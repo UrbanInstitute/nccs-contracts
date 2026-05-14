@@ -1,0 +1,50 @@
+# TODO: populate from authoritative source (nccs-data-bmf repo +
+# actual published artifact). Fields below are structural stubs.
+
+name: bmf-master
+description: >
+  Rolling master geocoded BMF — one row per EIN — published by the
+  BMF ETL pipeline. Carries history columns (first_year_in_bmf,
+  last_year_in_bmf, bmf_vintages_observed) derived across vintages.
+
+producer:
+  repo: UrbanInstitute/nccs-data-bmf
+  publish_path: TODO
+
+format: parquet
+compression: TODO  # likely zstd or snappy; verify against producer
+partitioned: false  # single file currently; consider partitioning later
+
+s3:
+  bucket: nccsdata
+  key_prefix: geocoding/bmf-master/merged/
+  versioned_template: TODO
+  latest_template: geocoding/bmf-master/merged/bmf_master_geocoded.parquet
+
+cadence:
+  type: monthly
+  notes: "Rebuilt monthly when new BMF vintages drop."
+
+manifest:
+  path: TODO  # confirm whether master has a sibling MANIFEST.json
+  schema_version: 1
+
+schema:
+  source: TODO  # likely inline initially; promote to ../schemas/bmf-master.yml later
+
+consumers:
+  - repo: UrbanInstitute/nccsdata
+    pin: "TODO"
+    notes: "Read via nccs_read() with arrow predicate pushdown."
+
+drift_detection:
+  trigger: cron
+  schedule: "0 8 * * MON"
+  event: ""
+
+deprecation_window_days: 90
+
+notes: |
+  TODO: confirm whether the master parquet has a co-located manifest
+  with sha256 sums; if not, the producer should start publishing one
+  as part of its standard publish step.

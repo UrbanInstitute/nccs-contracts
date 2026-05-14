@@ -1,0 +1,62 @@
+# TODO: populate from authoritative source (nccs-data-efile repo).
+
+name: efile
+description: >
+  Continuous trickle of raw Form 990 e-filings. Higher fidelity than
+  core 990 (full schedules, narrative text, line-item financials);
+  arrives in small batches throughout the month.
+
+producer:
+  repo: UrbanInstitute/nccs-data-efile  # confirm exact name
+  publish_path: TODO
+
+format: parquet  # target; confirm current state
+compression: TODO
+partitioned: true
+# Partition scheme TBD; likely filing_year + filing_month, or batch
+# vintage. See notes below.
+
+s3:
+  bucket: TODO
+  key_prefix: TODO
+  versioned_template: TODO
+  latest_template: TODO
+
+cadence:
+  type: continuous
+  notes: "Multiple publish events per month; new batches as IRS releases them."
+
+manifest:
+  path: TODO
+  schema_version: 1
+
+schema:
+  source: TODO
+
+consumers:
+  - repo: TODO  # merged producer will consume; API indirectly via merged
+    pin: "TODO"
+    notes: "TODO"
+
+drift_detection:
+  # Event-triggered because of continuous cadence; see decisions/0004.
+  trigger: event
+  schedule: ""
+  event: "publish"  # GH Actions event name from producer repo
+
+deprecation_window_days: 90
+
+notes: |
+  TODO key decisions to settle before this contract is real:
+
+  1. Partition scheme. Filing_year + filing_month is the natural cut
+     for analyst queries; batch vintage is the natural cut for
+     incremental updates. Pick one or partition by both.
+
+  2. Append-only vs. rolling. Are old filings ever republished
+     (corrections)? If yes, need a deduplication strategy.
+
+  3. Schema growth. E-file is where most new fields will appear
+     (new schedules, new line items year over year). The contract
+     should explicitly allow additive schema changes without a
+     deprecation window, but require ADR for any field removal.

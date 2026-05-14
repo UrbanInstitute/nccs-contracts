@@ -1,0 +1,71 @@
+# TODO: populate when the merged producer repo is created.
+
+name: merged
+description: >
+  Canonical merged dataset joining BMF + core 990 (+ e-file later)
+  on EIN. Promoted to a first-class derived producer; consumed by
+  the API and dashboard. See decisions/0002.
+
+producer:
+  repo: TODO  # new repo, name TBD (suggested: nccs-data-merged)
+  publish_path: TODO
+
+format: parquet
+compression: zstd
+partitioned: true
+# Partition scheme TBD; likely by org_addr_state for query locality,
+# or by some combination of state + filing_year if filing-year is
+# typical query filter.
+
+s3:
+  bucket: nccsdata
+  key_prefix: merged/
+  versioned_template: TODO
+  latest_template: TODO
+
+cadence:
+  # Rebuilds whenever any input artifact (bmf-master, core-990,
+  # efile) updates. Event-triggered.
+  type: on-change
+  notes: "Rebuilt on any input update; see decisions/0004."
+
+manifest:
+  path: TODO
+  schema_version: 1
+
+schema:
+  source: TODO
+# The merged schema is the union of input columns (with collisions
+# resolved by explicit prefixing — e.g. bmf_revenue_amount vs.
+# core_total_revenue). Document the resolution scheme here once the
+# producer exists.
+
+consumers:
+  - repo: TODO  # API
+    pin: "TODO"
+    notes: "Reads via DuckDB; see decisions/0003."
+  - repo: TODO  # dashboard, via API
+    pin: "TODO"
+    notes: "Indirect consumer through the API."
+
+drift_detection:
+  trigger: event
+  schedule: ""
+  event: "publish"
+
+deprecation_window_days: 90
+
+notes: |
+  TODO key decisions before this contract is real:
+
+  1. Column collision policy. When BMF and core both carry a
+     "revenue" concept with different semantics, prefixing is the
+     conservative default. Document and enforce.
+
+  2. Join semantics. Inner join (only EINs with both BMF and core)
+     vs. outer (every EIN that appears anywhere). Probably outer;
+     downstream filters can narrow.
+
+  3. Refresh granularity. Full rebuild on every input update, or
+     incremental? Start with full rebuild for simplicity; revisit
+     if rebuild time exceeds the inter-update window for any input.

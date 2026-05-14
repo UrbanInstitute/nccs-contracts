@@ -1,0 +1,49 @@
+# TODO: populate from authoritative source.
+
+name: bmf-lookups
+description: >
+  Curated set of BMF decoder lookups (subsection classification, NTEE
+  v2 subsector, foundation code, affiliation code, etc.) published as
+  CSV alongside a MANIFEST.json with per-file sha256 sums.
+
+producer:
+  repo: UrbanInstitute/nccs-data-bmf
+  publish_path: TODO
+
+format: csv  # multiple CSV files in a directory
+compression: none
+partitioned: false
+
+s3:
+  bucket: nccsdata
+  key_prefix: lookups/bmf/latest/
+  versioned_template: TODO  # confirm versioning scheme
+  latest_template: lookups/bmf/latest/
+
+cadence:
+  type: on-change
+  notes: "Republished when source decoder tables change."
+
+manifest:
+  path: lookups/bmf/latest/MANIFEST.json
+  schema_version: 1
+
+schema:
+  source: TODO  # per-file schemas in ../schemas/lookups/
+
+consumers:
+  - repo: UrbanInstitute/nccsdata
+    pin: "TODO"
+    notes: "Bundled into R/sysdata.rda by data-raw/build_lookups.R; consumed by nccs_catalog(labels = TRUE)."
+
+drift_detection:
+  trigger: cron
+  schedule: "0 8 * * MON"
+  event: ""
+
+deprecation_window_days: 90
+
+notes: |
+  TODO: list each lookup file (subsection_classification_code.csv,
+  nteev2_subsector.csv, foundation_code.csv, affiliation_code.csv)
+  with column expectations once we promote schema to ../schemas/.

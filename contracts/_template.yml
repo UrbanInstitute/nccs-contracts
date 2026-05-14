@@ -1,0 +1,83 @@
+# Contract template. Copy to a new file named after the artifact
+# (e.g. bmf-master.yml) and fill in. Every field is required unless
+# marked optional.
+
+# Stable identifier for this artifact across versions. Kebab-case.
+name: example-artifact
+
+# Human-readable one-liner used in catalog listings and agent context.
+description: >
+  One sentence describing what this artifact contains and who it's for.
+
+# Producer of this artifact. The repo whose CI is authoritative for
+# what gets published.
+producer:
+  repo: example/repo-name
+  publish_path: scripts/publish.sh  # optional, for agents to locate
+
+# Format of the artifact on S3.
+format: parquet  # parquet | csv | json
+compression: zstd  # optional; for parquet
+partitioned: true  # optional; true if a partitioned dataset
+
+# S3 location.
+s3:
+  # Bucket name (no s3:// prefix).
+  bucket: nccsdata
+  # Canonical key prefix; for partitioned datasets this is the
+  # dataset root.
+  key_prefix: example/path/to/artifact/
+  # Versioned form. The producer publishes both `_latest` and
+  # versioned URLs; consumers pin to versioned.
+  versioned_template: "example/path/to/artifact/v{version}/data.parquet"
+  latest_template: "example/path/to/artifact/_latest/data.parquet"
+
+# Update cadence. Drives drift-detection trigger.
+cadence:
+  # One of: monthly | annual | continuous | on-change
+  type: monthly
+  # Optional human-readable schedule note.
+  notes: "Rebuilt on the 1st of each month."
+
+# Manifest co-located with the artifact. Must follow the standard
+# shape: list of files, each with relative_path + sha256 + size_bytes,
+# plus top-level vintage + generated_at.
+manifest:
+  path: MANIFEST.json
+  schema_version: 1
+
+# Schema. Either inline or a pointer to a schema file in this repo.
+schema:
+  # Path within this repo, or 'inline' with columns: below.
+  source: ../schemas/example-artifact.yml
+  # Or:
+  # source: inline
+  # columns:
+  #   - name: ein
+  #     type: string
+  #     description: 9-digit IRS EIN, normalized to XX-XXXXXXX form.
+  #     nullable: false
+
+# Consumers that pin to this contract. Updated when a new consumer is
+# registered.
+consumers:
+  - repo: UrbanInstitute/nccsdata
+    pin: "0.0.0"  # contract version this consumer is pinned to
+    notes: "Reads via nccs_read()"
+
+# Drift detection trigger.
+drift_detection:
+  # cron | event | both
+  trigger: cron
+  # For cron: a cron expression interpretable by GitHub Actions.
+  schedule: "0 8 * * MON"
+  # For event: the GH Actions event from the producer repo.
+  event: ""
+
+# Deprecation policy. Default 90-day window for breaking changes.
+deprecation_window_days: 90
+
+# Free-text notes for agents and humans.
+notes: |
+  Anything that doesn't fit the structured fields. Subtleties,
+  known gotchas, links to issues, etc.

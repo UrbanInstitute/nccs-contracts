@@ -1,0 +1,55 @@
+# TODO: populate from authoritative source (nccs-data-core repo).
+
+name: core-990
+description: >
+  Core 990 datasets derived from IRS Statistics of Income (SOI)
+  extracts. One row per filing across 990, 990EZ, 990combined, and
+  990PF form types.
+
+producer:
+  repo: UrbanInstitute/nccs-data-core
+  publish_path: TODO
+
+# Currently CSV per discussion; migration to parquet is a prerequisite
+# for the API service-tier work. See decisions/0003.
+format: TODO  # csv today; parquet target
+compression: TODO
+partitioned: TODO  # likely partition by form type + year once parquet
+
+s3:
+  bucket: TODO
+  key_prefix: TODO  # e.g. processed/core990/
+  versioned_template: TODO
+  latest_template: TODO
+
+cadence:
+  type: annual
+  notes: "Follows IRS SOI release schedule."
+
+manifest:
+  path: TODO
+  schema_version: 1
+
+schema:
+  source: TODO
+
+consumers:
+  - repo: TODO  # API today; eventually nccsdata for 990 read surface
+    pin: "TODO"
+    notes: "TODO"
+
+drift_detection:
+  trigger: cron
+  schedule: "0 8 * * MON"
+  event: ""
+
+deprecation_window_days: 90
+
+notes: |
+  TODO: catalog page lists the four form-type datasets. Confirm URI
+  pattern, column shape, and whether is_501c3 indicator is present
+  in all four (mentioned as available in at least some).
+
+  Open question: does each form-type get its own contract entry, or
+  is this a single contract with form_type as a discriminator? Lean
+  toward separate contracts since cadences and schemas may diverge.
