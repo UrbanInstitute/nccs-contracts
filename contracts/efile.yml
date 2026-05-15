@@ -1,87 +1,102 @@
-# TODO: producer repo (nccs-data-efile) does not exist yet. The
-# canonical surface lives across two buckets today (s3://nccs-efile/
-# and s3://nccsdata/xml/) and needs reconciliation before this
-# contract can be fully populated.
+# Producer (UrbanInstitute/nccs-data-efile) not yet built. This
+# contract describes the planned shape per ADR 0007; fields fill in
+# as the pipeline is implemented.
 
 name: efile
 description: >
-  Continuous trickle of raw Form 990 e-filings. Higher fidelity than
-  core 990 (full schedules, narrative text, line-item financials);
-  arrives in small batches throughout the month. Today the surface is
-  split across raw XML (s3://nccs-efile/xml/, s3://nccs-efile/xml2/)
-  and parsed CSV extracts (s3://nccs-efile/parsed/). A future
-  nccs-data-efile pipeline is expected to consolidate these into a
-  versioned parquet dataset under a single bucket.
+  Form 990 e-file data published as form-agnostic parquet under
+  Urban Institute ownership. Parses raw XML from the GivingTuesday
+  data lake into a normalized columnar artifact with semantic
+  (not form-version-anchored) column names. See ADR 0007.
+
+  Phase 1 (MVP) scope: Form 990 only, tax years 2020+, headline
+  fields only (revenue, expenses, assets, executive compensation,
+  top-level narratives). Phase 2 adds detailed schedules + 990EZ.
+  Phase 3 adds 990PF.
+
+# --- Upstream sources (not part of this contract; consumed, not published) ---
+# - GivingTuesday data lake — canonical raw XML source
+#     https://990data.givingtuesday.org/
+# - s3://nccs-efile/                — NODC's parallel pipeline outputs
+#     (researcher-facing CSV, owned by Nonprofit Open Data Collective;
+#      retained as a parallel researcher tool; not the upstream for
+#      this producer).
+# - s3://nccsdata/xml/               — 200k 990 XMLs (provenance
+#     unverified as of 2026-05-15; pending separate audit; not the
+#     upstream for this producer).
 
 producer:
-  repo: UrbanInstitute/nccs-data-efile  # forthcoming; not yet a repo
+  repo: UrbanInstitute/nccs-data-efile  # to be created when work starts
   publish_path: TODO
 
-format: TODO  # raw XML + parsed CSV today; parquet is the target
-compression: TODO
+format: parquet
+compression: zstd
 partitioned: true
-# Partition scheme TBD; likely filing_year + filing_month, or batch
-# vintage. See notes below.
+# Partition scheme: filing_year × form_type. filing_year matches the
+# dominant analyst query shape (year-over-year sector studies);
+# form_type segregates 990 / 990EZ / 990PF without column-collision
+# pain.
 
 s3:
-  # Today, two buckets are in play. Pick one for the canonical contract
-  # before this stub is real:
-  bucket: TODO  # candidates: nccs-efile (existing dump) vs nccsdata (canonical)
-  key_prefix: TODO
+  bucket: nccsdata
+  key_prefix: processed/efile/
   versioned_template: TODO
-  latest_template: TODO
-  # Observed surfaces as of 2026-05-15:
-  #   s3://nccs-efile/xml/   — raw 990 XML, files from 2009 onwards
-  #   s3://nccs-efile/xml2/  — 2022 TEOS batches, 2023/ subset
-  #   s3://nccs-efile/parsed/ — F9-P00-T00-HEADER-{year}.csv + .rds
-  #   s3://nccs-efile/duckdb/, /duckpf/, /index/, /partvii/, /public/, /logs/
-  #   s3://nccsdata/xml/      — 200k 990 XMLs, last write 2025-04-14
-  #                             (relationship to nccs-efile/xml/ unclear)
+  latest_template: "processed/efile/{filing_year}/{form_type}/efile_{filing_year}_{form_type}.parquet"
+  # Companion files per (filing_year, form_type):
+  #   efile_{filing_year}_{form_type}_dictionary.csv  — column metadata
+  #   efile_{filing_year}_{form_type}_quality.json    — validation report
 
 cadence:
   type: continuous
-  notes: "Multiple publish events per month; new batches as IRS releases them."
+  notes: >
+    Monthly rebuild cadence. IRS publishes batches monthly; downstream
+    consumers do not need sub-monthly latency. Cadence chosen over
+    pure event-trigger for predictability — drift detection is the
+    cron-style weekly check, not the publish hook.
 
 manifest:
-  path: TODO
+  path: TODO  # producer will write MANIFEST.json per published vintage
   schema_version: 1
 
 schema:
   source: TODO
+  # Schema design is the load-bearing engineering work for this
+  # producer. Form-agnostic semantic names are mapped from the NODC
+  # concordance (irs-efile-master-concordance-file, MIT-licensed,
+  # adapted with attribution); 990PF mappings built from IRS XSD.
+  # Once stable, promote to ../schemas/efile.yml.
 
 consumers:
-  - repo: TODO  # merged producer will consume; API indirectly via merged
+  - repo: TODO  # merged producer (per ADR 0002) will consume
     pin: "TODO"
-    notes: "Forthcoming."
+    notes: "Joined with bmf-master and core-990 in the canonical merged artifact."
+  - repo: TODO  # API service tier (per ADR 0003)
+    pin: "TODO"
+    notes: "DuckDB reads partitioned parquet directly when merged is unavailable."
 
 drift_detection:
-  # Event-triggered because of continuous cadence; see decisions/0004.
-  trigger: event
-  schedule: ""
-  event: "publish"  # GH Actions event name from the producer repo (TODO)
+  trigger: cron
+  schedule: "0 8 * * MON"
+  event: ""
 
 deprecation_window_days: 90
 
 notes: |
-  TODO key decisions to settle before this contract is real:
+  Coexists with the NODC pipeline (catalog-efile.html). See ADR 0007
+  for the dual-catalog presentation (general-user catalog = this
+  artifact; researcher catalog = NODC's CSV outputs). The NODC
+  pipeline is not under nccs-contracts governance.
 
-  1. Bucket consolidation. Decide whether nccs-efile/ stays as a
-     separate bucket or whether efile becomes a prefix under nccsdata/
-     like the other producers. Two buckets means two access patterns
-     for consumers — worth resolving before standing up the producer.
+  Open decisions deferred to implementation time:
 
-  2. Relationship of nccsdata/xml/ to nccs-efile/xml/. They may be a
-     sync, a partial mirror, or a stale copy. Confirm and remove the
-     duplicate.
+  1. Append-only vs. rolling. Are old filings ever republished
+     (corrections)? If yes, need a deduplication strategy keyed on
+     EIN + filing receipt ID.
 
-  3. Partition scheme. filing_year + filing_month is the natural cut
-     for analyst queries; batch vintage is the natural cut for
-     incremental updates. Pick one or partition by both.
+  2. Schema evolution policy. The contract should explicitly allow
+     additive schema changes (new IRS schedules, new line items)
+     without a deprecation window, but require ADR for any field
+     removal or rename. Codify when the producer is built.
 
-  4. Append-only vs. rolling. Are old filings ever republished
-     (corrections)? If yes, need a deduplication strategy.
-
-  5. Schema growth. E-file is where most new fields will appear (new
-     schedules, new line items year over year). The contract should
-     explicitly allow additive schema changes without a deprecation
-     window, but require ADR for any field removal.
+  3. Relationship of nccsdata/xml/ to this producer. Likely
+     orphaned upstream data; resolve as a separate audit item.
