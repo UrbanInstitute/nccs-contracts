@@ -1,0 +1,87 @@
+# Producer (nccs-dataexplorer-data) exists but pipeline is broken
+# (references archived harmonized/bmf/unified per ADR 0005) and is
+# not yet contracted. This stub describes the planned shape per
+# ADR 0010; fields fill in when the pipeline is repointed and the
+# producer publishes with manifest.
+
+name: sector-in-brief
+description: >
+  Aggregated, dashboard-ready parquet artifact derived from
+  bmf-master, core-harmonized, legacy/core, and external SOI/DAF
+  sources. Powers the sector-in-brief Shiny dashboard
+  (https://nccs-urban.shinyapps.io/sector-in-brief/). Consumers
+  read pre-aggregated parquet (number of nonprofits, totals by
+  state/subsector/size, DAF metrics, PF grants) rather than
+  re-deriving from canonical NCCS artifacts.
+
+producer:
+  repo: UrbanInstitute/nccs-dataexplorer-data
+  publish_path: TODO  # consolidate across R/01_bmf_data.R through R/11_govt_grants.R; named entrypoint script TBD
+
+format: parquet
+compression: zstd
+partitioned: false  # one file per metric today; revisit if growth warrants
+
+s3:
+  bucket: nccsdata
+  key_prefix: dataexplorer/visuals/
+  versioned_template: "dataexplorer/visuals/{vintage}/"  # vintage = YYYY_MM
+  latest_template: dataexplorer/visuals/latest/  # mirror, per the bmf-lookups pattern
+  # Observed companion files (today, pre-consolidation):
+  #   Total_Assets.parquet, Total_Expenses.parquet, Total_Revenues.parquet
+  #   daf.parquet, pf_grants.parquet, pf_grant_data.csv
+  #   bmf_metadata.parquet, core_vars.parquet
+  #   number_nonprofits.parquet, nested_geographies.csv
+  #   fiscal_metrics.parquet, full_fiscal_metrics.parquet,
+  #   labor_metrics.parquet, efile_daf_metrics.parquet
+  #
+  # NOTE: s3://nccsdata/sector-in-brief/ holds an older copy of
+  # similar files. Resolve via ADR 0010 before this contract is
+  # operational.
+
+cadence:
+  type: on-change
+  notes: >
+    Rebuilt when any input artifact updates (bmf-master, core
+    annual SOI release, etc.). Today driven manually; future
+    versions should trigger on input contract publication.
+
+manifest:
+  path: TODO  # producer adds MANIFEST.json per ADR 0010
+  schema_version: 1
+
+schema:
+  source: TODO
+  # Per-file schemas to be enumerated once the consolidation
+  # decision lands. Each parquet file has its own metric-specific
+  # column set; cross-file conventions: Year, Tax Year, Subsector,
+  # Size, Census Region/State/County, Metro/Micro Area,
+  # Organization Type.
+
+consumers:
+  - repo: UrbanInstitute/sector-in-brief  # the Shiny dashboard
+    pin: "TODO"  # populate after ADR 0011 lands and dashboard reads from S3 directly
+    notes: "Reads via arrow::open_dataset / arrow::read_parquet after ADR 0011."
+
+drift_detection:
+  trigger: event
+  schedule: ""
+  event: "publish-input"  # bmf-master, core-harmonized, or external SOI/DAF refresh
+
+deprecation_window_days: 90
+
+notes: |
+  Derived producer pattern (per ADR 0002). Inputs are themselves
+  contracted artifacts: [[bmf-master]] (or [[bmf-master-geocoded]]),
+  [[core-harmonized]], plus uncontracted external sources (IRS SOI
+  990PF xlsx; DAF e-file returns).
+
+  Open decisions to settle as the contract is populated:
+
+  1. Prefix consolidation. dataexplorer/visuals/ vs sector-in-brief/
+     vs both — pick one, archive the other. ADR 0010 §2.
+  2. Vintage scheme. Today files overwrite latest in place; move
+     to {YYYY_MM} subdirectories with a latest/ mirror.
+  3. Partition policy. One file per metric scales today; revisit
+     when growth or query patterns suggest partitioning by
+     filing_year or geography.
