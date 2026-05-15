@@ -1,26 +1,42 @@
-# TODO: populate from authoritative source (nccs-data-efile repo).
+# TODO: producer repo (nccs-data-efile) does not exist yet. The
+# canonical surface lives across two buckets today (s3://nccs-efile/
+# and s3://nccsdata/xml/) and needs reconciliation before this
+# contract can be fully populated.
 
 name: efile
 description: >
   Continuous trickle of raw Form 990 e-filings. Higher fidelity than
   core 990 (full schedules, narrative text, line-item financials);
-  arrives in small batches throughout the month.
+  arrives in small batches throughout the month. Today the surface is
+  split across raw XML (s3://nccs-efile/xml/, s3://nccs-efile/xml2/)
+  and parsed CSV extracts (s3://nccs-efile/parsed/). A future
+  nccs-data-efile pipeline is expected to consolidate these into a
+  versioned parquet dataset under a single bucket.
 
 producer:
-  repo: UrbanInstitute/nccs-data-efile  # confirm exact name
+  repo: UrbanInstitute/nccs-data-efile  # forthcoming; not yet a repo
   publish_path: TODO
 
-format: parquet  # target; confirm current state
+format: TODO  # raw XML + parsed CSV today; parquet is the target
 compression: TODO
 partitioned: true
 # Partition scheme TBD; likely filing_year + filing_month, or batch
 # vintage. See notes below.
 
 s3:
-  bucket: TODO
+  # Today, two buckets are in play. Pick one for the canonical contract
+  # before this stub is real:
+  bucket: TODO  # candidates: nccs-efile (existing dump) vs nccsdata (canonical)
   key_prefix: TODO
   versioned_template: TODO
   latest_template: TODO
+  # Observed surfaces as of 2026-05-15:
+  #   s3://nccs-efile/xml/   — raw 990 XML, files from 2009 onwards
+  #   s3://nccs-efile/xml2/  — 2022 TEOS batches, 2023/ subset
+  #   s3://nccs-efile/parsed/ — F9-P00-T00-HEADER-{year}.csv + .rds
+  #   s3://nccs-efile/duckdb/, /duckpf/, /index/, /partvii/, /public/, /logs/
+  #   s3://nccsdata/xml/      — 200k 990 XMLs, last write 2025-04-14
+  #                             (relationship to nccs-efile/xml/ unclear)
 
 cadence:
   type: continuous
@@ -36,27 +52,36 @@ schema:
 consumers:
   - repo: TODO  # merged producer will consume; API indirectly via merged
     pin: "TODO"
-    notes: "TODO"
+    notes: "Forthcoming."
 
 drift_detection:
   # Event-triggered because of continuous cadence; see decisions/0004.
   trigger: event
   schedule: ""
-  event: "publish"  # GH Actions event name from producer repo
+  event: "publish"  # GH Actions event name from the producer repo (TODO)
 
 deprecation_window_days: 90
 
 notes: |
   TODO key decisions to settle before this contract is real:
 
-  1. Partition scheme. Filing_year + filing_month is the natural cut
+  1. Bucket consolidation. Decide whether nccs-efile/ stays as a
+     separate bucket or whether efile becomes a prefix under nccsdata/
+     like the other producers. Two buckets means two access patterns
+     for consumers — worth resolving before standing up the producer.
+
+  2. Relationship of nccsdata/xml/ to nccs-efile/xml/. They may be a
+     sync, a partial mirror, or a stale copy. Confirm and remove the
+     duplicate.
+
+  3. Partition scheme. filing_year + filing_month is the natural cut
      for analyst queries; batch vintage is the natural cut for
      incremental updates. Pick one or partition by both.
 
-  2. Append-only vs. rolling. Are old filings ever republished
+  4. Append-only vs. rolling. Are old filings ever republished
      (corrections)? If yes, need a deduplication strategy.
 
-  3. Schema growth. E-file is where most new fields will appear
-     (new schedules, new line items year over year). The contract
-     should explicitly allow additive schema changes without a
-     deprecation window, but require ADR for any field removal.
+  5. Schema growth. E-file is where most new fields will appear (new
+     schedules, new line items year over year). The contract should
+     explicitly allow additive schema changes without a deprecation
+     window, but require ADR for any field removal.

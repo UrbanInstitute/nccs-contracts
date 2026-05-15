@@ -1,14 +1,14 @@
-# TODO: populate from authoritative source.
-
 name: bmf-lookups
 description: >
-  Curated set of BMF decoder lookups (subsection classification, NTEE
-  v2 subsector, foundation code, affiliation code, etc.) published as
-  CSV alongside a MANIFEST.json with per-file sha256 sums.
+  Curated set of BMF decoder lookups (subsection classification, NTEE v2
+  subsector, foundation code, activity code, etc.) published as CSV
+  alongside a MANIFEST.json with per-file sha256 sums. Built from
+  data/lookup/bmf_code_lookup.xlsx (all sheets) plus
+  data/lookup/ntee_legacy_5char_lookup.csv inside the producer repo.
 
 producer:
   repo: UrbanInstitute/nccs-data-bmf
-  publish_path: TODO
+  publish_path: R/publish_lookups.R
 
 format: csv  # multiple CSV files in a directory
 compression: none
@@ -16,20 +16,34 @@ partitioned: false
 
 s3:
   bucket: nccsdata
-  key_prefix: lookups/bmf/latest/
-  versioned_template: TODO  # confirm versioning scheme
-  latest_template: lookups/bmf/latest/
+  key_prefix: lookups/bmf/
+  versioned_template: "lookups/bmf/{vintage}/"  # vintage = YYYY_MM
+  latest_template: lookups/bmf/latest/  # mirror of most-recent vintage
 
 cadence:
   type: on-change
-  notes: "Republished when source decoder tables change."
+  notes: >
+    Republished when bmf_code_lookup.xlsx or ntee_legacy_5char_lookup.csv
+    change in the producer repo. Each publish stamps a YYYY_MM vintage
+    and re-points `latest/` at it. Per-file sha256 in MANIFEST.json makes
+    re-runs idempotent (unchanged files are skipped on upload).
 
 manifest:
   path: lookups/bmf/latest/MANIFEST.json
   schema_version: 1
+  # Manifest top-level fields: vintage (YYYY_MM), generated_at (UTC ISO),
+  # source.{workbook, extra_csv}, files.{<name>}.{file, rows, cols,
+  # columns[], sha256, bytes}.
 
 schema:
-  source: TODO  # per-file schemas in ../schemas/lookups/
+  source: TODO  # per-file schemas — list expected columns per lookup file.
+  # Files observed in MANIFEST as of vintage 2026_05:
+  #   activity_code.csv, affiliation_code.csv, asset_code.csv,
+  #   deductibility_code.csv, filing_requirement_code.csv,
+  #   foundation_code.csv, income_code.csv, ntee_code.csv,
+  #   ntee_code_major_group.csv, ntee_common_code.csv,
+  #   ntee_legacy_5char.csv, nteev2_subsector.csv,
+  #   organization_code.csv, parent_organization.csv, status_code.csv
 
 consumers:
   - repo: UrbanInstitute/nccsdata
@@ -44,6 +58,8 @@ drift_detection:
 deprecation_window_days: 90
 
 notes: |
-  TODO: list each lookup file (subsection_classification_code.csv,
-  nteev2_subsector.csv, foundation_code.csv, affiliation_code.csv)
-  with column expectations once we promote schema to ../schemas/.
+  Producer also writes the same files to a vintage prefix
+  s3://nccsdata/lookups/bmf/{YYYY_MM}/. Consumers pin `latest/` for
+  convenience; pin to a specific vintage for reproducibility.
+
+  TODO: promote per-file schemas to ../schemas/lookups/ once stable.
