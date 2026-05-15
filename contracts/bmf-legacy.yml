@@ -1,0 +1,68 @@
+# TODO: populate from authoritative source (nccs-data-bmf legacy
+# pipeline + actual published artifact). Fields below are stubs.
+
+name: bmf-legacy
+description: >
+  Pre-1995 BMF vintages processed through the legacy pipeline
+  (run_legacy_pipeline.R). Source data lives at s3://nccsdata/legacy/bmf/
+  (read-only archive of historical IRS BMF dumps); outputs follow the
+  same intermediate → processed shape as the modern BMF pipeline so
+  master_bmf_builder.R can stack them with current vintages.
+
+producer:
+  repo: UrbanInstitute/nccs-data-bmf
+  publish_path: R/run_legacy_pipeline.R
+
+format: parquet  # intermediate (parquet) + processed (CSV)
+compression: TODO
+partitioned: false  # partitioned by YYYY_MM vintage directories
+
+s3:
+  bucket: nccsdata
+  # Two co-equal output prefixes (mirrors the modern pipeline shape):
+  key_prefix: processed/bmf-legacy/
+  versioned_template: TODO
+  latest_template: processed/bmf-legacy/{YYYY_MM}/bmf_legacy_{YYYY_MM}_processed.csv
+  # Companion outputs:
+  #   intermediate/bmf-legacy/{YYYY_MM}/bmf_legacy_{YYYY_MM}_intermediate.parquet
+  #   intermediate/bmf-legacy/{YYYY_MM}/bmf_legacy_{YYYY_MM}_quality_report.json
+  #   processed/bmf-legacy/{YYYY_MM}/bmf_legacy_{YYYY_MM}_processed.csv
+  #   processed/bmf-legacy/{YYYY_MM}/bmf_legacy_{YYYY_MM}_data_dictionary.csv
+  #   processed/bmf-legacy/{YYYY_MM}/bmf_legacy_{YYYY_MM}_quality_report.json
+
+cadence:
+  type: on-change
+  notes: >
+    Rebuilt when the legacy pipeline is re-run (rare — only when
+    pipeline logic changes or a new historical vintage is digitized).
+    Source data at legacy/bmf/ does not change.
+
+manifest:
+  path: TODO  # confirm whether legacy pipeline writes a MANIFEST.json per vintage
+  schema_version: 1
+
+schema:
+  source: TODO  # should match bmf processed schema for stackability
+
+consumers:
+  - repo: UrbanInstitute/nccs-data-bmf
+    pin: "n/a"
+    notes: "Internal: stacked with processed/bmf/ in master_bmf_builder.R."
+  - repo: TODO
+    pin: "TODO"
+    notes: "Identify any direct consumers of legacy vintages."
+
+drift_detection:
+  trigger: cron
+  schedule: "0 8 1 * *"  # monthly is plenty; this rarely changes
+  event: ""
+
+deprecation_window_days: 90
+
+notes: |
+  Upstream source: s3://nccsdata/legacy/bmf/ (read-only archive of
+  historical IRS BMF dumps, 1989–2014). Do not modify legacy/bmf/ —
+  it is the canonical input for this pipeline.
+
+  TODO: confirm vintage range actually published under bmf-legacy/
+  (intermediate has 172 objects, processed has 258 as of 2026-05-15).

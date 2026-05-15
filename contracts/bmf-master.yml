@@ -3,39 +3,55 @@
 
 name: bmf-master
 description: >
-  Rolling master geocoded BMF — one row per EIN — published by the
-  BMF ETL pipeline. Carries history columns (first_year_in_bmf,
-  last_year_in_bmf, bmf_vintages_observed) derived across vintages.
+  Rolling master BMF — one row per EIN — built by master_bmf_builder.R
+  from processed/bmf/ (1995–present) and processed/bmf-legacy/ (pre-1995).
+  Carries history columns derived across vintages
+  (first_year_in_bmf, last_year_in_bmf, bmf_vintages_observed).
+  This is the un-geocoded master; the geocoded extension is a separate
+  contract (see bmf-master-geocoded). State-sharded slices are NOT a
+  sub-artifact of this master — they derive from the geocoded master
+  and are contracted under bmf-master-geocoded.
 
 producer:
   repo: UrbanInstitute/nccs-data-bmf
-  publish_path: TODO
+  publish_path: R/master_bmf_builder.R
 
-format: parquet
+format: parquet  # CSV mirror also published; parquet is canonical
 compression: TODO  # likely zstd or snappy; verify against producer
-partitioned: false  # single file currently; consider partitioning later
+partitioned: false
 
 s3:
   bucket: nccsdata
-  key_prefix: geocoding/bmf-master/merged/
-  versioned_template: TODO
-  latest_template: geocoding/bmf-master/merged/bmf_master_geocoded.parquet
+  key_prefix: master/bmf/
+  versioned_template: TODO  # confirm versioning; today no /vN/ in the path
+  latest_template: master/bmf/bmf_master.parquet
+  # Co-located sub-artifacts at the same prefix:
+  #   master/bmf/bmf_master.csv                       — CSV mirror
+  #   master/bmf/bmf_master_data_dictionary.csv       — column metadata
+  #   master/bmf/bmf_master_quality_report.json       — validation metrics
+  # NOTE: master/bmf/state_marts/ is a path-quirk — those objects sit under
+  # this prefix but are produced from the *geocoded* master (see
+  # R/run_master_state_marts.R reading bmf_master_geocoded.parquet).
+  # They are contracted under bmf-master-geocoded, not here.
 
 cadence:
   type: monthly
-  notes: "Rebuilt monthly when new BMF vintages drop."
+  notes: "Rebuilt when new BMF vintages drop in processed/bmf/."
 
 manifest:
-  path: TODO  # confirm whether master has a sibling MANIFEST.json
+  path: TODO  # confirm whether master_bmf_builder writes a sibling MANIFEST.json
   schema_version: 1
 
 schema:
   source: TODO  # likely inline initially; promote to ../schemas/bmf-master.yml later
 
 consumers:
-  - repo: UrbanInstitute/nccsdata
+  - repo: UrbanInstitute/nccs-data-bmf
+    pin: "n/a"
+    notes: "Internal: feeds the geocoding workflow (bmf-master-geocoded)."
+  - repo: TODO
     pin: "TODO"
-    notes: "Read via nccs_read() with arrow predicate pushdown."
+    notes: "Identify direct consumers of the un-geocoded master."
 
 drift_detection:
   trigger: cron
@@ -45,6 +61,9 @@ drift_detection:
 deprecation_window_days: 90
 
 notes: |
-  TODO: confirm whether the master parquet has a co-located manifest
-  with sha256 sums; if not, the producer should start publishing one
-  as part of its standard publish step.
+  Predecessor unified-BMF products at harmonized/bmf/unified/ (V1.1)
+  and bmf/unified/v1.2/ were superseded by this master and archived
+  to s3://nccs-data-archive/superseded/ — see ADR 0005.
+
+  TODO: confirm whether the builder writes a co-located MANIFEST.json
+  with sha256 sums; if not, add it as part of the standard publish step.

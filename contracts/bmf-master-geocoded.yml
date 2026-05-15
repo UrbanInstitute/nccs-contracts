@@ -1,0 +1,78 @@
+# TODO: populate from authoritative source (nccs-data-bmf geocoding
+# workflow + actual published artifact). Fields below are stubs.
+
+name: bmf-master-geocoded
+description: >
+  Geocoded extension of bmf-master. Produced by sending master/bmf/ to
+  the Urban Institute geocoder and merging lat/lon + match-quality
+  columns back in. Canonical surface for nccsdata::nccs_read() and any
+  consumer needing geographic coordinates. State-sharded slices of this
+  geocoded master are also published as a sub-artifact (see below).
+
+producer:
+  repo: UrbanInstitute/nccs-data-bmf
+  publish_path: R/run_geocoding.R  # manual workflow, not automated
+  state_marts_publish_path: R/run_master_state_marts.R  # builds state shards from this artifact
+
+format: parquet  # CSV mirror also published; parquet is canonical
+compression: TODO  # likely zstd or snappy; verify against producer
+partitioned: false  # main artifact; state_marts/parquet/ IS Hive-partitioned by state
+
+s3:
+  bucket: nccsdata
+  key_prefix: geocoding/bmf-master/merged/
+  versioned_template: TODO  # no /vN/ in the path today
+  latest_template: geocoding/bmf-master/merged/bmf_master_geocoded.parquet
+  # Co-located sub-artifacts at the same prefix:
+  #   bmf_master_geocoded.csv                           — CSV mirror
+  #   bmf_master_geocoded_data_dictionary.csv           — column metadata
+  #   bmf_master_geocoded_quality_report.json           — match-rate metrics
+  # Plus geocoding/bmf-master/input/ for address batches in-flight.
+  #
+  # State marts — derived from this geocoded master but currently
+  # written under master/bmf/ for historical reasons (path quirk;
+  # see notes):
+  #   s3://nccsdata/master/bmf/state_marts/parquet/state={ST}/part-0.parquet
+  #   s3://nccsdata/master/bmf/state_marts/csv/bmf_master_{ST}.csv
+
+cadence:
+  type: on-change
+  notes: >
+    Rebuilt manually after each bmf-master build by running
+    R/run_geocoding.R. Lags bmf-master by hours-to-days depending on
+    operator availability.
+
+manifest:
+  path: TODO  # confirm whether geocoding workflow writes a sibling MANIFEST.json
+  schema_version: 1
+
+schema:
+  source: TODO  # extends bmf-master columns with lat, lon, match_quality, etc.
+
+consumers:
+  - repo: UrbanInstitute/nccsdata
+    pin: "TODO"
+    notes: "nccs_read() reads bmf_master_geocoded.parquet (R/nccs_read.R:401)."
+
+drift_detection:
+  trigger: event
+  schedule: ""
+  event: "publish-master"  # TODO: define exact event from nccs-data-bmf
+
+deprecation_window_days: 90
+
+notes: |
+  Depends on bmf-master. If the master's columns change, this
+  contract's schema changes too. Coordinate with bmf-master on any
+  breaking change.
+
+  Path quirk: state marts derive from this geocoded master
+  (R/run_master_state_marts.R reads bmf_master_geocoded.parquet) but
+  are written under s3://nccsdata/master/bmf/state_marts/, not under
+  this geocoded prefix. Worth considering a future migration to
+  s3://nccsdata/geocoding/bmf-master/state_marts/ to make the path
+  reflect the dependency — would be a breaking change for any
+  consumer reading state marts today.
+
+  TODO: define a manifest if not already present; lock the schema
+  delta (geo columns added on top of master) once stable.

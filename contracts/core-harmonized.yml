@@ -1,0 +1,61 @@
+# TODO: populate from authoritative source (nccs-data-core repo +
+# actual published artifact). Fields below are stubs.
+
+name: core-harmonized
+description: >
+  Harmonized 990 microdata — output of nccs-data-core's harmonize stage
+  (03_harmonize.R). Cross-year column harmonization sits between raw
+  SOI extracts and the processed/core production tier; canonical input
+  for downstream merge/panel work.
+
+producer:
+  repo: UrbanInstitute/nccs-data-core
+  publish_path: R/03_harmonize.R
+
+format: csv  # CSV today; consider promoting to parquet
+compression: none
+partitioned: true  # partitioned by subsection × form × tax_year
+
+s3:
+  bucket: nccsdata
+  key_prefix: harmonized/core/
+  versioned_template: TODO  # CORE-{YYYY}-{SUBSECTION_CLASS}-{FORM}-HRMN-V{N}.csv pattern
+  latest_template: harmonized/core/{subsection_form}/marts/CORE-{tax_year}-{SUBSECTION}-{FORM}-HRMN-V0.csv
+  # Observed subdirectories: 501c3-pc/, 501c3-pf/, 501c3-pz/, 501ce-pc/, 501ce-pz/
+  # Companion files:
+  #   harmonized/core/CORE-HRMN_dd.csv — cross-year data dictionary
+
+cadence:
+  type: annual
+  notes: "Refreshed when new SOI extracts are released and harmonized."
+
+manifest:
+  path: TODO  # confirm whether 03_harmonize.R writes a MANIFEST.json
+  schema_version: 1
+
+schema:
+  source: TODO  # CORE-HRMN_dd.csv is the in-place dictionary today
+
+consumers:
+  - repo: UrbanInstitute/nccs-data-core
+    pin: "n/a"
+    notes: "Internal: feeds processed/core/ via 04_derive_combined.R."
+  - repo: TODO
+    pin: "TODO"
+    notes: "Identify direct consumers (research notebooks, ad-hoc analysts)."
+
+drift_detection:
+  trigger: cron
+  schedule: "0 8 * * MON"
+  event: ""
+
+deprecation_window_days: 90
+
+notes: |
+  Predecessor sector-in-brief harmonized CSVs at harmonized/sector-in-brief/
+  and SOI extract CSVs at harmonized/soi-extract/ were superseded and
+  archived to s3://nccs-data-archive/superseded/ — see ADR 0005.
+
+  TODO: decide whether to promote harmonized/core/ to parquet (vintage
+  stacking would benefit from columnar reads). Coordinate with
+  nccs-data-core's harmonize stage.
