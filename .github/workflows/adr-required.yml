@@ -1,0 +1,66 @@
+name: adr-required
+
+on:
+  pull_request:
+    paths:
+      - "contracts/**"
+      - "decisions/**"
+      - ".github/workflows/adr-required.yml"
+
+jobs:
+  adr-required:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # need full history to diff against base
+
+      - name: Check for ADR on shape-changing contract edits
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          set -euo pipefail
+
+          git fetch origin "$BASE_REF" --depth=0 || git fetch origin "$BASE_REF"
+          BASE="origin/$BASE_REF"
+
+          # Files modified (not added, not deleted) under contracts/
+          MODIFIED=$(git diff --diff-filter=M --name-only "$BASE"...HEAD -- 'contracts/*.yml' || true)
+
+          if [ -z "$MODIFIED" ]; then
+            echo "No existing contracts modified; ADR check skipped."
+            exit 0
+          fi
+
+          echo "Modified contracts in this PR:"
+          echo "$MODIFIED" | sed 's/^/  - /'
+
+          # Look in the diff for changes to any gated top-level field.
+          # We match lines that start with + or - (diff additions/deletions)
+          # followed by an unindented or single-space-indented key.
+          DIFF=$(git diff "$BASE"...HEAD -- $MODIFIED)
+
+          SHAPE_HIT=$(printf '%s\n' "$DIFF" | grep -E '^[+-][[:space:]]*(schema|s3|cadence|format):' || true)
+
+          if [ -z "$SHAPE_HIT" ]; then
+            echo "No shape-changing fields (schema/s3/cadence/format) touched."
+            exit 0
+          fi
+
+          echo
+          echo "Shape-changing lines detected:"
+          printf '%s\n' "$SHAPE_HIT" | sed 's/^/  /'
+
+          # New ADR files added in this PR
+          NEW_ADRS=$(git diff --diff-filter=A --name-only "$BASE"...HEAD -- 'decisions/*.md' || true)
+          NEW_ADR_COUNT=$(printf '%s\n' "$NEW_ADRS" | grep -c . || true)
+
+          if [ "$NEW_ADR_COUNT" -eq 0 ]; then
+            echo
+            echo "::error::Contract shape changed (schema/s3/cadence/format) but no new ADR was added under decisions/. Per CLAUDE.md house rules, shape-changing edits require a new ADR."
+            exit 1
+          fi
+
+          echo
+          echo "New ADR(s) found:"
+          printf '%s\n' "$NEW_ADRS" | sed 's/^/  - /'

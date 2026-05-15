@@ -1,0 +1,26 @@
+name: contracts-validate
+
+on:
+  pull_request:
+    paths:
+      - "contracts/**"
+      - "scripts/validate_contracts.py"
+      - ".github/workflows/contracts-validate.yml"
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install PyYAML
+        run: pip install pyyaml
+
+      - name: Validate contracts
+        run: python3 scripts/validate_contracts.py
