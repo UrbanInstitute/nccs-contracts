@@ -1,0 +1,81 @@
+# Producer (new nccs-data-api repo) not yet built. This contract
+# describes the planned shape per ADR 0008; fields fill in when the
+# rollup job ships.
+
+name: usage-api
+description: >
+  Monthly rollups of dataexplorer API usage. Per-query log entries
+  (one per request to the API) are aggregated into a partitioned
+  parquet artifact: query counts, result sizes, durations,
+  success/failure rates, by day and by query class. Promotes API
+  usage from inferred-from-leftover-result-CSVs to a first-class
+  contracted artifact suitable for dashboards and capacity planning.
+
+# --- Upstream sources (not part of this contract; consumed, not published) ---
+# - s3://nccs-data-api/logs/queries/{YYYY-MM-DD}/*.ndjson — per-query
+#   structured log written live by the API process. The rollup job
+#   reads these; consumers do not.
+
+producer:
+  repo: UrbanInstitute/nccs-data-api  # to be created per ADR 0008
+  publish_path: TODO  # e.g. R/rollup_usage.R or jobs/rollup.py
+
+format: parquet
+compression: zstd
+partitioned: true
+# Partition by YYYY_MM vintage directory; one rollup per calendar month.
+
+s3:
+  bucket: nccsdata
+  key_prefix: usage/api/
+  versioned_template: TODO
+  latest_template: "usage/api/{vintage}/queries.parquet"  # vintage = YYYY_MM
+
+cadence:
+  type: monthly
+  notes: >
+    Rollup job runs on the 1st of each month, aggregating the prior
+    month's per-query log entries. Idempotent — re-running for a past
+    month overwrites that vintage.
+
+manifest:
+  path: TODO  # rollup job writes a MANIFEST.json alongside the parquet
+  schema_version: 1
+
+schema:
+  source: TODO
+  # Planned columns (finalize when job ships):
+  #   - vintage_month        (date, first of month)
+  #   - day                  (date, query date)
+  #   - query_class          (string, optional taxonomy of common queries)
+  #   - n_queries            (int)
+  #   - n_unique_users       (int)
+  #   - bytes_returned_p50   (long)
+  #   - bytes_returned_p95   (long)
+  #   - duration_ms_p50      (int)
+  #   - duration_ms_p95      (int)
+  #   - n_failures           (int)
+  #   - failure_modes        (json, optional breakdown)
+
+consumers:
+  - repo: TODO  # internal dashboards / capacity planning notebooks
+    pin: "TODO"
+    notes: "Operational metrics — usage growth, latency trends, failure rates."
+
+drift_detection:
+  trigger: cron
+  schedule: "0 8 * * MON"
+  event: ""
+
+deprecation_window_days: 90
+
+notes: |
+  Coexists with whatever the new nccs-data-api process logs in raw
+  form; this contract covers only the aggregated artifact, not the
+  source log files.
+
+  A future nccs-data-usage repo (per ADR 0008 follow-up) may expand
+  scope to aggregate across API + S3 access logs + dashboard hits +
+  R-package downloads. At that point this contract is either
+  subsumed, or stays as the API-specific slice — decide via a
+  separate ADR when the broader repo is created.
