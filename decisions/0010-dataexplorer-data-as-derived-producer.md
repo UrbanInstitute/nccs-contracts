@@ -1,8 +1,10 @@
 # 0010 — nccs-dataexplorer-data as a Contracted Derived Producer
 
-- **Status:** Accepted (planning; not yet executed)
+- **Status:** Superseded by [0010 — `sector-in-brief-data` Replaces `nccs-dataexplorer-data`](0010-sector-in-brief-data-replaces-dataexplorer-data.md) (2026-05-19 revision)
 - **Date:** 2026-05-15
 - **Deciders:** sole maintainer
+
+> **Superseded.** This draft proposed promoting `nccs-dataexplorer-data` to a contracted derived producer *in place*. On-disk recon on 2026-05-19 found the repo's structural debt makes in-place repair the wrong call. The successor ADR stands up a fresh repo (`sector-in-brief-data`) instead. Read the successor for the current decision; this draft remains as the audit trail of why the in-place approach was abandoned.
 
 ## Context
 
