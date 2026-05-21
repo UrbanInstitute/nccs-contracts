@@ -16,6 +16,9 @@ decisions behind that shape.
 - `decisions/` — Architecture Decision Records (ADRs) capturing the
   *why* behind major calls. The architecture doc describes
   current state; ADRs preserve history.
+- `CONTRIBUTING.md` — how to make changes here: the plan/execute/
+  reconcile loop with downstream repos, when to write a new ADR
+  vs. amend, and the contract YAML conventions.
 
 ## How this repo is used
 

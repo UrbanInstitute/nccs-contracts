@@ -1,6 +1,6 @@
 # 0011 — Decouple the Sector-In-Brief Dashboard from Committed Data
 
-- **Status:** Accepted (planning; not yet executed)
+- **Status:** Accepted (executed 2026-05-21) — see Outcome. One follow-up (API URL fix) remains, gated on [[0008-modernize-dataexplorer-api]].
 - **Date:** 2026-05-15
 - **Deciders:** sole maintainer
 
@@ -55,23 +55,32 @@ parquet. Concretely:
 
 ### Data plumbing
 
-1. **Remove committed parquet/data from the repo:**
+1. **Refresh parquet at app startup from S3 instead of via manual
+   commit.** The `data/*.parquet` files remain in the dashboard
+   repo's working tree but are overwritten from S3 on each app
+   boot via `ensure_data_local()` (`R/s3_sync.R`, called from
+   `R/app.R`). This is a deliberate amendment of the original
+   plan, which proposed removing the parquet outright — see
+   Outcome for rationale.
+
+   Files kept committed (as cache seed) and auto-refreshed:
    - `data/number_nonprofits.parquet`
    - `data/finances.parquet`
    - `data/daf.parquet`
    - `data/pf_grants.parquet`
-   - `data/panel_dd.csv`
-   - Keep `data/nested_geographies.csv` (small, mostly static lookup;
-     decide case-by-case).
+   - `data/data_dictionary.parquet` (replaces older `panel_dd.csv`)
+   - `data/nested_geographies.csv`
 2. **Read from the contracted artifact** per
    `contracts/sector-in-brief.yml` (ADR 0010):
-   - On app startup, fetch the manifest from
-     `s3://nccsdata/dataexplorer/visuals/latest/MANIFEST.json`.
-   - Download referenced parquet to a local cache directory
-     (e.g. `/tmp/sector-in-brief-cache/`) keyed by sha256.
+   - On app startup, sync from
+     `s3://nccsdata/sector-in-brief-sandbox/v2026.05/` (interim —
+     will move to the prod `sector-in-brief/` prefix once the
+     cutover in [[0010-sector-in-brief-data-replaces-dataexplorer-data]]
+     ships).
+   - Use `aws s3 sync` into `data/` (sha256-keyed local cache and
+     `/tmp/...` path not yet implemented — see Outcome).
    - Use `arrow::open_dataset()` / `arrow::read_parquet()` for the
      reads.
-   - Skip downloads when the cached sha256 matches the manifest.
 3. **Pin the contract version** in the dashboard repo: a small
    `data_pins.yml` or equivalent records the
    `sector-in-brief` contract tag the dashboard is built against.
@@ -99,6 +108,27 @@ parquet. Concretely:
 7. **shinyapps.io deployment needs AWS credentials** scoped to
    `s3://nccsdata/dataexplorer/visuals/*` read-only. Add as
    deployment secret; update `deploy/` config accordingly.
+
+## Outcome (as of 2026-05-21)
+
+Decoupling shipped 2026-05-20/21 alongside the new producer ([[0010-sector-in-brief-data-replaces-dataexplorer-data]]).
+
+**Shipped:**
+
+- New `R/s3_sync.R` runs `aws s3 sync` against the contracted artifact and writes into `data/` at app startup. As of the 2026-05-21 prod cutover (see [[0010-sector-in-brief-data-replaces-dataexplorer-data]] Outcome), `S3_PREFIX <- "sector-in-brief"` (`R/s3_sync.R:14`), `VINTAGE <- "v2026.05"` (`R/s3_sync.R:15`).
+- `R/app.R:3` calls `ensure_data_local()` before rendering UI, so every cold start refreshes from S3.
+- Column rename in the dashboard (`Tax Year` → `Year`) landed in the same PR.
+- shinyapps.io deployment carries AWS credentials scoped to the prod prefix.
+
+**Diverged from plan:**
+
+- **Parquet stays committed.** Decision §1 originally proposed *removing* the parquet files from the repo. What shipped instead keeps them committed and overwrites them at startup. Rationale: (a) gives the dashboard a usable cache seed even when S3 is unreachable at cold start; (b) lets shinyapps.io serve a previously-deployed version while the boot-time sync runs; (c) sidesteps the AWS-credential dependency for local dev (clone-and-run still works, then refreshes on first boot if creds are present). The Decision section above has been amended to record the shipped pattern; the original removal plan is no longer the intended state.
+- **No sha256-keyed cache.** Decision §1 proposed a `/tmp/sector-in-brief-cache/` keyed by sha256 from the manifest. What shipped is a flat `aws s3 sync` into `data/` — simpler, but it re-downloads any parquet whose mtime differs from S3 even if the bytes match. Acceptable for now; revisit if cold-start latency becomes an issue.
+
+**Residual work:**
+
+1. The hardcoded `/stg/` API URL in the download tab (§4–5 of the Decision) is **not** addressed by what shipped. Still pending [[0008-modernize-dataexplorer-api]].
+2. Consider promoting the boot-time `aws s3 sync` to a sha256-keyed cache once cold-start latency at the prod prefix is measured.
 
 ## Consequences
 

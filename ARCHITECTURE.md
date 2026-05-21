@@ -27,8 +27,9 @@ the history behind major calls, see the ADRs in `decisions/`.
 | E-file pipeline | Producer — continuous trickle of raw Form 990 filings | `nccs-data-efile` |
 | Merged producer | Derived producer — joins BMF + core (+ efile later) on EIN | TBD (likely new repo) |
 | nccsdata R package | Consumer — programmatic reads with arrow filters + local cache | `nccsdata` |
-| API | Consumer + service tier — parametric queries over the merged artifact via DuckDB | TBD (existing API to modernize) |
-| Dashboard | Consumer — UI sitting on top of the API | TBD (existing dashboard to modernize) |
+| API | Consumer + service tier — parametric queries over the merged artifact via DuckDB | TBD (existing API to modernize per ADR 0008) |
+| Sector-in-Brief data | Derived producer — aggregates BMF/core/SOI/DAF into dashboard-ready parquet (replaces nccs-dataexplorer-data per ADR 0010) | `sector-in-brief-data` |
+| Sector-in-Brief dashboard | Consumer — Shiny UI; reads sector-in-brief data from S3 directly at app startup (not via the API) per ADR 0011 | `sector-in-brief` |
 
 ## 2. Why S3 as the Contract Surface
 
@@ -146,7 +147,11 @@ Cadence determines drift-detection trigger. See
 ## 9. Agentic Operations
 
 The system uses GitHub Copilot agent (Opus) for fuzzy cross-repo
-work, deterministic GitHub Actions for everything else.
+work, deterministic GitHub Actions for everything else. Three
+loops run in steady state; the maintainer is the approver in all
+three, not the debugger.
+
+### Job-to-mechanism map
 
 | Job | Mechanism |
 |---|---|
@@ -157,9 +162,113 @@ work, deterministic GitHub Actions for everything else.
 | Cross-repo update PRs | Copilot agent triggered by issues |
 | PR review on contract-adjacent code | Copilot agent, path-filtered to keep Opus costs bounded |
 
-The agent reads `contracts/` and `ARCHITECTURE.md` for context. The
-contract YAMLs are the only thing it needs to do useful drift work;
-the architecture doc gives it the *why* for borderline cases.
+### Loop 1 — Drift detection
+
+A producer publishes (e.g. `nccs-data-bmf` cuts a new vintage to
+S3). One of two triggers fires depending on cadence:
+
+- **Event trigger** (continuous producers like e-file): the
+  producer's publish step fires a GH Actions workflow that reads
+  `contracts/<name>.yml` and diffs the S3 artifact against it
+  (schema, manifest, sha256, row counts within tolerance).
+- **Cron trigger** (batch producers like BMF): same diff, run from
+  a scheduled workflow in `nccs-contracts` rather than from a
+  publish hook.
+
+Pass is silent. Fail opens a GitHub issue in `nccs-contracts`
+titled `[drift] <contract-name>` with the specific delta. The
+Copilot agent then:
+
+1. Reads the issue, `contracts/<name>.yml`, and any ADR linked
+   from the YAML's notes.
+2. Investigates — checks actual S3 layout, the producer repo's
+   recent commits, whether the contract is stale or the producer
+   drifted.
+3. Drafts a PR in whichever repo owns the fix (producer if it
+   regressed, `nccs-contracts` if the contract is wrong) with a
+   one-paragraph diagnosis.
+4. Posts a comment on the drift issue linking the PR.
+
+The maintainer reviews and merges. The agent does not merge its
+own PRs.
+
+### Loop 2 — Cross-repo updates
+
+The maintainer opens an issue like `[update] sector-in-brief.yml
+pin to v2026.06`. The agent reads the contract, finds every
+repo that pins it (looking at `consumers[].repo` in the YAML),
+and drafts a pin-bump PR in each. Cross-links the PRs back on
+the original issue. The maintainer merges them in dependency
+order.
+
+### Loop 3 — Contract-adjacent PR review
+
+When a PR opens in any repo that touches contract-relevant paths
+(configured by path filter to bound Opus cost — e.g. `R/publish.R`,
+`data/*.parquet`, anything in `contracts/`), the agent leaves an
+automated review checking: does this break the contract? Does it
+match the relevant ADR? Did the author forget to update the YAML
+or `ARCHITECTURE.md`?
+
+This is the cheapest loop and the one that catches "I forgot to
+update the contract" mistakes mid-flight rather than at drift-
+detection time.
+
+### What the agents read
+
+- `contracts/*.yml` — source of truth for schemas, paths, cadence,
+  pins.
+- `ARCHITECTURE.md` — the *why* for borderline judgment calls.
+- ADRs in `decisions/` — fetched by `[[link]]` references from the
+  YAML or this doc when the agent needs deep context for a
+  non-obvious decision.
+
+### Cost shape
+
+Opus is expensive, so the agents run **on triggers, not on
+schedules-that-loop**. The cron jobs are deterministic GH Actions
+(cheap); the agent only wakes when a deterministic check has
+already found drift or a contract-adjacent PR opened. The PR
+review loop uses path filters to skip PRs that can't possibly
+affect the contract surface.
+
+### Day-to-day maintainer load (in steady state)
+
+- Review 0–3 agent-drafted PRs per week (more after producer
+  releases, near-zero between releases).
+- Open the occasional `[update]` issue when a contract version
+  needs bumping.
+- Open ADRs for new decisions — the agent will not initiate these.
+- Reconcile downstream work back into ADRs after execution (see
+  `CONTRIBUTING.md`).
+
+### Not yet built
+
+This section is aspirational. As of 2026-05-21, none of the loops
+above run. What is missing before they can:
+
+1. **A schema validator.** Nothing in this repo currently reads a
+   contract YAML and a parquet file and tells you they agree. The
+   `c5a75fb` commit added the scaffold of a `contracts-validate`
+   GH Actions workflow but no validator behind it.
+2. **Per-producer publish hooks.** Each producer repo needs a
+   workflow step that calls into validation on publish (Loop 1's
+   event trigger).
+3. **The cron/event workflow.** A scheduled GH Action in
+   `nccs-contracts` that opens drift issues when the validator
+   finds delta (Loop 1's cron trigger and Loop 1's issue-opener).
+4. **Copilot agent configuration.** Path filters, repo allowlist,
+   and the system prompt that tells the agent to read `contracts/`
+   and `ARCHITECTURE.md` before drafting any PR.
+5. **A populated contract surface.** Several `contracts/*.yml`
+   files still carry `TODO` markers. The agents are useless
+   without an authoritative spec to diff against; populating these
+   from authoritative sources is prerequisite work per `CLAUDE.md`.
+
+Until those five pieces ship, "drift detection" is the maintainer,
+manually, in a Claude session. The contract YAMLs and ADRs are
+the leverage point — they are what makes the agentic workflow
+possible later.
 
 ## 10. Adding a New Module
 

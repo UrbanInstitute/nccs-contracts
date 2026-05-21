@@ -1,6 +1,6 @@
 # 0010 — `sector-in-brief-data` Replaces `nccs-dataexplorer-data`
 
-- **Status:** Accepted (planning; not yet executed)
+- **Status:** Accepted (executed 2026-05-21; two panels deferred to a future ADR — see Outcome)
 - **Date:** 2026-05-19
 - **Deciders:** sole maintainer
 - **Supersedes:** the 2026-05-15 draft of ADR 0010 (`0010-dataexplorer-data-as-derived-producer.md`) — this revision changes the decision shape after on-disk recon corrected several premises.
@@ -129,6 +129,25 @@ Sequenced; each step gates the next.
 - Adding the SOI 990PF and DAF external sources as contracted upstreams — they remain HTTP/external inputs in the new repo too. Worth a separate ADR if their drift becomes a problem.
 - Producer CI (auto-publish on input drift) — defer until the new repo stabilizes. Manual triggers are fine for the first vintages.
 - The CBSA crosswalk's own contract — it is small enough to ship with the new repo initially; promote to a `nccsdata/lookups/` artifact later if it grows.
+
+## Outcome (as of 2026-05-21, updated after prod cutover)
+
+Migration steps 1–4, 6, 7, and 8 of this ADR shipped between 2026-05-19 and 2026-05-21. Step 5 (six panels) is partial — four of six panels shipped; the remaining two (`gov_grants`, `pf_pri`) are deferred pending a separate column-mapping investigation and will be tracked under a future ADR rather than as residual work here.
+
+**Shipped:**
+
+- `UrbanInstitute/sector-in-brief-data` exists as a fresh repo (initial commit 2026-05-19, not a fork of `nccs-dataexplorer-data`), structured as an R package per the "Repo shape" spec. `DESCRIPTION` declares `aws.s3` as a runtime dependency.
+- `config.yml` centralizes all input and output S3 paths and vintage tag (no hardcoded paths in R code). Production prefix `sector-in-brief` and sandbox prefix `sector-in-brief-sandbox` are both addressable; `publish.R` selects via a `sandbox=TRUE/FALSE` argument.
+- Four of six panels publish: `number_nonprofits`, `finances`, `daf`, `pf_grants`, plus `data_dictionary.parquet`, `nested_geographies.csv`, and `_manifest.json`.
+- Column-naming normalization shipped (single `Year` int32 column; consistent Title Case dimensions). The dashboard side of the rename also landed (see [[0011-decouple-dashboard-from-committed-data]]).
+- A vintage manifest is published alongside each batch as `_manifest.json` at the vintage prefix.
+- **Prod cutover landed 2026-05-21.** First prod vintage published to `s3://nccsdata/sector-in-brief/v2026.05/` with a `latest/` mirror; the S3 prefix migration (archive bucket copies of the 2024-09 `sector-in-brief/` artifact and the older `dataexplorer/visuals/`) ran ahead of it.
+- **Dashboard cutover landed 2026-05-21.** `S3_PREFIX` in `sector-in-brief/R/s3_sync.R:14` flipped from `sector-in-brief-sandbox` to `sector-in-brief`; vintage pinned to `v2026.05`. The `contracts/sector-in-brief.yml` flip out of `INTERIM` state was made in the same beat.
+- **`nccs-dataexplorer-data` archived 2026-05-21.** GitHub `archived: true`; README rewritten as an archive redirect.
+
+**Deferred (out of this ADR's residual scope):**
+
+- **`gov_grants` and `pf_pri` panels.** Both panels remain unwired in the dashboard and unbuilt in `sector-in-brief-data` (`config.yml:34,36` carry year-range stubs but no `panel_gov_grants.R` / `panel_pf_pri.R`). The blocker is upstream: it is not yet known which columns in the new core / e-file artifacts carry the source values for government-grant totals and program-related-investment totals. That investigation is in progress; a separate ADR will document the column-mapping decision and the panel-build plan once the source columns are identified. Until that ADR opens, do not treat the panels as residual work on this one.
 
 ## Consequences
 
