@@ -1,6 +1,6 @@
 # 0002 — Canonical Merged Artifact as a First-Class Producer
 
-- **Status:** Accepted
+- **Status:** Superseded by [[0016-no-canonical-cross-dataset-merge]] (2026-05-21). Consumers compose joins from separate contracted producers (BMF, core, e-file) rather than reading a canonical pre-joined artifact. The Revisit trigger this ADR named ("multiple variant merges needed") fired in practice; see 0016 for rationale.
 - **Date:** 2026-05-14
 - **Deciders:** sole maintainer
 

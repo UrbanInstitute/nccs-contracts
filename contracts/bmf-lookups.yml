@@ -36,7 +36,7 @@ manifest:
   # columns[], sha256, bytes}.
 
 schema:
-  source: TODO  # per-file schemas — list expected columns per lookup file.
+  source: lookups/bmf/latest/MANIFEST.json  # per-file columns[] arrays inside the manifest are the schema source; one entry per CSV listing exact column names and row/byte counts
   # Files observed in MANIFEST as of vintage 2026_05:
   #   activity_code.csv, affiliation_code.csv, asset_code.csv,
   #   deductibility_code.csv, filing_requirement_code.csv,
@@ -47,7 +47,7 @@ schema:
 
 consumers:
   - repo: UrbanInstitute/nccsdata
-    pin: "TODO"
+    pin: "latest"  # bundled into R/sysdata.rda at package-build time; pin a specific vintage for reproducibility
     notes: "Bundled into R/sysdata.rda by data-raw/build_lookups.R; consumed by nccs_catalog(labels = TRUE)."
 
 drift_detection:
@@ -62,4 +62,20 @@ notes: |
   s3://nccsdata/lookups/bmf/{YYYY_MM}/. Consumers pin `latest/` for
   convenience; pin to a specific vintage for reproducibility.
 
-  TODO: promote per-file schemas to ../schemas/lookups/ once stable.
+  ## Reference implementation
+
+  This is currently the only nccs-contracts producer that emits a
+  fully contract-standard manifest (vintage, generated_at, sha256
+  per file, source provenance, idempotent re-uploads). When the
+  cross-cutting "Standardize manifest shape across producers" ADR
+  proposed in [[bmf-master]] is opened, use `publish_lookups.R` as
+  the reference implementation — the other BMF and core producers
+  should converge on this shape.
+
+  ## Open items
+
+  1. Per-file column schemas are currently carried inside MANIFEST's
+     `files.<name>.columns` arrays. Extracting them to standalone
+     YAML under `../schemas/lookups/` would let drift detection
+     check column-set equality more cleanly. Low priority — the
+     manifest is already authoritative.

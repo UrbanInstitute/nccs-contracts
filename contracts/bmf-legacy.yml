@@ -1,5 +1,7 @@
-# TODO: populate from authoritative source (nccs-data-bmf legacy
-# pipeline + actual published artifact). Fields below are stubs.
+# Populated 2026-05-21 from nccs-data-bmf code (R/run_legacy_pipeline.R,
+# R/config.R). The contracted surface is the processed CSV
+# (consumed by master_bmf_builder.R); the intermediate parquet is a
+# build artifact, not a consumer-facing contract.
 
 name: bmf-legacy
 description: >
@@ -13,22 +15,22 @@ producer:
   repo: UrbanInstitute/nccs-data-bmf
   publish_path: R/run_legacy_pipeline.R
 
-format: parquet  # intermediate (parquet) + processed (CSV)
-compression: TODO
-partitioned: false  # partitioned by YYYY_MM vintage directories
+format: csv  # consumer-facing artifact is the processed CSV (master_bmf_builder.R:34 reads bmf_legacy_*_processed.csv); intermediate parquet is a build artifact, not a contract surface
+compression: none  # CSV is uncompressed; intermediate parquet uses arrow's default (snappy)
+partitioned: false  # vintages live in YYYY_MM subdirectories — see versioned_template — but not Hive-partitioned within a vintage
 
 s3:
   bucket: nccsdata
-  # Two co-equal output prefixes (mirrors the modern pipeline shape):
   key_prefix: processed/bmf-legacy/
-  versioned_template: TODO
-  latest_template: processed/bmf-legacy/{YYYY_MM}/bmf_legacy_{YYYY_MM}_processed.csv
-  # Companion outputs:
-  #   intermediate/bmf-legacy/{YYYY_MM}/bmf_legacy_{YYYY_MM}_intermediate.parquet
-  #   intermediate/bmf-legacy/{YYYY_MM}/bmf_legacy_{YYYY_MM}_quality_report.json
-  #   processed/bmf-legacy/{YYYY_MM}/bmf_legacy_{YYYY_MM}_processed.csv
-  #   processed/bmf-legacy/{YYYY_MM}/bmf_legacy_{YYYY_MM}_data_dictionary.csv
-  #   processed/bmf-legacy/{YYYY_MM}/bmf_legacy_{YYYY_MM}_quality_report.json
+  versioned_template: "processed/bmf-legacy/{vintage}/"  # vintage = YYYY_MM; each historical BMF dump is its own vintage subdir
+  latest_template: null  # no latest/ mirror — consumers reference vintages directly. master_bmf_builder.R discovers all vintages by glob and stacks.
+  # Companion outputs at processed/bmf-legacy/{vintage}/:
+  #   bmf_legacy_{vintage}_processed.csv          — canonical artifact (consumer-facing)
+  #   bmf_legacy_{vintage}_data_dictionary.csv    — column metadata
+  #   bmf_legacy_{vintage}_quality_report.json    — validation metrics
+  # Build artifact at intermediate/bmf-legacy/{vintage}/ (not contracted):
+  #   bmf_legacy_{vintage}_intermediate.parquet   — pre-processing snapshot, arrow snappy
+  #   bmf_legacy_{vintage}_quality_report.json    — intermediate-stage metrics
 
 cadence:
   type: on-change
@@ -38,11 +40,11 @@ cadence:
     Source data at legacy/bmf/ does not change.
 
 manifest:
-  path: TODO  # confirm whether legacy pipeline writes a MANIFEST.json per vintage
+  path: null  # producer does NOT emit a contract-standard _manifest.json; only a per-vintage quality report (see Open items)
   schema_version: 1
 
 schema:
-  source: TODO  # should match bmf processed schema for stackability
+  source: "processed/bmf-legacy/{vintage}/bmf_legacy_{vintage}_data_dictionary.csv"  # per-vintage co-located dictionary; expected to remain consistent across vintages so master_bmf_builder can union_by_name with the modern pipeline
 
 consumers:
   - repo: UrbanInstitute/nccs-data-bmf
@@ -64,5 +66,19 @@ notes: |
   historical IRS BMF dumps, 1989–2014). Do not modify legacy/bmf/ —
   it is the canonical input for this pipeline.
 
-  TODO: confirm vintage range actually published under bmf-legacy/
-  (intermediate has 172 objects, processed has 258 as of 2026-05-15).
+  ## Open items
+
+  1. **No `_manifest.json`.** Same gap as [[bmf-master]] and
+     [[bmf-master-geocoded]]. Address as part of the cross-cutting
+     "Standardize manifest shape across producers" ADR, modeled on
+     [[bmf-lookups]]'s reference implementation.
+  2. **Intermediate parquet uses arrow's default (snappy)** while
+     `bmf-master` and `bmf-master-geocoded` use `zstd`. Minor
+     inconsistency worth tightening when the standardization pass
+     above runs — though since the intermediate parquet is not a
+     contracted surface, it's cosmetic from this contract's POV.
+  3. **Vintage range verification pending.** Spot-check confirmed
+     intermediate has 172 objects and processed has 258 as of
+     2026-05-15 — worth listing the exact vintage years covered
+     here once the S3 listing is captured, so drift detection can
+     check vintage completeness rather than just file presence.
