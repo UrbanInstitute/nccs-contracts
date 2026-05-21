@@ -7,23 +7,36 @@
 ## Context
 
 The API has used AWS Athena to query a pre-processed merged table.
-With the merged dataset moving to canonical partitioned parquet
-(see [0002](0002-canonical-merged-artifact.md)), the runtime query
-engine is up for re-evaluation.
+A reconsideration of the runtime query engine: this ADR's original
+framing (2026-05-14) assumed the canonical merged table from
+[[0002-canonical-merged-artifact]] would exist as the API's primary
+target. That ambition has since been dropped per
+[[0016-no-canonical-cross-dataset-merge]] — consumers compose joins
+from the separate contracted producers (BMF, core, e-file) rather
+than reading a pre-merged artifact. The DuckDB-over-parquet
+decision below holds regardless, since DuckDB's design center
+includes query-time joins over multiple parquet files.
 
 The API's query profile is overwhelmingly selective: filter by EIN,
 state, NTEE, or filing year; project a column subset; return a
 small slice. Heavy aggregations across the whole dataset are rare.
 
-The merged table is roughly 50 GB CSV / 10 GB parquet today and
-will grow as e-file is added.
+The merged table was roughly 50 GB CSV / 10 GB parquet at the time
+of this ADR's writing. Post-0016, the API instead reads the
+individual contracted parquets (BMF master + core tiers + e-file)
+and joins at query time; total parquet footprint is similar order
+of magnitude.
 
 ## Decision
 
 The API uses **DuckDB embedded in the API process**, querying
-partitioned parquet on S3 (or a local cache). Athena is retired
-from the API runtime. Athena may be retained for human ad-hoc SQL
-and data quality work; it is not on any consumer's hot path.
+partitioned parquet on S3 (or a local cache). Per
+[[0016-no-canonical-cross-dataset-merge]], the API opens DuckDB
+views across multiple contracted parquets (BMF master, core tiers,
+e-file) and serves joined results per-query rather than reading a
+pre-merged table. Athena is retired from the API runtime. Athena
+may be retained for human ad-hoc SQL and data quality work; it is
+not on any consumer's hot path.
 
 ## Consequences
 

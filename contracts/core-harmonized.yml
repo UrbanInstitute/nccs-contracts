@@ -1,61 +1,30 @@
-# TODO: populate from authoritative source (nccs-data-core repo +
-# actual published artifact). Fields below are stubs.
+# Retired 2026-05-21 per ADR 0015.
+#
+# The harmonize stage in nccs-data-core (R/03_harmonize.R) writes
+# core_{tax_year}_{form}.csv files to s3://nccsdata/intermediate/core/harmonized/
+# as an intermediate, debugging-and-rehydration tier. It is NOT a
+# consumer-facing contract surface; no analyst, API, dashboard, or
+# sibling repo is supposed to read it. Promotion to the contracted
+# surface happens in R/08_upload.R promote_harmonized_to_processed.
+#
+# The original 2026-05-15 stub at this path described a different
+# (pre-`intermediate/`) layout under s3://nccsdata/harmonized/core/
+# that the modern producer never actually wrote to. Retiring the
+# contract removes the gap between spec and reality.
+#
+# Where to look instead:
+#   - core-990.yml          → processed/core/ (the consumer surface)
+#   - core-legacy.yml       → processed_legacy/core/ (rehydration tier;
+#                              consumed internally by the merged build)
+#   - core-panel.yml        → processed_merged/core/ (within-core
+#                              form-type union)
+# The intermediate/core/harmonized/ path remains a build artifact
+# with no contract.
 
 name: core-harmonized
+status: retired
 description: >
-  Harmonized 990 microdata — output of nccs-data-core's harmonize stage
-  (03_harmonize.R). Cross-year column harmonization sits between raw
-  SOI extracts and the processed/core production tier; canonical input
-  for downstream merge/panel work.
-
-producer:
-  repo: UrbanInstitute/nccs-data-core
-  publish_path: R/03_harmonize.R
-
-format: csv  # CSV today; consider promoting to parquet
-compression: none
-partitioned: true  # partitioned by subsection × form × tax_year
-
-s3:
-  bucket: nccsdata
-  key_prefix: harmonized/core/
-  versioned_template: TODO  # CORE-{YYYY}-{SUBSECTION_CLASS}-{FORM}-HRMN-V{N}.csv pattern
-  latest_template: harmonized/core/{subsection_form}/marts/CORE-{tax_year}-{SUBSECTION}-{FORM}-HRMN-V0.csv
-  # Observed subdirectories: 501c3-pc/, 501c3-pf/, 501c3-pz/, 501ce-pc/, 501ce-pz/
-  # Companion files:
-  #   harmonized/core/CORE-HRMN_dd.csv — cross-year data dictionary
-
-cadence:
-  type: annual
-  notes: "Refreshed when new SOI extracts are released and harmonized."
-
-manifest:
-  path: TODO  # confirm whether 03_harmonize.R writes a MANIFEST.json
-  schema_version: 1
-
-schema:
-  source: TODO  # CORE-HRMN_dd.csv is the in-place dictionary today
-
-consumers:
-  - repo: UrbanInstitute/nccs-data-core
-    pin: "n/a"
-    notes: "Internal: feeds processed/core/ via 04_derive_combined.R."
-  - repo: TODO
-    pin: "TODO"
-    notes: "Identify direct consumers (research notebooks, ad-hoc analysts)."
-
-drift_detection:
-  trigger: cron
-  schedule: "0 8 * * MON"
-  event: ""
-
-deprecation_window_days: 90
-
-notes: |
-  Predecessor sector-in-brief harmonized CSVs at harmonized/sector-in-brief/
-  and SOI extract CSVs at harmonized/soi-extract/ were superseded and
-  archived to s3://nccs-data-archive/superseded/ — see ADR 0005.
-
-  TODO: decide whether to promote harmonized/core/ to parquet (vintage
-  stacking would benefit from columnar reads). Coordinate with
-  nccs-data-core's harmonize stage.
+  Retired contract. The cross-year harmonized core CSVs at
+  intermediate/core/harmonized/ are an internal build artifact, not
+  a consumer-facing surface. See ADR 0015 for rationale and
+  contracts/core-990.yml for the consumer-facing replacement.

@@ -1,4 +1,4 @@
-You're in nccs-contracts, the contract-surface repo for the NCCS data system. It is the spine of a multi-repo system: producers (nccs-data-bmf, nccs-data-core, nccs-data-efile, and a forthcoming nccs-data-merged) publish parquet/CSV artifacts to S3; consumers (nccsdata R package, an API, a dashboard) read those artifacts. This repo describes the contract surface, not the code that produces or consumes it.
+You're in nccs-contracts, the contract-surface repo for the NCCS data system. It is the spine of a multi-repo system: producers (nccs-data-bmf, nccs-data-core, nccs-data-efile) publish parquet/CSV artifacts to S3; consumers (nccsdata R package, an API, a dashboard, sector-in-brief-data → sector-in-brief) read those artifacts and compose joins per their use cases. There is no canonical cross-dataset merge (per ADR 0016 superseding ADR 0002). This repo describes the contract surface, not the code that produces or consumes it.
 
 Sibling repos live one level up under `../` (nccsdata is the most mature consumer; the others are at varying states). S3 is the only inter-repo contract surface — code dependencies between sibling repos are intentionally avoided.
 

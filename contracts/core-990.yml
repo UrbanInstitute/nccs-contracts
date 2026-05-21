@@ -1,3 +1,10 @@
+# Populated 2026-05-21 from nccs-data-core code (R/08_upload.R,
+# R/config.R, R/run_pipeline.R). The legacy-pipeline analogue and
+# the within-core form union are contracted separately as
+# core-legacy and core-panel per ADR 0015. The retired
+# `core-harmonized` contract described an intermediate-only
+# debugging tier; see contracts/core-harmonized.yml.
+
 name: core-990
 description: >
   Core 990 datasets derived from IRS Statistics of Income (SOI) extracts.
@@ -8,24 +15,28 @@ description: >
 
 producer:
   repo: UrbanInstitute/nccs-data-core
-  publish_path: R/08_upload.R  # called by R/run_pipeline.R + run_legacy_pipeline.R
+  publish_path: R/08_upload.R  # called by R/run_pipeline.R; uses aws s3 sync of processed/core/
 
-format: csv  # CSV today; parquet target
+format: csv  # CSV today; parquet target via R/09_parquet.R (not yet contract-canonical)
 compression: none
 partitioned: true  # partitioned by tax_year × form_type directories
 
 s3:
   bucket: nccsdata
   key_prefix: processed/core/
-  versioned_template: TODO  # no /vN/ in the path today; vintage encoded in file timestamps
+  versioned_template: null  # no per-vintage subdirectories today; flagged for migration under ADR 0013
   latest_template: "processed/core/{tax_year}/{form}/core_{tax_year}_{form}.csv"
   # Co-located sub-artifacts per (tax_year, form):
-  #   core_{tax_year}_{form}_dictionary.csv  — column metadata
-  #   core_{tax_year}_{form}_quality.html    — validation report
+  #   core_{tax_year}_{form}_dictionary.csv  — column metadata (per-partition)
+  #   core_{tax_year}_{form}_quality.html    — validation report (gzipped on upload per
+  #                                            R/08_upload.R sync_processed_tier; served with
+  #                                            Content-Encoding: gzip)
   #
   # Form types: 990, 990combined, 990ez, 990pf
-  # Coverage observed as of 2026-05-15: tax years 1990, 1991, 1995–present
-  # (gap 1992–1994 maps to the legacy harmonize path; see core-harmonized).
+  # Coverage: per-tax-year. 2012-present uses the modern pipeline
+  # (R/run_pipeline.R). Pre-2012 vintages flow through the legacy
+  # pipeline and land in processed_legacy/core/ — contracted as
+  # core-legacy, not here.
 
 cadence:
   type: annual
@@ -35,19 +46,19 @@ cadence:
     intervening schema fixes update existing year/form CSVs in place.
 
 manifest:
-  path: TODO  # no co-located MANIFEST.json today; promote when added
+  path: null  # producer does NOT emit a contract-standard _manifest.json today; flagged under ADR 0014
   schema_version: 1
 
 schema:
-  source: TODO  # dictionary CSVs are in-place per (tax_year, form); cross-year harmonized dictionary at harmonized/core/CORE-HRMN_dd.csv
+  source: "processed/core/{tax_year}/{form}/core_{tax_year}_{form}_dictionary.csv"  # per-(tax_year, form) dictionary co-located with each partition
 
 consumers:
-  - repo: UrbanInstitute/nccs-data-bmf
+  - repo: UrbanInstitute/sector-in-brief-data
+    pin: "latest"  # reads via sector-in-brief-data/config.yml:9 inputs.core_modern; covers 2012-2024 990 + 990combined
+    notes: "Consumes 990 and 990combined for 2012-2024 (Pt IX 5/6/7/8/9 columns). Legacy years come from core-legacy."
+  - repo: UrbanInstitute/nccs-data-core
     pin: "n/a"
-    notes: "Indirect: bmf-master joins on EIN; uses processed/core for filings columns."
-  - repo: TODO
-    pin: "TODO"
-    notes: "API service tier (forthcoming); direct research consumers."
+    notes: "Internal: input to run_build_panel.R which produces core-panel (processed_merged/core/)."
 
 drift_detection:
   trigger: cron
@@ -62,10 +73,27 @@ notes: |
   but split into separate contracts (core-990, core-990ez, core-990pf,
   core-990combined) if their lifecycles diverge meaningfully.
 
-  Upstream chain: raw/core/soi-extracts → intermediate/core/unpacked →
-  intermediate/core/harmonized → processed/core (this contract).
-  See nccs-data-core/R/config.R for the full prefix map.
+  Upstream chain (all in nccs-data-core):
+    raw/core/soi-extracts
+      → intermediate/core/unpacked
+      → intermediate/core/harmonized   (build artifact; no contract)
+      → processed/core                 (this contract)
+  See nccs-data-core/R/config.R `S3` block for the full prefix map.
 
-  Open: introduce a co-located MANIFEST.json so the standard
-  drift-detection flow applies. Today the dictionary CSV serves as
-  the de-facto schema source.
+  Sibling contracts in the core surface:
+    - [[core-legacy]]    processed_legacy/core/   pre-2012 + rehydration
+    - [[core-panel]]     processed_merged/core/   within-core form union
+
+  ## Open items
+
+  1. **No `_manifest.json`.** Same gap as [[bmf-master]] et al.;
+     address per [[0014-standardize-manifest-shape]].
+  2. **No vintage subdirectories.** Producer overwrites
+     `processed/core/{tax_year}/{form}/...` on each run. Migrate
+     per [[0013-versioned-producer-outputs]].
+  3. **Parquet target deferred.** `nccs-data-core/R/09_parquet.R`
+     exists and writes parquet copies, but parquet output is not
+     yet the contract-canonical format. Decide whether to promote
+     parquet to canonical (with CSV mirror) or dual-publish; tied
+     to [[0003-retire-athena-for-duckdb]] which assumes parquet
+     reads.

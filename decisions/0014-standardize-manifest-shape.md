@@ -46,7 +46,7 @@ Producers not yet emitting a manifest at all:
   (has row counts but no sha256 sums, no input provenance).
 - `bmf-master-geocoded` — same pattern as `bmf-master`.
 - `bmf-legacy` — same pattern.
-- `core-harmonized`, `core-990` — TBD (contracts not yet populated).
+- `core-990`, `core-legacy`, `core-panel` — write only quality reports today; manifests not yet emitted. `core-harmonized` is retired (intermediate-only build artifact, no contract per ADR 0015).
 - `efile`, `merged` — not yet built.
 
 ### Why this matters
@@ -204,8 +204,7 @@ In-scope for this ADR:
 - Migrate `sector-in-brief-data`'s `_manifest.json` to add the
   `columns[]` per file and switch `built_at` to UTC `Z` format.
 - Add manifests to `bmf-master`, `bmf-master-geocoded`, `bmf-legacy`.
-- Design manifests into `core-harmonized` and `core-990` when those
-  contracts are populated.
+- Add manifests to `core-990`, `core-legacy`, and `core-panel`.
 
 Out of scope:
 
@@ -242,9 +241,11 @@ per-vintage manifests.
 4. **`bmf-legacy`.** Same pattern; piggyback on whatever helper
    the BMF master writes (the legacy pipeline reuses
    `nccs-data-bmf/R/config.R` helpers).
-5. **`core-harmonized`, `core-990`.** Design in from the start
-   when those contracts are populated and the publish scripts
-   touched.
+5. **`core-990`, `core-legacy`, `core-panel`.** Extend
+   `R/08_upload.R` (and `R/run_build_panel.R` for the panel
+   producer) to emit `_manifest.json` alongside the per-partition
+   CSV outputs. All three share `R/08_upload.R`'s sync logic so a
+   single helper covers them.
 
 ### Implementation notes
 

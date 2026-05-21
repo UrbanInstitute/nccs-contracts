@@ -17,8 +17,9 @@ writing to vintage-stamped subdirectories. Concretely (as of
 | `bmf-master-geocoded` | none — `geocoding/bmf-master/merged/bmf_master_geocoded.parquet` overwritten each run | n/a |
 | `bmf-legacy` | per-vintage `processed/bmf-legacy/{YYYY_MM}/` ✓ | no `latest/` |
 | `bmf-lookups` | per-vintage `lookups/bmf/{YYYY_MM}/` ✓ | `lookups/bmf/latest/` ✓ |
-| `core-harmonized` | TBD (contract not yet populated) | TBD |
-| `core-990` | TBD (contract not yet populated) | TBD |
+| `core-990` | none — `processed/core/{tax_year}/{form}/...` overwritten in place | n/a |
+| `core-legacy` | none — `processed_legacy/core/{tax_year}/{form}/...` overwritten in place | n/a |
+| `core-panel` | none — `processed_merged/core/{tax_year}/{form}/...` overwritten in place | n/a |
 | `sector-in-brief` | per-vintage `sector-in-brief/v{YYYY.MM}/` ✓ | `sector-in-brief/latest/` ✓ |
 | `efile`, `merged` | not yet built | n/a |
 
@@ -146,9 +147,10 @@ This ADR is in-scope for:
   vintage)
 - `bmf-legacy` — migrate (add `latest/`; vintage subdirs already
   exist)
-- `core-harmonized` — design in from the start (contract not yet
-  populated)
-- `core-990` — design in from the start
+- `core-990` — migrate
+- `core-legacy` — migrate
+- `core-panel` — migrate (in lockstep with `core-990` and
+  `core-legacy`, since this artifact unions them)
 
 Out of scope (already compliant; cited as reference
 implementations):

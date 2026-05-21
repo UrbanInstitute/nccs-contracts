@@ -1,0 +1,101 @@
+# Populated 2026-05-21 per ADR 0015. Renamed from merged.yml,
+# which had been a v0 stub for the canonical cross-dataset merge
+# envisioned in ADR 0002. That ambition is dropped per ADR 0016;
+# this contract describes the *within-core* form-type union that
+# actually exists at s3://nccsdata/processed_merged/core/.
+
+name: core-panel
+description: >
+  Within-core form-type union, partitioned by tax_year. Two file
+  families: `990combined` files (990 + 990-EZ unioned on the common
+  variable set) and `990pf` files (separately, since PF columns
+  don't align with 990/EZ). Produced by
+  nccs-data-core/R/run_build_panel.R, which composes modern
+  (core-990) and legacy (core-legacy) inputs into a single per-tax-
+  year panel. NOT a cross-dataset merge (that ambition is dropped
+  per ADR 0016); this artifact joins data only within the core
+  surface.
+
+producer:
+  repo: UrbanInstitute/nccs-data-core
+  publish_path: R/run_build_panel.R  # uses promote_harmonized_to_processed_merged + run_upload_merged in R/08_upload.R
+
+format: csv
+compression: none
+partitioned: true  # partitioned by tax_year × form_type ({990combined, 990pf})
+
+s3:
+  bucket: nccsdata
+  key_prefix: processed_merged/core/
+  versioned_template: null  # no per-vintage subdirectories today; flagged for migration under ADR 0013
+  latest_template: "processed_merged/core/{tax_year}/{form}/core_{tax_year}_{form}.csv"
+  # Form types written (from R/run_build_panel.R:129,136):
+  #   990combined  — 990 + 990-EZ unioned on the common variable set
+  #   990pf        — 990-PF, separately (column-set incompatible with 990/EZ)
+  # Co-located sub-artifacts per (tax_year, form), same shape as
+  # core-990 and core-legacy:
+  #   core_{tax_year}_{form}_dictionary.csv  — column metadata
+  #   core_{tax_year}_{form}_quality.html    — validation report
+
+cadence:
+  type: on-change
+  notes: >
+    Rebuilt whenever the upstream core-990 or core-legacy inputs
+    update. Driven manually today (R/run_build_panel.R is
+    operator-invoked); future versions should trigger on input
+    contract publication.
+
+manifest:
+  path: null  # same gap as core-990 and core-legacy; address per ADR 0014
+  schema_version: 1
+
+schema:
+  source: "processed_merged/core/{tax_year}/{form}/core_{tax_year}_{form}_dictionary.csv"  # per-partition dictionary
+
+consumers:
+  - repo: UrbanInstitute/sector-in-brief-data
+    pin: "latest"  # reads via sector-in-brief-data/config.yml:11 inputs.core_pf; covers 990-PF panel
+    notes: "Consumes the 990pf family only (single form, no intersection issue with the 990combined files). 990combined is consumed from core-990 (modern) and core-legacy directly."
+
+drift_detection:
+  trigger: event
+  schedule: ""
+  event: "publish-input"  # core-990 or core-legacy refresh
+
+deprecation_window_days: 90
+
+notes: |
+  Sibling contracts in the core surface (this artifact composes from them):
+    - [[core-990]]    processed/core/         2012-present, modern pipeline
+    - [[core-legacy]] processed_legacy/core/  pre-2012, legacy pipeline
+
+  ## Scope is deliberately narrow
+
+  This contract describes a *within-core* form-type union — not the
+  cross-dataset BMF×core×efile merge that the original
+  contracts/merged.yml stub (and [[0002-canonical-merged-artifact]])
+  envisioned. The cross-dataset merge is dropped per
+  [[0016-no-canonical-cross-dataset-merge]]; consumers compose
+  joins from separate contracted producers (BMF, core, e-file) at
+  their layer.
+
+  The reason this artifact exists despite the no-canonical-merge
+  decision: unioning 990 and 990-EZ on common variables is a
+  within-dataset normalization that every consumer would otherwise
+  duplicate. The 990-PF sibling is here because it shares the same
+  per-tax-year shape but with an incompatible column set.
+
+  ## Open items
+
+  1. **No `_manifest.json`.** Same gap as the rest of the core
+     surface; address per [[0014-standardize-manifest-shape]].
+  2. **No vintage subdirectories.** Migrate per
+     [[0013-versioned-producer-outputs]] in lockstep with core-990
+     and core-legacy.
+  3. **Verify exact filename pattern on S3.** The latest_template
+     above (`core_{tax_year}_{form}.csv`) assumes parity with the
+     core-990 / core-legacy naming convention. Spot-check the
+     actual paths on first S3 inspection — if the merged-panel
+     producer uses a different filename (e.g.
+     `core_{tax_year}_990combined.csv` without the subdirectory
+     split), correct the template here.

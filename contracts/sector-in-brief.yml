@@ -7,8 +7,9 @@
 name: sector-in-brief
 description: >
   Aggregated, dashboard-ready parquet artifact derived from
-  bmf-master-geocoded, core-harmonized, legacy/core, and external
-  SOI/DAF sources. Powers the sector-in-brief Shiny dashboard
+  bmf-master-geocoded, the three core tiers (core-990, core-legacy,
+  core-panel), and external SOI/DAF sources. Powers the
+  sector-in-brief Shiny dashboard
   (https://nccs-urban.shinyapps.io/sector-in-brief/). Consumers
   read pre-aggregated parquet (number of nonprofits, totals by
   state/subsector/size, DAF metrics, PF grants) rather than
@@ -75,15 +76,24 @@ consumers:
 drift_detection:
   trigger: event
   schedule: ""
-  event: "publish-input"  # bmf-master-geocoded, core-harmonized, or external SOI/DAF refresh
+  event: "publish-input"  # bmf-master-geocoded, core-990, core-legacy, core-panel, or external SOI/DAF refresh
 
 deprecation_window_days: 90
 
 notes: |
-  Derived producer pattern (per ADR 0002). Inputs are themselves
-  contracted artifacts: [[bmf-master-geocoded]], [[core-harmonized]],
-  plus uncontracted external sources (IRS SOI 990PF xlsx; DAF e-file
-  returns).
+  Derived producer pattern. Inputs are themselves contracted
+  artifacts read via sector-in-brief-data/config.yml:
+    - [[bmf-master-geocoded]]   (inputs.bmf)
+    - [[core-legacy]]           (inputs.core_legacy; 990combined 1989-2011)
+    - [[core-990]]              (inputs.core_modern; 990 + 990combined 2012-2024)
+    - [[core-panel]]            (inputs.core_pf; 990-PF panel)
+  Plus uncontracted external sources (IRS SOI 990PF xlsx; DAF
+  e-file returns).
+
+  Per [[0016-no-canonical-cross-dataset-merge]], this consumer is
+  itself a model of the consumer-composes-joins pattern: it reads
+  four contracted upstreams and derives panel-specific aggregates
+  rather than pulling from a pre-joined canonical artifact.
 
   ## Open items
 

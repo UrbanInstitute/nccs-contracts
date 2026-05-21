@@ -25,7 +25,7 @@ the history behind major calls, see the ADRs in `decisions/`.
 | BMF pipeline | Producer — geocoded master + dated vintages + lookups | `nccs-data-bmf` |
 | Core 990 pipeline | Producer — IRS SOI extracts, one row per filing | `nccs-data-core` |
 | E-file pipeline | Producer — continuous trickle of raw Form 990 filings | `nccs-data-efile` |
-| Merged producer | Derived producer — joins BMF + core (+ efile later) on EIN | TBD (likely new repo) |
+| Consumer-composed joins | Consumers compose BMF × core × e-file joins per use case (per ADR 0016 — no canonical cross-dataset merge). The within-core form union is contracted as `core-panel`. | n/a |
 | nccsdata R package | Consumer — programmatic reads with arrow filters + local cache | `nccsdata` |
 | API | Consumer + service tier — parametric queries over the merged artifact via DuckDB | TBD (existing API to modernize per ADR 0008) |
 | Sector-in-Brief data | Derived producer — aggregates BMF/core/SOI/DAF into dashboard-ready parquet (replaces nccs-dataexplorer-data per ADR 0010) | `sector-in-brief-data` |

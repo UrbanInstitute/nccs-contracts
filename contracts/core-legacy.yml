@@ -1,0 +1,90 @@
+# Populated 2026-05-21 per ADR 0015. Parallel to core-990 but
+# scoped to the legacy pipeline (pre-2012 + rehydration tier).
+# Primary consumer is the internal merged-panel build; external
+# consumption is limited but real (sector-in-brief-data reads it
+# for 1989-2011 990combined data).
+
+name: core-legacy
+description: >
+  Pre-2012 core 990 microdata processed through the legacy
+  pipeline (R/run_legacy_pipeline.R in nccs-data-core). Parallel
+  shape to core-990 — partitioned by tax_year × form_type — but
+  covers vintages the modern pipeline doesn't reach. Per the
+  producer's comment in R/08_upload.R:255, this tier exists for
+  "parity and rehydration — not as the primary distribution path";
+  it is nonetheless contracted because drift here silently breaks
+  the merged-panel build.
+
+producer:
+  repo: UrbanInstitute/nccs-data-core
+  publish_path: R/run_legacy_pipeline.R  # uploads via R/08_upload.R run_upload_legacy
+
+format: csv
+compression: none
+partitioned: true  # partitioned by tax_year × form_type
+
+s3:
+  bucket: nccsdata
+  key_prefix: processed_legacy/core/
+  versioned_template: null  # no per-vintage subdirectories today; flagged for migration under ADR 0013
+  latest_template: "processed_legacy/core/{tax_year}/{form}/core_{tax_year}_{form}.csv"
+  # Co-located sub-artifacts per (tax_year, form), same shape as
+  # core-990:
+  #   core_{tax_year}_{form}_dictionary.csv  — column metadata
+  #   core_{tax_year}_{form}_quality.html    — validation report
+  #
+  # Coverage: pre-2012 vintages. Per nccs-data-core/R/config.R:59
+  # the legacy raw input "mirror of s3://nccsdata/legacy/core/,
+  # pre-2012 PZ + PF only" — so the realized output form types
+  # are narrower than the modern pipeline's. Verify exact tax-year
+  # × form coverage during S3 spot-check.
+
+cadence:
+  type: on-change
+  notes: >
+    Rebuilt only when the legacy pipeline is re-run, which is
+    rare — only when legacy pipeline logic changes or a new
+    historical vintage is digitized. The upstream source data at
+    s3://nccsdata/legacy/core/ does not change.
+
+manifest:
+  path: null  # same gap as core-990; address per ADR 0014
+  schema_version: 1
+
+schema:
+  source: "processed_legacy/core/{tax_year}/{form}/core_{tax_year}_{form}_dictionary.csv"  # per-partition dictionary
+
+consumers:
+  - repo: UrbanInstitute/nccs-data-core
+    pin: "n/a"
+    notes: "Internal: input to run_build_panel.R which unions modern + legacy into core-panel (processed_merged/core/)."
+  - repo: UrbanInstitute/sector-in-brief-data
+    pin: "latest"  # reads via sector-in-brief-data/config.yml:6 inputs.core_legacy; covers 1989-2011 990combined
+    notes: "Consumes 990combined for 1989-2011 (the only form available pre-2012, carries Pt IX 5+7 inline)."
+
+drift_detection:
+  trigger: cron
+  schedule: "0 8 * * MON"
+  event: ""
+
+deprecation_window_days: 90
+
+notes: |
+  Sibling contracts in the core surface:
+    - [[core-990]]    processed/core/         2012-present, modern pipeline
+    - [[core-panel]]  processed_merged/core/  within-core form union built on top of both
+
+  ## Open items
+
+  1. **No `_manifest.json`.** Same gap as the rest of the BMF and
+     core surface; address per [[0014-standardize-manifest-shape]].
+  2. **No vintage subdirectories.** Re-runs of the legacy pipeline
+     overwrite in place. Lower urgency than core-990 (legacy
+     pipeline is rarely re-run) but should converge with the rest
+     of the producers per [[0013-versioned-producer-outputs]].
+  3. **Tax-year × form coverage not fully enumerated.** Per the
+     legacy raw note, coverage is "pre-2012 PZ + PF only" in the
+     upstream — but the realized published form types in
+     processed_legacy/core/ should be verified by S3 listing.
+     When confirmed, list them explicitly so drift detection can
+     check coverage completeness, not just file presence.
