@@ -35,9 +35,9 @@ enough that a future maintainer (including future-you) understands
 ### 2. Execute downstream
 
 Make the actual code changes in the relevant sibling repo
-(`sector-in-brief`, `nccs-data-bmf`, etc., one level up from this
-repo at `../`). The ADR is your reference; you do not update it
-during execution.
+(`sector-in-brief`, `nccs-data-bmf`, etc., co-located alongside
+this repo at `/root/NCCS/*`). The ADR is your reference; you do
+not update it during execution.
 
 **Leave ADR breadcrumbs in commit messages.** Format:
 
@@ -57,8 +57,9 @@ acted on.
 ### 3. Reconcile here
 
 Once the downstream work has settled, return to a `nccs-contracts`
-session — the sibling repos are co-located at `/root/NCCS/*` so a
-session opened in this repo can read them directly. Then:
+session. All NCCS repos are peers under `/root/NCCS/*`, so a
+session opened in this repo can read the sibling repos directly
+without changing directories. Then:
 
 1. **Flip the ADR Status** to one of:
    - `Accepted (executed YYYY-MM-DD)` — everything in the Decision
@@ -196,5 +197,5 @@ When closing the loop on an executed ADR, walk this:
 - [ ] `INTERIM` markers added if state is transitional
 - [ ] `ARCHITECTURE.md` updated if system map / current-state shifted
 - [ ] Downstream commits carry `ADR NNNN` breadcrumbs (verify with
-      `git log --grep "ADR NNNN" -- ../<repo>`)
+      `git log --grep "ADR NNNN" -C /root/NCCS/<repo>`)
 - [ ] Stale Follow-up bullets in the ADR removed or marked done

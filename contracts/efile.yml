@@ -1,26 +1,45 @@
 # Producer (UrbanInstitute/nccs-data-efile) not yet built. This
-# contract describes the planned shape per ADR 0007; fields fill in
-# as the pipeline is implemented.
+# contract describes the planned shape per ADR 0007 as amended by
+# ADR 0017; fields fill in as the pipeline is implemented.
 
 name: efile
 description: >
   Form 990 e-file data published as form-agnostic parquet under
-  Urban Institute ownership. Parses raw XML from the GivingTuesday
-  data lake into a normalized columnar artifact with semantic
-  (not form-version-anchored) column names. See ADR 0007.
+  Urban Institute ownership. Parses raw XML into a normalized
+  columnar artifact with semantic (not form-version-anchored) column
+  names. See ADR 0007 (original framing) and ADR 0017 (Phase 0
+  vertical slice and amended concordance posture).
 
-  Phase 1 (MVP) scope: Form 990 only, tax years 2020+, headline
-  fields only (revenue, expenses, assets, executive compensation,
-  top-level narratives). Phase 2 adds detailed schedules + 990EZ.
-  Phase 3 adds 990PF.
+  Phase 0 (vertical slice, ships first per ADR 0017): two filing-grain
+  columns — `government_grants` (Form 990 Part VIII line 1e) and
+  `program_related_investments_total` (Form 990-PF Part IX-B) —
+  scoped to unblock the sector-in-brief dashboard panels. 990 and
+  990-PF, tax years 2020+.
+
+  Phase 1 (MVP): Form 990 only, tax years 2020+, headline fields
+  (revenue, expenses, assets, executive compensation, top-level
+  narratives). Phase 2 adds detailed schedules + 990EZ + backfill to
+  2009. Phase 3 adds full 990PF.
 
 # --- Upstream sources (not part of this contract; consumed, not published) ---
-# - GivingTuesday data lake — canonical raw XML source
+# Primary upstream (per ADR 0017):
+# - GivingTuesday data lake — raw IRS XML mirror with navigation indices
+#     s3://gt990datalake-rawdata/  (anonymous --no-sign-request, us-east-1)
+#     Indices/990xmls/      — JSON filing manifests (EIN, form, year, S3 key)
+#     EfileData/XmlFiles/   — raw IRS 990 XMLs
 #     https://990data.givingtuesday.org/
+# Fallback upstream (tested but dormant; activates if GT lake unavailable >7d):
+# - IRS direct downloads — per-year ZIPs, 2019-2026
+#     https://www.irs.gov/charities-non-profits/form-990-series-downloads
+# Reference (not consumed at runtime):
 # - s3://nccs-efile/                — NODC's parallel pipeline outputs
 #     (researcher-facing CSV, owned by Nonprofit Open Data Collective;
 #      retained as a parallel researcher tool; not the upstream for
 #      this producer).
+# - irs-efile-master-concordance-file (ODC-By licensed) — vendored at
+#     pinned commit SHA during Phase 0 and Phase 0.5 transition window;
+#     mirrored to s3://nccsdata/processed/efile/concordance/. Phase 1+
+#     drops this to an automated comparison artifact only.
 # - s3://nccsdata/xml/               — 200k 990 XMLs (provenance
 #     unverified as of 2026-05-15; pending separate audit; not the
 #     upstream for this producer).
@@ -40,11 +59,19 @@ partitioned: true
 s3:
   bucket: nccsdata
   key_prefix: processed/efile/
-  versioned_template: TODO
-  latest_template: "processed/efile/{filing_year}/{form_type}/efile_{filing_year}_{form_type}.parquet"
-  # Companion files per (filing_year, form_type):
-  #   efile_{filing_year}_{form_type}_dictionary.csv  — column metadata
-  #   efile_{filing_year}_{form_type}_quality.json    — validation report
+  versioned_template: TODO  # pinned per ADR 0013 when Phase 0 publishes
+  latest_template: "processed/efile/{filing_year}/{form_type}/efile_{filing_year}_{form_type}.parquet"  # Phase 1+ shape
+  # Phase 0 layout (per ADR 0017), ships first:
+  #   processed/efile/phase0/{vintage}/government_grants.parquet
+  #   processed/efile/phase0/{vintage}/program_related_investments.parquet
+  #   processed/efile/phase0/{vintage}/government_grants_dictionary.csv
+  #   processed/efile/phase0/{vintage}/program_related_investments_dictionary.csv
+  #   processed/efile/phase0/{vintage}/government_grants_quality.json
+  #   processed/efile/phase0/{vintage}/program_related_investments_quality.json
+  #   processed/efile/phase0/{vintage}/_manifest.json
+  #   processed/efile/phase0/latest/  (symlink-equivalent copy)
+  # Phase 1+ layout (planned): partitioned by filing_year × form_type;
+  # companion *_dictionary.csv and *_quality.json per partition.
 
 cadence:
   type: continuous
@@ -55,24 +82,66 @@ cadence:
     cron-style weekly check, not the publish hook.
 
 manifest:
-  path: TODO  # producer will write MANIFEST.json per published vintage
+  path: TODO  # producer writes _manifest.json per published vintage per ADR 0014
   schema_version: 1
+  # Phase 0 manifest carries additional fields per ADR 0017:
+  #   nodc_concordance_sha          string   # exact NODC commit used as build input
+  #   nodc_concordance_s3_path      string   # S3 mirror location of the vendored file
+  #   gt_lake_snapshot_timestamp    string   # ISO8601 of the GT data lake read window
+  #   xsd_verification_passed       bool     # build-time XPath existence checks
+  #   value_distribution_summary    object   # per-field null rate, range, outliers
 
 schema:
-  source: TODO
-  # Schema design is the load-bearing engineering work for this
-  # producer. Form-agnostic semantic names are mapped from the NODC
-  # concordance (irs-efile-master-concordance-file, MIT-licensed,
-  # adapted with attribution); 990PF mappings built from IRS XSD.
-  # Once stable, promote to ../schemas/efile.yml.
+  source: TODO  # dictionary CSVs ship per file; promote stable schema to ../schemas/efile.yml when Phase 1 lands
+  # Per ADR 0017: nccs-data-efile owns a two-layer concordance,
+  # producer-internal infrastructure in a public repo:
+  #   Layer 1 — mechanical per-(tax_year, version) XPath inventory
+  #             generated from IRS XSDs; regenerated on each IRS
+  #             schema release; never hand-edited.
+  #   Layer 2 — small curated semantic dictionary mapping NCCS-owned
+  #             snake_case names to lists of (tax_year, version,
+  #             xpath) claims, with per-field IRS-instruction
+  #             citations. The reviewable artifact.
+  #
+  # Phase 0 uses NODC's concordance.csv as a vendored build input
+  # only (pinned by commit SHA, mirrored to s3://nccsdata/processed/
+  # efile/concordance/{nodc_sha}_{date}.csv). NODC is licensed ODC-By
+  # (Open Data Commons Attribution) — *not* MIT as stated in earlier
+  # drafts of ADR 0007. Attribution obligation runs in nccs-data-efile
+  # README and propagates into the per-vintage _manifest.json.
+  # Phase 1+ runs natively off the NCCS two-layer concordance;
+  # NODC drops to an automated comparison artifact (not blocking).
+  #
+  # Build-time trust verification (every Phase 0 build, per ADR 0017):
+  #   1. XSD existence check — each NODC XPath claim resolved against
+  #      the IRS XSD for that (tax_year, version); build fails on miss.
+  #   2. Value-distribution sanity check — sampled extraction asserts
+  #      type, range, null-rate expectations; egregious outliers fail.
+  #   3. IRS instruction spot-check — one-time human cross-reference
+  #      per field at adoption, citation captured in layer 2.
+  #
+  # Phase 0 columns (2 total, both filing-grain):
+  #   government_grants                       double  # Form 990 Part VIII line 1e
+  #     NODC variable_name:  F9_08_REV_CONTR_GOVT_GRANT
+  #     XPath variants:      /Return/ReturnData/IRS990/{Form990PartVIII/,}GovernmentGrants{Amt,}
+  #   program_related_investments_total       double  # Form 990-PF Part IX-B aggregate
+  #     NODC variable_name:  PF_09_PROG_RLTD_INVEST_AMT_TOT
+  #     XPath variants:      /Return/ReturnData/IRS990PF/{SumOfProgramRelatedInvestments/Total,SumOfProgramRelatedInvstGrp/TotalAmt}
+  # Plus identifying columns: ein (string), tax_year (int32),
+  # form_type (string, "990" or "990PF"), filing_receipt_id (string).
 
 consumers:
-  - repo: TODO  # merged producer (per ADR 0002) will consume
-    pin: "TODO"
-    notes: "Joined with bmf-master and core-990 in the canonical merged artifact."
+  - repo: UrbanInstitute/sector-in-brief-data  # Phase 0 primary consumer per ADR 0017
+    pin: "phase0/latest"
+    notes: >
+      Aggregates filing-grain government_grants and
+      program_related_investments_total to the sector-in-brief
+      dimension grain (Organization Type × Subsector × Size ×
+      Census geography × Year), joining EIN against
+      bmf-master-geocoded. See ADR 0017 §3.
   - repo: TODO  # API service tier (per ADR 0003)
     pin: "TODO"
-    notes: "DuckDB reads partitioned parquet directly when merged is unavailable."
+    notes: "DuckDB reads partitioned parquet directly. Activates with Phase 1+ headline-990 surface."
 
 drift_detection:
   trigger: cron

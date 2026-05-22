@@ -1,8 +1,9 @@
 # 0007 — E-file as a Contracted Urban-Owned Producer
 
-- **Status:** Accepted (planning; pipeline not yet built)
+- **Status:** Accepted (planning; pipeline not yet built); amended by [[0017-efile-phase-0-vertical-slice]] on 2026-05-22
 - **Date:** 2026-05-15
 - **Deciders:** sole maintainer
+- **Amended by:** [[0017-efile-phase-0-vertical-slice]] — inserts a Phase 0 vertical slice ahead of the original Phase 1; corrects the NODC license claim (ODC-By, not MIT); replaces "adapt NODC concordance with attribution" with a two-layer NCCS-owned concordance (mechanical XSD inventory + curated semantic dictionary) built during a Phase 0.5 workstream, with NODC vendored at a pinned SHA as a *bounded transition input* — not a permanent reference. Read this ADR for the original framing; read 0017 for the current intended state.
 
 ## Context
 
@@ -57,18 +58,35 @@ follows the same shape as `nccs-data-bmf` and `nccs-data-core`:
   semantic column names (independent of any specific IRS form
   revision year). Published under `s3://nccsdata/processed/efile/`
   to live alongside `processed/bmf/` and `processed/core/`.
-- **Concordance handling:** the NODC concordance file (MIT-licensed,
-  under `Nonprofit-Open-Data-Collective/irs-efile-master-concordance-file`)
-  may be adapted with attribution as the XPath → field source. A
-  translation layer maps NODC's form-version-anchored column names
-  to NCCS form-agnostic names. 990PF concordance is built from IRS
-  XSD (NODC does not cover 990PF).
+- **Concordance handling:** *(amended by [[0017]])* `nccs-data-efile`
+  owns a two-layer concordance: (1) a mechanical XPath inventory
+  generated per (tax_year, version) directly from IRS XSDs, never
+  hand-edited; (2) a small curated semantic dictionary mapping
+  NCCS-owned `snake_case` names to lists of (tax_year, version,
+  xpath) claims, with per-field IRS-instruction citations. NODC's
+  concordance file (under
+  `Nonprofit-Open-Data-Collective/irs-efile-master-concordance-file`,
+  licensed under **ODC-By** — Open Data Commons Attribution, *not*
+  MIT as originally stated) is used as a vendored build input
+  during Phase 0 and the Phase 0.5 transition window only, pinned
+  by commit SHA and mirrored to S3. Phase 1+ extracts run natively
+  off the NCCS two-layer concordance; NODC drops to an automated
+  comparison artifact, not a runtime dependency. NODC covers 990PF
+  comprehensively (correction to earlier framing); the case for
+  NCCS-owned concordance is sovereignty, not coverage.
 - **Cadence:** monthly. IRS publishes batches monthly; downstream
   consumers do not need sub-monthly latency.
 - **Implementation language:** R, matching `nccs-data-bmf` and
   `nccs-data-core` to share patterns and infrastructure code.
 
-**MVP scope** (Phase 1, ~4–6 weeks of focused work):
+**Phase 0** *(inserted by [[0017]], ships first)*: a vertical slice
+covering exactly the two columns the `sector-in-brief` dashboard
+needs — `government_grants` from Form 990 Part VIII line 1e, and
+`program_related_investments_total` from Form 990-PF Part IX-B —
+both at filing grain (EIN × tax_year × form_type), 2020+. Output
+under `processed/efile/phase0/`. See 0017 for the full scope.
+
+**Phase 1 MVP scope** (~4–6 weeks of focused work, ships after Phase 0):
 
 - Form type: 990 only.
 - Tax years: 2020 onward.

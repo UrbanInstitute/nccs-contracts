@@ -32,8 +32,13 @@ s3:
   #   number_nonprofits.parquet, finances.parquet, daf.parquet,
   #   pf_grants.parquet, data_dictionary.parquet,
   #   nested_geographies.csv, _manifest.json
-  # Not yet published (ADR 0010 step 5 incomplete):
+  # Not yet published (deferred — ADR 0017):
   #   gov_grants.parquet, pf_pri.parquet
+  # These two panels are sourced from the `efile` Phase 0 vertical
+  # slice (Form 990 Part VIII line 1e and Form 990-PF Part IX-B).
+  # They ship after nccs-data-efile publishes its first Phase 0
+  # vintage; see ADR 0017 for the deferral rationale and the
+  # explicit rejection of NODC-interim wiring.
 
 cadence:
   type: on-change
@@ -76,7 +81,7 @@ consumers:
 drift_detection:
   trigger: event
   schedule: ""
-  event: "publish-input"  # bmf-master-geocoded, core-990, core-legacy, core-panel, or external SOI/DAF refresh
+  event: "publish-input"  # bmf-master-geocoded, core-990, core-legacy, core-panel, efile (Phase 0 once it ships), or external SOI/DAF refresh
 
 deprecation_window_days: 90
 
@@ -87,6 +92,10 @@ notes: |
     - [[core-legacy]]           (inputs.core_legacy; 990combined 1989-2011)
     - [[core-990]]              (inputs.core_modern; 990 + 990combined 2012-2024)
     - [[core-panel]]            (inputs.core_pf; 990-PF panel)
+    - [[efile]]                 (Phase 0 vertical slice — gov_grants
+                                 and pf_pri panels only; pending
+                                 nccs-data-efile producer build per
+                                 ADR 0017)
   Plus uncontracted external sources (IRS SOI 990PF xlsx; DAF
   e-file returns).
 
@@ -98,9 +107,12 @@ notes: |
   ## Open items
 
   1. `gov_grants.parquet` and `pf_pri.parquet` not yet built.
-     Deferred to a future ADR — blocked on identifying which
-     columns in the new core / e-file artifacts carry the source
-     values. When the panels ship, add to s3.* file list above and
+     Source columns resolved per [[0017-efile-phase-0-vertical-slice]]:
+     Form 990 Part VIII line 1e (`government_grants`) and Form 990-PF
+     Part IX-B (`program_related_investments_total`), both delivered
+     by the `efile` Phase 0 vertical slice. Wait for that producer
+     to publish; do not wire to NODC's CSV in the interim (ADR 0017
+     §3). When the panels ship, add to s3.* file list above and
      include their schemas in data_dictionary.parquet.
   2. `nccs-dataexplorer-data` is dormant but not yet archived (ADR
      0010 step 8). Consumers should treat anything at
