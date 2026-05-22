@@ -47,6 +47,12 @@ REQUIRED_NESTED = {
     "drift_detection": ["trigger"],
 }
 
+# Tombstone contracts (per ADR 0015's `status` convention) carry only
+# enough metadata to remain resolvable by slug. They are intentionally
+# missing the producer/format/s3/etc. fields that active contracts
+# require.
+RETIRED_REQUIRED_TOP_LEVEL = ["name", "status", "description"]
+
 KEBAB_NAME = re.compile(r"^[a-z][a-z0-9-]*$")
 
 
@@ -60,7 +66,10 @@ def validate_contract(path: Path) -> list[str]:
     if not isinstance(doc, dict):
         return [f"{path.name}: top-level must be a mapping, got {type(doc).__name__}"]
 
-    for field in REQUIRED_TOP_LEVEL:
+    is_retired = doc.get("status") == "retired"
+    required_top_level = RETIRED_REQUIRED_TOP_LEVEL if is_retired else REQUIRED_TOP_LEVEL
+
+    for field in required_top_level:
         if field not in doc:
             errors.append(f"{path.name}: missing required field `{field}`")
 
@@ -71,13 +80,14 @@ def validate_contract(path: Path) -> list[str]:
             f"(lowercase, digits, hyphens; must start with a letter)"
         )
 
-    for parent, children in REQUIRED_NESTED.items():
-        section = doc.get(parent)
-        if not isinstance(section, dict):
-            continue  # already reported as missing above, or wrong type
-        for child in children:
-            if child not in section:
-                errors.append(f"{path.name}: missing required field `{parent}.{child}`")
+    if not is_retired:
+        for parent, children in REQUIRED_NESTED.items():
+            section = doc.get(parent)
+            if not isinstance(section, dict):
+                continue  # already reported as missing above, or wrong type
+            for child in children:
+                if child not in section:
+                    errors.append(f"{path.name}: missing required field `{parent}.{child}`")
 
     return errors
 
