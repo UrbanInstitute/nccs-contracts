@@ -117,6 +117,21 @@ uses `v{YYYY.MM}` (dot, with `v` prefix). Pick one:
   files changed (the timestamps refresh, which is the signal that
   a new vintage exists).
 
+**Exemption — append-only archives.** The `latest/` mirror is a
+*"current version" pointer*, and it only makes sense for producers
+whose new vintages **supersede** older ones (`bmf-master`,
+`bmf-lookups`, `sector-in-brief`: each rebuild replaces the prior as
+"the current data"). `bmf-legacy` is different: each vintage is a
+distinct, permanent slice of history (the 1989 dump, the 1990 dump,
+…) and the consumer (`master_bmf_builder.R`) **globs and stacks all
+vintages**. There is no "current" legacy vintage a consumer would
+read instead of the others, so a `latest/` mirror would duplicate an
+arbitrary vintage for zero benefit and could mislead. `bmf-legacy` is
+therefore **exempt** from the `latest/` requirement (its contract
+records `latest_template: null`). Vintage subdirs and a per-vintage
+`_manifest.json` still apply. A producer is `latest/`-exempt iff its
+vintages are append-only history rather than superseding snapshots.
+
 **Idempotency.** Re-publishing a vintage that already exists on S3
 should be a no-op for unchanged files. Producers fetch the existing
 vintage's manifest (per [[0014-standardize-manifest-shape]]), skip
@@ -145,8 +160,12 @@ This ADR is in-scope for:
 - `bmf-master-geocoded` — migrate (in lockstep with `bmf-master`
   since the geocoded artifact depends on the un-geocoded master's
   vintage)
-- `bmf-legacy` — migrate (add `latest/`; vintage subdirs already
-  exist)
+- `bmf-legacy` — vintage subdirs already exist; gains a per-vintage
+  `_manifest.json` via [[0014-standardize-manifest-shape]] but is
+  **exempt from the `latest/` mirror** (append-only archive — see the
+  Exemption note under "`latest/` mirror semantics" above). Amends
+  this ADR's original intent, which listed legacy for a `latest/`
+  mirror before the glob-stack consumption was accounted for.
 - `core-990` — migrate
 - `core-legacy` — migrate
 - `core-panel` — migrate (in lockstep with `core-990` and
@@ -174,10 +193,13 @@ Per-producer; sequenced to minimize consumer churn.
    implicit pin) to a specific vintage in their next deploy.
    Then the producer drops the in-place write and the `latest/`
    mirror takes its place.
-2. **BMF legacy.** `latest/` mirror added next time the legacy
-   pipeline is re-run (rare). Vintage format flip from `YYYY_MM`
-   to `v{YYYY.MM}` at the same time; old `YYYY_MM/` paths stay
-   readable for the deprecation window.
+2. **BMF legacy.** No `latest/` mirror (exempt — see Scope). Gains a
+   per-vintage `_manifest.json` per [[0014-standardize-manifest-shape]]
+   next time the legacy pipeline is re-run (rare). The vintage-format
+   flip from `YYYY_MM` to `v{YYYY.MM}` is a separate, breaking path
+   change deferred to a consumer-coordinated migration (the
+   `master_bmf_builder.R` glob would need updating), not bundled with
+   the manifest work.
 3. **BMF lookups.** Vintage format flip from `YYYY_MM` to
    `v{YYYY.MM}` at next publish. `latest/` mirror is already in
    place; old `YYYY_MM/` directories are not deleted.
