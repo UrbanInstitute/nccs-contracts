@@ -5,20 +5,30 @@ every artifact published to S3 by the NCCS data pipelines, the
 conventions producers and consumers agree on, and the architectural
 decisions behind that shape.
 
+> 📐 **New here for the approach, not the data?** See
+> [`docs/agentic-systems-design.md`](docs/agentic-systems-design.md) —
+> the system in three states (old → current → complete) and what a
+> practical agentic approach to systems design looks like: build the
+> contract + decision surface first, and let agents become the dividend.
+
 ## What's in here
 
 - `ARCHITECTURE.md` — system overview: producers, consumers, S3 spine,
   agentic operations. Read this first.
 - `contracts/` — one YAML file per published artifact (BMF master,
-  BMF lookups, core 990, e-file, merged). Each file is the source of
-  truth for that artifact's path, format, cadence, schema, and
-  producer/consumer mapping.
+  BMF lookups, core tiers, e-file, sector-in-brief). Each file is the
+  source of truth for that artifact's path, format, cadence, schema,
+  and producer/consumer mapping. (There is no canonical cross-dataset
+  merge — consumers compose joins per ADR 0016.)
 - `decisions/` — Architecture Decision Records (ADRs) capturing the
   *why* behind major calls. The architecture doc describes
   current state; ADRs preserve history.
 - `CONTRIBUTING.md` — how to make changes here: the plan/execute/
   reconcile loop with downstream repos, when to write a new ADR
   vs. amend, and the contract YAML conventions.
+- `docs/agentic-systems-design.md` — the system's old → current →
+  complete arc as a worked example of designing for agents:
+  legibility (contracts + ADRs) before autonomy.
 
 ## How this repo is used
 
@@ -32,5 +42,9 @@ decisions behind that shape.
 
 ## Status
 
-v0 — scaffolding in place; contract YAMLs are stubs awaiting
-authoritative population.
+Contract surface populated (11 contracts) with 17 ADRs. E-file Phase 0
+is live; the first Copilot coding-agent pilot has run on
+`nccs-data-bmf`. The deterministic drift-detection loops described in
+`ARCHITECTURE.md` §9 are not yet wired — see that section's "Not yet
+built" list and `docs/agentic-systems-design.md` for where the system
+sits on the curve.

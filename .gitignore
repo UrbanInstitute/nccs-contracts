@@ -39,8 +39,9 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 
-# pkgdown site
-docs/
+# pkgdown site (generated HTML). Hand-authored docs are tracked explicitly.
+docs/*
+!docs/agentic-systems-design.md
 
 # translation temp files
 po/*~
