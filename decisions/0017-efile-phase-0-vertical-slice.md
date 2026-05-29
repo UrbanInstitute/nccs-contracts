@@ -1,7 +1,7 @@
 # 0017 — E-file Phase 0 Vertical Slice and Transition to NCCS-Owned Concordance
 
-- **Status:** Accepted (planning; not yet executed)
-- **Date:** 2026-05-22
+- **Status:** Executed (Phase 0 shipped; Phase 0.5/1+ still planned)
+- **Date:** 2026-05-22 (executed 2026-05-29)
 - **Deciders:** sole maintainer
 - **Related:** [[0001-s3-as-contract-surface]], [[0004-cadence-aware-drift-detection]], [[0007-efile-urban-owned-producer]], [[0010-sector-in-brief-data-replaces-dataexplorer-data]], [[0013-versioned-producer-outputs]], [[0014-standardize-manifest-shape]], [[0016-no-canonical-cross-dataset-merge]]
 - **Amends:** [[0007-efile-urban-owned-producer]] (inserts Phase 0 ahead of original Phase 1; shifts concordance posture from "adapt NODC with attribution" to "vendor NODC during a bounded transition window, then transition to an NCCS-owned XSD-driven concordance"; corrects license claim)
@@ -443,6 +443,45 @@ sequenced as follows:
    yet built" until first publish.
 5. **No `nccs-data-efile` repo creation yet.** Repo stands up when
    Phase 0 build work begins, per [[0007]] Follow-up #1.
+
+## Outcome (2026-05-29)
+
+Phase 0 executed. `nccs-data-efile` was built and published its first
+vintage `v2026.05` to `s3://nccsdata/processed/efile/phase0/` (with a
+`latest/` mirror) on 2026-05-29, producer git SHA `0a7048d`. Realized
+against the plan:
+
+- **Decision §1 (vertical slice):** shipped as two single-metric flat
+  tables, each filtered to its applicable form — `government_grants`
+  (990, 1,412,695 rows) and `program_related_investments` (990PF,
+  526,807 rows), tax years 2020-2024. Per-filing grain as specified.
+- **Decision §2 (vendored NODC + verification):** NODC SHA
+  `49f62af015ad56c4857273eff633166ba6c1a4da` pinned and mirrored to
+  `processed/efile/concordance/`; manifest records it under
+  `inputs.nodc_concordance_sha`. The realized manifest field names
+  diverge from the §2 sketch (`nodc_concordance_s3_prefix`,
+  `gt_lake_snapshot_timestamp_utc`, nested `xsd_verification.passed`,
+  `value_distribution`) — `contracts/efile.yml` documents the as-built
+  shape.
+- **Decision §4 (GT primary):** GT data lake used as upstream; IRS
+  XSDs mirrored to `processed/efile/schemas/{tax_year}/` for the
+  existence check. 2024 v5.1/v5.2 XSDs were unavailable from TEOS and
+  aliased to v5.0 (recorded in `manifest.xsd_verification.aliases`).
+- **`ARCHITECTURE.md` flipped** the e-file row from "producer not yet
+  built" to LIVE (Phase 0) — the trigger condition (first vintage
+  published) in Migration plan step 4 is now met.
+
+Open at execution (tracked in `contracts/efile.yml` Open items, not
+reopening this ADR): the §2.3 IRS-instruction spot-check is not yet
+finalized (dictionaries still carry "(CONFIRM PAGE)"); value-range
+gates passed despite a >1e10 government_grants max and negative
+minimums; and `xsd_verification.passed` is true alongside ~60
+`found:false` mismatch rows that target bare-element XPath variants
+rather than the `...Amt` leaves actually extracted.
+
+Phase 0.5 (NCCS-owned two-layer concordance, §3) and Phase 1+ remain
+planned. Decision §5's sector-in-brief panels (`gov_grants`, `pf_pri`)
+are not yet built — the upstream blocker is now cleared.
 
 ## Consequences
 

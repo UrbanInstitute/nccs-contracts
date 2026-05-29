@@ -24,7 +24,7 @@ the history behind major calls, see the ADRs in `decisions/`.
 |---|---|---|
 | BMF pipeline | Producer — geocoded master + dated vintages + lookups | `nccs-data-bmf` |
 | Core 990 pipeline | Producer — IRS SOI extracts, one row per filing | `nccs-data-core` |
-| E-file pipeline | Producer — continuous trickle of raw Form 990 filings | `nccs-data-efile` |
+| E-file pipeline | Producer — LIVE (Phase 0). Parses raw IRS 990/990-PF XML into form-agnostic parquet; first vintage `v2026.05` published 2026-05-29. Phase 0 ships two filing-grain metric tables (`government_grants`, `program_related_investments_total`) under `s3://nccsdata/processed/efile/phase0/`; Phase 1+ headline-990 surface still planned. See ADR 0007 / ADR 0017. | `nccs-data-efile` |
 | Consumer-composed joins | Consumers compose BMF × core × e-file joins per use case (per ADR 0016 — no canonical cross-dataset merge). The within-core form union is contracted as `core-panel`. | n/a |
 | nccsdata R package | Consumer — programmatic reads with arrow filters + local cache | `nccsdata` |
 | API | Consumer + service tier — parametric queries over the merged artifact via DuckDB | TBD (existing API to modernize per ADR 0008) |

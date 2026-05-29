@@ -36,9 +36,13 @@ s3:
   #   gov_grants.parquet, pf_pri.parquet
   # These two panels are sourced from the `efile` Phase 0 vertical
   # slice (Form 990 Part VIII line 1e and Form 990-PF Part IX-B).
-  # They ship after nccs-data-efile publishes its first Phase 0
-  # vintage; see ADR 0017 for the deferral rationale and the
-  # explicit rejection of NODC-interim wiring.
+  # Their upstream is now LIVE: efile published v2026.05 on
+  # 2026-05-29 (see [[efile]]). The panels still need building in
+  # sector-in-brief-data (panel_gov_grants.R / panel_pf_pri.R reading
+  # phase0/latest and aggregating to the dimension grain) and wiring
+  # in the dashboard; not yet shipped as of this writing. See ADR
+  # 0017 §5 for the build/wire sequence and the explicit rejection of
+  # NODC-interim wiring.
 
 cadence:
   type: on-change
@@ -93,9 +97,9 @@ notes: |
     - [[core-990]]              (inputs.core_modern; 990 + 990combined 2012-2024)
     - [[core-panel]]            (inputs.core_pf; 990-PF panel)
     - [[efile]]                 (Phase 0 vertical slice — gov_grants
-                                 and pf_pri panels only; pending
-                                 nccs-data-efile producer build per
-                                 ADR 0017)
+                                 and pf_pri panels only; upstream LIVE
+                                 as of efile v2026.05 (2026-05-29),
+                                 panels not yet built per ADR 0017 §5)
   Plus uncontracted external sources (IRS SOI 990PF xlsx; DAF
   e-file returns).
 
@@ -110,10 +114,17 @@ notes: |
      Source columns resolved per [[0017-efile-phase-0-vertical-slice]]:
      Form 990 Part VIII line 1e (`government_grants`) and Form 990-PF
      Part IX-B (`program_related_investments_total`), both delivered
-     by the `efile` Phase 0 vertical slice. Wait for that producer
-     to publish; do not wire to NODC's CSV in the interim (ADR 0017
-     §3). When the panels ship, add to s3.* file list above and
-     include their schemas in data_dictionary.parquet.
+     by the `efile` Phase 0 vertical slice — now LIVE at
+     `s3://nccsdata/processed/efile/phase0/latest/` as of efile
+     v2026.05 (2026-05-29). The upstream blocker is cleared; next is
+     building the two panels in sector-in-brief-data
+     (panel_gov_grants.R / panel_pf_pri.R, reading phase0/latest and
+     joining EIN against bmf-master-geocoded), then wiring them in the
+     dashboard. Do NOT wire to NODC's CSV in the interim (ADR 0017
+     §3/§5). When the panels ship, add them to the s3.* file list
+     above and include their schemas in data_dictionary.parquet.
+     Heads-up before consuming: efile v2026.05's IRS-instruction
+     spot-check is not yet finalized (see [[efile]] Open items #1).
   2. `nccs-dataexplorer-data` is dormant but not yet archived (ADR
      0010 step 8). Consumers should treat anything at
      `s3://nccsdata/dataexplorer/visuals/` as superseded.
