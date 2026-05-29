@@ -233,21 +233,39 @@ notes: |
 
   ## Open items (process / data-quality loose ends in v2026.05)
 
-  1. IRS instruction spot-check (gate 3 / ADR 0017 §2.3) NOT
-     finalized. Both dictionaries' irs_instruction_citation still
-     read "...(CONFIRM PAGE)". ADR 0017 §2.3 requires the source
-     page/line documented and signed off at adoption; the resume plan
-     flagged publishing before sign-off as a retracted-vintage risk.
-     Land the citations and re-publish (or amend the vintage) before
-     treating column semantics as authoritative.
-  2. Value-range breaches passed the build. government_grants max is
+  1. v2026.05 IS BROKEN FOR TY2022 AND TY2023 — rebuild + republish
+     required. Both fields are 100% null for tax years 2022 and 2023
+     in the published vintage (verified against the parquets; 2020,
+     2021, 2024 have normal ~0.60-0.73 null rates). Cause: the
+     producer's layer-2 dictionary used hyphenated schema-version keys
+     (e.g. 2022:4-0) for those years, but extraction matches the
+     dotted GT return_version (2022v4.0), so no XPath claim resolved
+     and every value fell to null. Fixed producer-side
+     (nccs-data-efile, branch efile-phase0-gate5-and-version-fix /
+     commit "Fix TY2022/2023 XPath version-key typo"); the published
+     S3 artifact still carries the defect until a fresh vintage is
+     built. This also inflated the manifest's sampled null rates (see
+     item 2) since two of five years were entirely null.
+  2. IRS instruction spot-check (gate 5 / ADR 0017 §2.3) — DONE
+     2026-05-29. Citations verified against the actual IRS
+     instructions and landed in the producer's layer-2 dictionary
+     (the "(CONFIRM PAGE)" placeholders are gone): government_grants
+     -> Form 990 Part VIII line 1e, 2024 instructions p. 39 (stable
+     TY2020-2024); program_related_investments_total -> Form 990-PF
+     Summary of Program-Related Investments, 2024 instructions p. 31.
+     The spot-check caught a form renumbering: PRI is Part VIII-B for
+     TY2021-2024 but Part IX-B for TY2020 (the NODC PF_09_ name is
+     2020-anchored). The version-agnostic XPath resolves regardless,
+     so data is unaffected. NOTE: the corrected citations reach the
+     published *_dictionary.csv only on the next vintage (see item 1).
+  3. Value-range breaches passed the build. government_grants max is
      ~1.32e10, above the [0, 1e10] sane ceiling ADR 0017 §2.2 named;
      both fields carry negative minimums (government_grants -5,653,277;
      PRI -55,000). PRI's quality check flagged a null_rate breach
      (observed 0.7668 vs configured 0.9 floor) as non-fatal. Confirm
      these are intended (legitimate amended/negative filings) or
      tighten the gate.
-  3. xsd_verification.passed = true while mismatches[] lists ~60
+  4. xsd_verification.passed = true while mismatches[] lists ~60
      found:false entries. Those checks target the concordance's
      bare-element XPath variants (e.g. .../GovernmentGrants), which do
      not resolve; the extractor used the `...Amt`-suffixed leaves that
