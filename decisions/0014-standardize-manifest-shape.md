@@ -1,6 +1,6 @@
 # 0014 — Standardize Manifest Shape Across Producers
 
-- **Status:** Accepted (planning; not yet executed)
+- **Status:** Accepted (partially executed 2026-06-03 — see Outcome)
 - **Date:** 2026-05-21
 - **Deciders:** sole maintainer
 - **Related:** [[0001-s3-as-contract-surface]], [[0004-cadence-aware-drift-detection]], [[0013-versioned-producer-outputs]]
@@ -262,6 +262,42 @@ repo* (no cross-repo dependency — the helper is ~50 lines):
 
 `bmf-lookups`'s `.read_remote_manifest` and `.hash_unchanged`
 already cover (b) and (c); generalize them.
+
+## Outcome (2026-06-03)
+
+Reference implementation built and first two producers migrated via
+nccs-data-bmf PR #14 (merged 2026-06-03, merge commit `5248ae4`):
+
+- **`R/manifest.R`** (new) is the shared reference helper:
+  `write_manifest()` emits the ADR 0014 shape, plus `git_short_sha()`,
+  `manifest_input_repo()`, `read_existing_manifest()`,
+  `manifest_unchanged()`.
+- **`bmf-lookups` — LIVE & verified.** `_manifest.json` published to
+  `s3://nccsdata/lookups/bmf/2026_05/` and `.../latest/` (6403 B each;
+  shape validated against this ADR — PASS).
+- **`bmf-legacy` — code landed, not yet emitted.**
+  `run_legacy_pipeline.R` now writes a per-vintage `_manifest.json`
+  (no `latest/`); appears on the next legacy run.
+
+**Deviations recorded (in the contracts):**
+
+1. **The dual-write is a *name* alias, not a *shape* shim.** During the
+   90-day window (ends **2026-09-01**) `bmf-lookups` still writes the
+   old filename `MANIFEST.json`, but with the **new** `_manifest.json`
+   bytes — not the old `generated_at`/`source{}`/`rows`/`cols` shape. A
+   consumer still reading `MANIFEST.json` by name therefore receives the
+   new field set and must migrate. (The ADR text above implied byte
+   continuity of the old *shape*; in practice continuity is of the
+   *filename* only.) Flagged in `bmf-lookups.yml`.
+2. **`bmf-legacy` `inputs[]` is not yet ADR-conformant.** It records the
+   source archive *prefix* (`s3://nccsdata/legacy/bmf/`) with a `uri`
+   but no `etag`, so the S3-input `{uri, etag}` form is unmet. Open
+   producer TODO; flagged in `bmf-legacy.yml`.
+
+**Not yet migrated:** `bmf-master`, `bmf-master-geocoded` (next agent
+replication of `R/manifest.R`); `core-990`, `core-legacy`, `core-panel`
+(still quality-report-only). `sector-in-brief-data` already emitted a
+compatible `_manifest.json` pre-ADR and is the shape's other origin.
 
 ## Consequences
 

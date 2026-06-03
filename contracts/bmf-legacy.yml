@@ -40,8 +40,13 @@ cadence:
     Source data at legacy/bmf/ does not change.
 
 manifest:
-  path: null  # producer does NOT emit a contract-standard _manifest.json; only a per-vintage quality report (see Open items)
-  schema_version: 1
+  path: "processed/bmf-legacy/{vintage}/_manifest.json"  # ADR 0014 shape, per-vintage, NO latest/ mirror (append-only exemption, ADR 0013). CODE landed via PR #14 (2026-06-03) but NOT yet emitted — appears per-vintage on the next legacy pipeline run; existing back-vintages stay manifest-less until re-run.
+  schema_version: 2  # ADR 0014 standard shape
+  # Known gap vs ADR 0014: inputs[] currently records the source archive
+  # PREFIX (s3://nccsdata/legacy/bmf/) with a uri but NO etag, so the
+  # S3-input {uri, etag} form is not yet fully satisfied. Threading the
+  # exact source object key + ETag is an open producer TODO
+  # (R/run_legacy_pipeline.R).
 
 schema:
   source: "processed/bmf-legacy/{vintage}/bmf_legacy_{vintage}_data_dictionary.csv"  # per-vintage co-located dictionary; expected to remain consistent across vintages so master_bmf_builder can union_by_name with the modern pipeline
@@ -68,10 +73,15 @@ notes: |
 
   ## Open items
 
-  1. **No `_manifest.json`.** Same gap as [[bmf-master]] and
-     [[bmf-master-geocoded]]. Address as part of the cross-cutting
-     "Standardize manifest shape across producers" ADR, modeled on
-     [[bmf-lookups]]'s reference implementation.
+  1. **`_manifest.json`: code landed, not yet emitted.** PR #14
+     (2026-06-03) added ADR 0014 manifest emission to
+     `run_legacy_pipeline.R` (via the shared `R/manifest.R` helper), but
+     the legacy pipeline has not been re-run since, so no `_manifest.json`
+     exists on S3 yet — one appears per-vintage on the next run, and
+     existing back-vintages stay manifest-less until re-run. Remaining
+     shape gap: the `inputs[]` etag (see manifest block). [[bmf-master]]
+     and [[bmf-master-geocoded]] are still entirely unmigrated (later
+     replication of the `R/manifest.R` reference).
   2. **Intermediate parquet uses arrow's default (snappy)** while
      `bmf-master` and `bmf-master-geocoded` use `zstd`. Minor
      inconsistency worth tightening when the standardization pass

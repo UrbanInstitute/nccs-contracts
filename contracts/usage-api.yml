@@ -39,8 +39,8 @@ cadence:
     month overwrites that vintage.
 
 manifest:
-  path: TODO  # rollup job writes a MANIFEST.json alongside the parquet
-  schema_version: 1
+  path: TODO  # rollup job should emit a contract-standard _manifest.json (ADR 0014 shape) alongside the parquet
+  schema_version: 2  # ADR 0014 standard shape (this producer is a stub; not yet built)
 
 schema:
   source: TODO

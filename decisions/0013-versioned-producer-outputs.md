@@ -1,6 +1,6 @@
 # 0013 — Versioned Producer Outputs
 
-- **Status:** Accepted (planning; not yet executed)
+- **Status:** Accepted (partially executed 2026-06-03 — see Outcome)
 - **Date:** 2026-05-21
 - **Deciders:** sole maintainer
 - **Related:** [[0001-s3-as-contract-surface]], [[0004-cadence-aware-drift-detection]], [[0010-sector-in-brief-data-replaces-dataexplorer-data]], [[0014-standardize-manifest-shape]]
@@ -220,6 +220,23 @@ The reference implementations to copy:
 Each producer's `R/publish_*.R` (or equivalent) implements the
 pattern. No new shared library — the two implementations are small
 and the producers are loosely coupled, so copy-and-adapt is fine.
+
+## Outcome (2026-06-03)
+
+Partially executed alongside [[0014-standardize-manifest-shape]] via
+nccs-data-bmf PR #14 (merged 2026-06-03, merge commit `5248ae4`):
+
+- The **`latest/`-exemption for append-only producers** (amended into
+  this ADR 2026-05-29, commit `c8e91ea`) is now realized in code:
+  `bmf-legacy` emits a per-vintage `_manifest.json` with **no `latest/`
+  mirror**, matching `bmf-legacy.yml`'s `latest_template: null`.
+  `bmf-lookups` keeps its vintage + `latest/` mirror.
+- **Still deferred — the headline vintage-format flip** (`YYYY_MM` →
+  `v{YYYY.MM}`). PR #14 was manifest-shape-only; the path-format change
+  is a breaking, consumer-coordinated migration left for a separate
+  pass. `bmf-lookups`/`bmf-legacy` vintages remain `YYYY_MM` for now.
+- `bmf-master`, `bmf-master-geocoded`, and the core producers are not
+  yet on the versioned + manifest pattern (later replication).
 
 ## Consequences
 

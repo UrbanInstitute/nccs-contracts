@@ -54,8 +54,12 @@ Every producer publishes the same shape:
 - **Data artifact(s).** Parquet preferred; CSV permitted only when
   parquet is not yet possible. Partitioned where the access pattern
   benefits (e.g. by state, year, or filing month).
-- **Manifest.** `MANIFEST.json` co-located with the artifact, listing
-  files, sha256 sums, vintage, and generation timestamp.
+- **Manifest.** `_manifest.json` co-located with the artifact, in the
+  standard ADR 0014 shape (`vintage`, `built_at` UTC, `git_sha`,
+  `inputs[]`, and per-file `sha256`/`bytes`/`row_count`/`columns[]`).
+  Reference implementation: nccs-data-bmf `R/manifest.R`. Live for
+  `bmf-lookups` (2026-06-03); rolling out to the other producers. The
+  older `MANIFEST.json` name is dual-written through a 90-day window.
 - **Versioned URL + `_latest` pointer.** Consumers pin a version;
   applications that always want the freshest data can reference the
   `_latest` alias.

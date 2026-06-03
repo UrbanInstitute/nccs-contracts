@@ -53,11 +53,13 @@ cadence:
   notes: "Rebuilt on the 1st of each month."
 
 # Manifest co-located with the artifact. Must follow the standard
-# shape: list of files, each with relative_path + sha256 + size_bytes,
-# plus top-level vintage + generated_at.
+# ADR 0014 shape: top-level vintage + built_at (UTC ISO-8601 with Z) +
+# git_sha + inputs[] ({uri, etag|sha256}); files{} keyed by basename,
+# each with file + sha256 + bytes + row_count + columns[] (+ optional
+# year_counts{}).
 manifest:
-  path: MANIFEST.json
-  schema_version: 1
+  path: _manifest.json
+  schema_version: 2  # 2 = ADR 0014 standard shape; 1 = the pre-0014 bespoke MANIFEST.json shape
 
 # Schema. Either inline or a pointer to a schema file in this repo.
 schema:
