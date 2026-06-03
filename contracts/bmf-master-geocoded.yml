@@ -84,6 +84,20 @@ notes: |
   possible but would be a breaking change for current consumers
   and is not currently planned.
 
+  ## Counting active orgs — defer to sector-in-brief
+
+  A nonprofit count taken straight from this artifact or its
+  `state_marts` (filtering `last_year_in_bmf` and/or partitioning on
+  `org_addr_state`) runs slightly BELOW [[sector-in-brief]]'s
+  `number_nonprofits` for the same geography/year. That product counts
+  by an active-window rule (`org_year_first ≤ Y ≤ org_year_last`) and
+  by geocoded `Census County`/`Census State`, not by vintage presence
+  and mailing state. Both differences are by design — see the
+  "Counting semantics" note in [[sector-in-brief]] for the rule and a
+  worked example. For "how many active orgs in place X," cite
+  sector-in-brief; use this artifact directly only for EIN-level detail
+  or a non-standard activity definition.
+
   ## Open items
 
   1. **No `_manifest.json`.** Same gap as [[bmf-master]] —

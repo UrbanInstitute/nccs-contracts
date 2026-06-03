@@ -121,6 +121,42 @@ notes: |
   four contracted upstreams and derives panel-specific aggregates
   rather than pulling from a pre-joined canonical artifact.
 
+  ## Counting semantics — read before comparing to a direct BMF query
+
+  `number_nonprofits` counts distinct EINs by an **active-window**
+  rule: an org is counted in year Y when `org_year_first ≤ Y ≤
+  org_year_last` (the derived window), and is placed by **geocoded**
+  geography (`Census State` / `Census County`, from the
+  [[bmf-master-geocoded]] `geo_*` fields). This is the canonical
+  definition for "how many active nonprofits in place X, year Y."
+
+  It will NOT match a count taken straight from [[bmf-master]] /
+  [[bmf-master-geocoded]] that filters on `last_year_in_bmf` (the last
+  *vintage* an EIN was observed) and/or the `state_marts` partition key
+  `org_addr_state` (the *mailing* state). Both gaps are by design, not
+  data errors:
+    - **Active-window vs vintage presence.** `org_year_last` (derived)
+      can reach Y for an org whose last observed BMF *vintage* was
+      earlier, so for the latest year the active-window count is the
+      higher of the two.
+    - **Geocoded vs mailing geography.** An org with a blank or
+      out-of-state mailing address that geocodes into a county appears
+      under that county here, but not in the `org_addr_state` partition.
+
+  Worked example (2026, 501(c)(3), seven SE-Michigan counties —
+  Wayne/Oakland/Macomb/Washtenaw/Livingston/Monroe/St. Clair): a direct
+  master query gives 21,586 (mailing-state partition) or 21,589
+  (geocoded geography); `number_nonprofits` gives 21,638. The Δ52 = 3
+  (geography basis) + 49 (active-window). Private-foundation counts
+  matched to the org, which is what localized the gap to these two
+  definitions and ruled out a data/vintage/geocoding-quality
+  discrepancy. Reconciled 2026-06-03 against the shared 2026-05-08
+  geocoded master (both products' source).
+
+  Rule of thumb: cite `number_nonprofits` for active-org counts by
+  place/year; query the master directly only for EIN-level detail or a
+  non-standard activity definition.
+
   ## Open items
 
   1. `government_grants.parquet` and
