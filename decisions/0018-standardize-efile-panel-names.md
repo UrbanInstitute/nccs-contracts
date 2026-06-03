@@ -87,6 +87,51 @@ different-grain filing-level value, not the dimension-grain sum.
   the cognitive tax this closes for free while the panels are
   unpublished. Rejected.
 
+## Outcome (execution feedback, 2026-06-03)
+
+`sector-in-brief-data` implemented the rename and reported two refinements
+that this ADR's original "file/artifact names only" scoping understated:
+
+- **There is no panel→path mapping table.** The output `.parquet`
+  filename is simply the *key* of the in-memory `panels` list:
+  `pipeline/run.R` sets `panels$gov_grants` / `panels$pf_pri`, and
+  `R/publish.R` writes each panel as `<name>.<fmt>` by iterating
+  `names(panels)`. So the load-bearing rename is renaming those two list
+  keys to `panels$government_grants` /
+  `panels$program_related_investments`. The `build_*` functions and the
+  Title-Case metric columns (`Total Government Grants` /
+  `Total Program-Related Investments`) are untouched and correct, as the
+  Decision intended.
+
+- **The artifact filename is also a load-bearing key in the
+  data-dictionary subsystem** — this ADR's instructions missed it.
+  `build_data_dictionary()` runs a drift check that `stop()`s the
+  pipeline if any emitted `(file, column)` pair lacks a curated entry,
+  joined on the *filename*. Renaming the artifact without updating the
+  curation makes the new file emit with zero curated rows and kills the
+  run before publish. Two more files therefore change in the *same*
+  load-bearing commit, because they ARE artifact-filename keys (in scope
+  by this ADR's own definition): `R/build_data_dictionary.R`
+  (`.DD_FILES_WITH_SHARED_DIMS` hardcodes the old filenames) and
+  `R/data_dictionary_curation.R` (per-panel curated entries keyed on the
+  old filenames).
+
+**Scope clarification.** "Artifact filename" in the Decision means *every
+load-bearing occurrence of the filename string* — the writer's `panels`
+keys AND the data-dictionary curation keys — not just the file written to
+S3. The producer is landing this as commit 1 (rename the two `panels`
+keys + the two data-dictionary files = the complete, build-passing
+artifact rename) and an optional commit 2 (hygiene: `panel_*.R` files,
+`build_*` / `read_*_raw` functions, internal config keys, call sites,
+tests). Verified to a sandbox prefix; no prod publish yet.
+
+Sandbox note: the panels were published to the *sandbox* prefix
+(v2026.06) earlier on 2026-06-03 under the OLD names. Sandbox is not a
+consumer and the rename re-run overwrites it, so the zero-deprecation
+property in "Deprecation window" below is unaffected. Producer PR #1
+(`feat/gov-grants-pf-pri-panels` → main) still references the old names
+and will be updated.
+
 ## Consequences
 
 - Sector-in-brief gains two panels whose file names match other
@@ -95,9 +140,11 @@ different-grain filing-level value, not the dimension-grain sum.
   within-producer brevity for these two e-file-sourced panels.
 - `sector-in-brief-data` is now in drift from this contract: it builds
   `gov_grants.parquet` / `pf_pri.parquet`. Per the house rule that the
-  contract is authoritative, the producer must rename its outputs (and,
-  for hygiene, the `panel_*.R` scripts) before the next vintage cut.
-  No published artifact changes, so no consumer breaks.
+  contract is authoritative, the producer must rename its outputs before
+  the next vintage cut. The load-bearing rename touches the two writer
+  `panels` keys *and* the data-dictionary curation keyed on the filename
+  (see Outcome); the `panel_*.R` scripts and `build_*` functions are
+  optional hygiene. No published artifact changes, so no consumer breaks.
 
 ## Deprecation window
 
@@ -109,9 +156,15 @@ before first publish; after that, a rename would re-incur the standard
 
 1. `sector-in-brief-data`: rename the two panel outputs to
    `government_grants.parquet` / `program_related_investments.parquet`
-   (and ideally `panel_government_grants.R` /
-   `panel_program_related_investments.R`) before publishing the next
-   `sector-in-brief` vintage.
+   before publishing the next `sector-in-brief` vintage. The artifact
+   name lives in three load-bearing places, all of which must change
+   together (see Outcome): the two `panels` list keys
+   (`pipeline/run.R`), `.DD_FILES_WITH_SHARED_DIMS`
+   (`R/build_data_dictionary.R`), and the per-panel curated entries
+   (`R/data_dictionary_curation.R`). Optionally, for hygiene, also
+   rename `panel_government_grants.R` /
+   `panel_program_related_investments.R` and the `build_*` / `read_*_raw`
+   functions.
 2. At publish, register both panels' columns in
    `data_dictionary.parquet`, including the Title-Case aggregate metric
    column names.

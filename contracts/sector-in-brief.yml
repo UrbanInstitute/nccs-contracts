@@ -37,9 +37,10 @@ s3:
   #   government_grants.parquet, program_related_investments.parquet
   # Names standardized to the efile producer's per ADR 0018 (was
   # gov_grants.parquet / pf_pri.parquet in ADR 0010 / 0017 §5). The
-  # producer still emits the old names (panel_gov_grants.R /
-  # panel_pf_pri.R) and must rename its outputs before first publish;
-  # this contract is authoritative on the target names.
+  # producer (sector-in-brief-data) is renaming to match before first
+  # publish: the artifact name is the panels-list key, and the rename
+  # also touches the data-dictionary curation keyed on it (see ADR 0018
+  # Outcome). This contract is authoritative on the target names.
   # These two panels are sourced from the `efile` Phase 0 vertical
   # slice (Form 990 Part VIII line 1e and Form 990-PF Part IX-B).
   # Their upstream is LIVE: efile v2026.05, republished 2026-05-29
