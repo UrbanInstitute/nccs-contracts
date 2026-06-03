@@ -3,7 +3,7 @@
 - **Status:** Accepted (executed 2026-05-21; two panels deferred to a future ADR — see Outcome)
 - **Date:** 2026-05-19
 - **Deciders:** sole maintainer
-- **Supersedes:** the 2026-05-15 draft of ADR 0010 (`0010-dataexplorer-data-as-derived-producer.md`) — this revision changes the decision shape after on-disk recon corrected several premises.
+- **Supersedes:** the 2026-05-15 draft, now [[0019-dataexplorer-data-as-derived-producer]] (`0019-dataexplorer-data-as-derived-producer.md`; originally filed as 0010, renumbered 2026-06-03) — this revision changes the decision shape after on-disk recon corrected several premises.
 - **Related:** [[0005-bmf-unified-superseded-by-master]], [[0008-modernize-dataexplorer-api]], [[0009-sector-in-brief-dashboard-hygiene]], [[0011-decouple-dashboard-from-committed-data]], [[0012-sector-in-brief-architecture-refactor]]
 
 ## Context

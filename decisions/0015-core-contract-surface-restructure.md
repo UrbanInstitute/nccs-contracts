@@ -77,7 +77,7 @@ specific gaps:
 - The 2026-05-15 stub of `core-990.yml` carries a passing
   reference to `core-harmonized` in comments (lines 28, 42) that
   needs cleanup.
-- The superseded draft of [[0010-dataexplorer-data-as-derived-producer]]
+- The superseded draft of [[0019-dataexplorer-data-as-derived-producer]]
   references `core-harmonized` as a contract. Superseded
   documents are historical record; no edit there.
 
