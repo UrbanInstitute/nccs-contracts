@@ -1,6 +1,7 @@
 # Phase 0 vertical slice is LIVE. First vintage `v2026.05` published
 # 2026-05-29 to s3://nccsdata/processed/efile/phase0/{vintage}/ with a
-# latest/ mirror, producer git SHA 0a7048d. This contract is populated
+# latest/ mirror, producer git SHA a9c32e5 (rebuilt + republished the
+# same day to fix the TY2022/2023 version-key bug). This contract is populated
 # from the published artifact (manifest, dictionaries, quality JSON),
 # not from the plan. Phases 1-3 below remain planned future state per
 # ADR 0007 as amended by ADR 0017.
@@ -138,7 +139,7 @@ schema:
   #   ein                 string
   #   tax_year            int     # 2020-2024
   #   form_type           string  # "990"
-  #   government_grants   double  # USD; ~0.80 null (most filers report 0/none)
+  #   government_grants   double  # USD; ~0.64 null (most filers report 0/none)
   #     source_xpath:        /Return/ReturnData/IRS990/GovernmentGrantsAmt
   #     source_nodc_variable_name: F9_08_REV_CONTR_GOVT_GRANT
   #     IRS line: Form 990 Part VIII line 1e (government grants/contributions
@@ -149,7 +150,7 @@ schema:
   #   ein                               string
   #   tax_year                          int     # 2020-2024
   #   form_type                         string  # "990PF"
-  #   program_related_investments_total double  # USD; ~0.79 null
+  #   program_related_investments_total double  # USD; ~0.62 null
   #     source_xpath:        /Return/ReturnData/IRS990PF/SumOfProgramRelatedInvstGrp/TotalAmt
   #     source_nodc_variable_name: PF_09_PROG_RLTD_INVEST_AMT_TOT
   #     IRS line: Form 990-PF Part IX-B (Summary of Program-Related
@@ -193,9 +194,10 @@ consumers:
       program_related_investments_total to the sector-in-brief
       dimension grain (Organization Type x Subsector x Size x Census
       geography x Year), joining EIN against bmf-master-geocoded. The
-      gov_grants and pf_pri panels are NOT yet built as of 2026-05-29
-      (efile v2026.05 only just published); they wire in next via
-      panel_gov_grants.R / panel_pf_pri.R. See [[sector-in-brief]]
+      government_grants and program_related_investments panels (named
+      gov_grants / pf_pri in the producer until the ADR 0018 rename
+      lands) are now built in sector-in-brief-data but not yet
+      published or wired into the dashboard. See [[sector-in-brief]]
       Open items and ADR 0017 §5.
   - repo: TODO  # API service tier (per ADR 0003)
     pin: "TODO"
@@ -225,28 +227,23 @@ notes: |
   - Coverage (manifest scope + quality per_year_counts): tax years
     2020-2024; government_grants 1,412,695 rows, PRI 526,807 rows.
     2024 is partial (78,817 / 48,860 rows) — filings still arriving.
-  - High null rates (~0.80 both fields) are expected: most filers
-    report no government grants / no PRI.
+  - High null rates (~0.64 government_grants, ~0.62 PRI) are expected:
+    most filers report no government grants / no PRI.
   - 2024 v5.1 and v5.2 had no published TEOS XSD; the build aliased
     them to 2024 v5.0 XSDs (manifest.xsd_verification.aliases),
     pending SOI/MeF retrieval. A documented, bounded provenance gap.
 
   ## Open items (process / data-quality loose ends in v2026.05)
 
-  1. v2026.05 IS BROKEN FOR TY2022 AND TY2023 — rebuild + republish
-     required. Both fields are 100% null for tax years 2022 and 2023
-     in the published vintage (verified against the parquets; 2020,
-     2021, 2024 have normal ~0.60-0.73 null rates). Cause: the
-     producer's layer-2 dictionary used hyphenated schema-version keys
-     (e.g. 2022:4-0) for those years, but extraction matches the
-     dotted GT return_version (2022v4.0), so no XPath claim resolved
-     and every value fell to null. Fixed producer-side
-     (nccs-data-efile, branch efile-phase0-gate5-and-version-fix /
-     commit "Fix TY2022/2023 XPath version-key typo"); the published
-     S3 artifact still carries the defect until a fresh vintage is
-     built. This also inflated the manifest's sampled null rates (see
-     item 2) since two of five years were entirely null.
-  2. IRS instruction spot-check (gate 5 / ADR 0017 §2.3) — DONE
+  # NOTE: the TY2022/2023 100%-null bug (hyphenated layer-2 version
+  # keys not matching the dotted GT return_version) was fixed
+  # producer-side and the vintage was rebuilt + republished on
+  # 2026-05-29 (producer SHA a9c32e5). All five tax years are now
+  # populated; verified against latest/ (whole-file null rates 0.6417
+  # government_grants / 0.6178 PRI, no longer inflated by all-null
+  # years). The defect is resolved in the live artifact.
+
+  1. IRS instruction spot-check (gate 5 / ADR 0017 §2.3) — DONE
      2026-05-29. Citations verified against the actual IRS
      instructions and landed in the producer's layer-2 dictionary
      (the "(CONFIRM PAGE)" placeholders are gone): government_grants
@@ -256,28 +253,30 @@ notes: |
      The spot-check caught a form renumbering: PRI is Part VIII-B for
      TY2021-2024 but Part IX-B for TY2020 (the NODC PF_09_ name is
      2020-anchored). The version-agnostic XPath resolves regardless,
-     so data is unaffected. NOTE: the corrected citations reach the
-     published *_dictionary.csv only on the next vintage (see item 1).
-  3. Value-range breaches passed the build. government_grants max is
+     so data is unaffected. The corrected citations are now live in
+     the published *_dictionary.csv as of the 2026-05-29 republish
+     (producer SHA a9c32e5; verified in phase0/latest/).
+  2. Value-range breaches passed the build. government_grants max is
      ~1.32e10, above the [0, 1e10] sane ceiling ADR 0017 §2.2 named;
      both fields carry negative minimums (government_grants -5,653,277;
      PRI -55,000). PRI's quality check flagged a null_rate breach
-     (observed 0.7668 vs configured 0.9 floor) as non-fatal. Confirm
+     (observed 0.6094 vs configured 0.9 floor) as non-fatal. Confirm
      these are intended (legitimate amended/negative filings) or
      tighten the gate.
-  4. xsd_verification.passed = true while mismatches[] lists ~60
-     found:false entries. Those checks target the concordance's
-     bare-element XPath variants (e.g. .../GovernmentGrants), which do
-     not resolve; the extractor used the `...Amt`-suffixed leaves that
-     do. Reconcile the checked XPaths with the extracted ones so the
-     manifest's mismatch list reflects real gaps, not naming variants.
+  3. xsd_verification.passed = true while mismatches[] lists 48
+     found:false entries (of 80 checks). Those checks target the
+     concordance's bare-element XPath variants (e.g.
+     .../GovernmentGrants), which do not resolve; the extractor used
+     the `...Amt`-suffixed leaves that do. Reconcile the checked
+     XPaths with the extracted ones so the manifest's mismatch list
+     reflects real gaps, not naming variants.
 
   ## Deferred design decisions (codify when Phase 1 is built)
 
   1. Append-only vs. rolling. Are old filings ever republished
      (corrections)? If yes, define a dedup strategy. v2026.05 already
      dedups extracted filings by filing_receipt_id at the combine step
-     (producer SHA 0a7048d).
+     (producer SHA a9c32e5).
   2. Schema evolution policy. Allow additive schema changes (new
      schedules / line items) without a deprecation window, but require
      an ADR for any field removal or rename.

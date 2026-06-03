@@ -32,17 +32,26 @@ s3:
   #   number_nonprofits.parquet, finances.parquet, daf.parquet,
   #   pf_grants.parquet, data_dictionary.parquet,
   #   nested_geographies.csv, _manifest.json
-  # Not yet published (deferred — ADR 0017):
-  #   gov_grants.parquet, pf_pri.parquet
+  # Built, pending publish (promote to the published-files list above
+  # on the next vintage cut):
+  #   government_grants.parquet, program_related_investments.parquet
+  # Names standardized to the efile producer's per ADR 0018 (was
+  # gov_grants.parquet / pf_pri.parquet in ADR 0010 / 0017 §5). The
+  # producer still emits the old names (panel_gov_grants.R /
+  # panel_pf_pri.R) and must rename its outputs before first publish;
+  # this contract is authoritative on the target names.
   # These two panels are sourced from the `efile` Phase 0 vertical
   # slice (Form 990 Part VIII line 1e and Form 990-PF Part IX-B).
-  # Their upstream is now LIVE: efile published v2026.05 on
-  # 2026-05-29 (see [[efile]]). The panels still need building in
-  # sector-in-brief-data (panel_gov_grants.R / panel_pf_pri.R reading
-  # phase0/latest and aggregating to the dimension grain) and wiring
-  # in the dashboard; not yet shipped as of this writing. See ADR
-  # 0017 §5 for the build/wire sequence and the explicit rejection of
-  # NODC-interim wiring.
+  # Their upstream is LIVE: efile v2026.05, republished 2026-05-29
+  # with the TY2022/2023 fix (see [[efile]]). The panels are now built
+  # in sector-in-brief-data (reading phase0/latest and aggregating to
+  # the dimension grain, joining EIN against bmf-master-geocoded) but
+  # are not yet published to this prefix or wired into the dashboard.
+  # The aggregated metric columns stay Title Case per ADR 0010 output
+  # normalization (Total Government Grants / Total Program-Related
+  # Investments), NOT efile's snake_case filing-grain column names.
+  # See ADR 0017 §5 for the build/wire sequence and the explicit
+  # rejection of NODC-interim wiring.
 
 cadence:
   type: on-change
@@ -96,10 +105,13 @@ notes: |
     - [[core-legacy]]           (inputs.core_legacy; 990combined 1989-2011)
     - [[core-990]]              (inputs.core_modern; 990 + 990combined 2012-2024)
     - [[core-panel]]            (inputs.core_pf; 990-PF panel)
-    - [[efile]]                 (Phase 0 vertical slice — gov_grants
-                                 and pf_pri panels only; upstream LIVE
-                                 as of efile v2026.05 (2026-05-29),
-                                 panels not yet built per ADR 0017 §5)
+    - [[efile]]                 (Phase 0 vertical slice —
+                                 government_grants and
+                                 program_related_investments panels
+                                 only; upstream LIVE as of efile
+                                 v2026.05 (2026-05-29), panels built,
+                                 pending publish per ADR 0017 §5;
+                                 names standardized per ADR 0018)
   Plus uncontracted external sources (IRS SOI 990PF xlsx; DAF
   e-file returns).
 
@@ -110,21 +122,28 @@ notes: |
 
   ## Open items
 
-  1. `gov_grants.parquet` and `pf_pri.parquet` not yet built.
-     Source columns resolved per [[0017-efile-phase-0-vertical-slice]]:
-     Form 990 Part VIII line 1e (`government_grants`) and Form 990-PF
-     Part IX-B (`program_related_investments_total`), both delivered
-     by the `efile` Phase 0 vertical slice — now LIVE at
+  1. `government_grants.parquet` and
+     `program_related_investments.parquet` built, not yet published.
+     Names standardized to the efile producer's per
+     [[0018-standardize-efile-panel-names]] (was gov_grants.parquet /
+     pf_pri.parquet in ADR 0010 / 0017 §5). Source columns resolved
+     per [[0017-efile-phase-0-vertical-slice]]: Form 990 Part VIII line
+     1e (`government_grants`) and Form 990-PF Part IX-B
+     (`program_related_investments_total`), both delivered by the
+     `efile` Phase 0 vertical slice — LIVE at
      `s3://nccsdata/processed/efile/phase0/latest/` as of efile
-     v2026.05 (2026-05-29). The upstream blocker is cleared; next is
-     building the two panels in sector-in-brief-data
-     (panel_gov_grants.R / panel_pf_pri.R, reading phase0/latest and
-     joining EIN against bmf-master-geocoded), then wiring them in the
-     dashboard. Do NOT wire to NODC's CSV in the interim (ADR 0017
-     §3/§5). When the panels ship, add them to the s3.* file list
-     above and include their schemas in data_dictionary.parquet.
-     Heads-up before consuming: efile v2026.05's IRS-instruction
-     spot-check is not yet finalized (see [[efile]] Open items #1).
+     v2026.05 (republished 2026-05-29 with the TY2022/2023 fix). The
+     upstream blocker is cleared and both panels are now built in
+     sector-in-brief-data (panel_gov_grants.R / panel_pf_pri.R, reading
+     phase0/latest and joining EIN against bmf-master-geocoded); the
+     producer must rename its outputs to the standardized names before
+     first publish (ADR 0018 Follow-up). They are not yet published to
+     this prefix or wired into the dashboard. Do NOT wire to NODC's CSV
+     in the interim (ADR 0017 §3/§5). When the panels ship, promote
+     them to the published-files list under s3.* above and include
+     their schemas in data_dictionary.parquet. The efile
+     IRS-instruction spot-check is now finalized (see [[efile]] Open
+     items), so it is no longer a pre-consume caveat.
   2. `nccs-dataexplorer-data` is dormant but not yet archived (ADR
      0010 step 8). Consumers should treat anything at
      `s3://nccsdata/dataexplorer/visuals/` as superseded.
