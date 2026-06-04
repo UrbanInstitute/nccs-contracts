@@ -26,33 +26,30 @@ partitioned: false  # one file per panel; revisit if growth warrants
 s3:
   bucket: nccsdata
   key_prefix: sector-in-brief/
-  versioned_template: "sector-in-brief/{vintage}/"  # vintage = vYYYY.MM, currently v2026.05
+  versioned_template: "sector-in-brief/{vintage}/"  # vintage = vYYYY.MM, currently v2026.07
   latest_template: sector-in-brief/latest/
-  # Published files (vintage v2026.05):
+  # Published files (current vintage v2026.07):
   #   number_nonprofits.parquet, finances.parquet, daf.parquet,
-  #   pf_grants.parquet, data_dictionary.parquet,
-  #   nested_geographies.csv, _manifest.json
-  # Built, pending publish (promote to the published-files list above
-  # on the next vintage cut):
-  #   government_grants.parquet, program_related_investments.parquet
-  # Names standardized to the efile producer's per ADR 0018 (was
-  # gov_grants.parquet / pf_pri.parquet in ADR 0010 / 0017 §5). The
-  # producer (sector-in-brief-data) is renaming to match before first
-  # publish: the artifact name is the panels-list key, and the rename
-  # also touches the data-dictionary curation keyed on it (see ADR 0018
-  # Outcome). This contract is authoritative on the target names.
-  # These two panels are sourced from the `efile` Phase 0 vertical
-  # slice (Form 990 Part VIII line 1e and Form 990-PF Part IX-B).
-  # Their upstream is LIVE: efile v2026.05, republished 2026-05-29
-  # with the TY2022/2023 fix (see [[efile]]). The panels are now built
-  # in sector-in-brief-data (reading phase0/latest and aggregating to
-  # the dimension grain, joining EIN against bmf-master-geocoded) but
-  # are not yet published to this prefix or wired into the dashboard.
-  # The aggregated metric columns stay Title Case per ADR 0010 output
-  # normalization (Total Government Grants / Total Program-Related
-  # Investments), NOT efile's snake_case filing-grain column names.
-  # See ADR 0017 §5 for the build/wire sequence and the explicit
-  # rejection of NODC-interim wiring.
+  #   pf_grants.parquet, government_grants.parquet,
+  #   program_related_investments.parquet, data_dictionary.parquet,
+  #   nested_geographies.csv, county_fips_crosswalk.parquet,
+  #   cbsa_crosswalk.parquet, _manifest.json
+  # Vintage history:
+  #   v2026.05 (2026-05-21) — first prod cutover (ADR 0010).
+  #   v2026.06 (2026-06-03) — added government_grants.parquet +
+  #     program_related_investments.parquet, sourced from the `efile`
+  #     Phase 0 vertical slice (Form 990 Part VIII line 1e and Form 990-PF
+  #     Part IX-B; [[efile]] v2026.05 republished 2026-05-29 with the
+  #     TY2022/2023 fix). 2021-2023 only. Names standardized per ADR 0018
+  #     (was gov_grants/pf_pri); metric columns stay Title Case per ADR
+  #     0010 (Total Government Grants / Total Program-Related Investments),
+  #     NOT efile snake_case; NODC-interim wiring explicitly rejected
+  #     (ADR 0017 §5).
+  #   v2026.07 (2026-06-04) — FIPS-keyed county + CBSA geography (ADR
+  #     0021): every panel gains County FIPS + CBSA Code; Census County is
+  #     canonicalized (NA = unassigned); county_fips_crosswalk.parquet and
+  #     cbsa_crosswalk.parquet added; nested_geographies.csv enriched.
+  #     See "schema" below.
 
 cadence:
   type: on-change
@@ -77,20 +74,52 @@ schema:
   #   Size                int32   (ordinal 0-6)
   #   Census Region       string
   #   Census State        string  (2-letter postal)
-  #   Census County       string
-  #   Metro/Micro Area    string  (CBSA name, NA if none)
+  #   Census County       string  (canonical name; NA = unassigned — an
+  #                                ambiguous/unresolved label per ADR 0021)
+  #   County FIPS         string  (5-char GEOID, leading zeros; identity
+  #                                key; NA where Census County is NA) — v2026.07+
+  #   Metro/Micro Area    string  (CBSA name, FIPS-keyed; NA = rural or unassigned)
+  #   CBSA Code           string  (OMB CBSA code; NA likewise) — v2026.07+
   # Year column (where temporal): Year, int32. The legacy
   # `Tax Year` / `TAX_YEAR` naming was retired in the 2026-05-20 cut.
+  #
+  # Geography (ADR 0021): County FIPS / CBSA Code / canonical Census
+  # County / Metro/Micro Area are resolved by joining
+  # [[county-fips-crosswalk]] then [[cbsa-crosswalk]] (replaces the
+  # repo-local OMB delineation file ADR 0010 used). FIPS/CBSA codes are
+  # the identity key (names are display-only) and are STRINGS — never
+  # numeric-cast (leading zeros). Two geography artifacts join this
+  # surface — vintage-local copies, distinct from the producer crosswalks
+  # under s3://nccsdata/crosswalks/:
+  #   county_fips_crosswalk.parquet — Census State, County (raw),
+  #     Census County, County FIPS, Resolution (resolved/ambiguous/
+  #     unresolved; explains every NA FIPS).
+  #   cbsa_crosswalk.parquet — County FIPS, CBSA Code, Metro/Micro Area,
+  #     CBSA Type, Central/Outlying, CSA Code, CSA Title, Delineation Year.
+  #     DATA-DERIVED universe (resolved counties present in our data ⋈
+  #     OMB) — NOT the full OMB universe; NOT a complete UI dropdown
+  #     allowlist.
+  #   nested_geographies.csv — adds County FIPS + CBSA Code; drops
+  #     NA-county rows (data-derived allowlist of selectable geographies).
+  # Producer/consumer boundary: the producer owns geography identity and
+  # publishes these; the dashboard derives presentation at runtime
+  # (dropdowns = distinct geo present in a panel; "N records unassigned"
+  # per state = sum of the panel's NA-geography cells) — not pre-baked.
 
 consumers:
   - repo: UrbanInstitute/sector-in-brief  # the Shiny dashboard
-    pin: "v2026.05"  # hardcoded in R/s3_sync.R via S3_PREFIX + sync path
+    pin: "v2026.06"  # hardcoded in R/s3_sync.R (VINTAGE). v2026.07 cutover pending — see notes.
     notes: >
       Reads via `aws s3 sync` at app startup
-      (R/s3_sync.R:21, called from R/app.R:3), into committed
+      (R/s3_sync.R, called from R/app.R), into committed
       data/ directory. Auto-refresh-on-boot pattern per ADR 0011
       Outcome (the original "remove committed parquet" plan was
-      amended at execution time).
+      amended at execution time). The dashboard pins a specific
+      vintage (not latest/), so it does NOT auto-pick-up v2026.07
+      even though latest/ now mirrors it. v2026.07 cutover is pending
+      a dashboard PR (ADR 0021 Pending #3): bump VINTAGE to v2026.07,
+      declare County FIPS + CBSA Code in R/expected_schema.R, and move
+      county/CBSA selection from name-based to FIPS/code-keyed.
 
 drift_detection:
   trigger: event
@@ -159,28 +188,24 @@ notes: |
 
   ## Open items
 
-  1. `government_grants.parquet` and
-     `program_related_investments.parquet` built, not yet published.
-     Names standardized to the efile producer's per
-     [[0018-standardize-efile-panel-names]] (was gov_grants.parquet /
-     pf_pri.parquet in ADR 0010 / 0017 §5). Source columns resolved
-     per [[0017-efile-phase-0-vertical-slice]]: Form 990 Part VIII line
-     1e (`government_grants`) and Form 990-PF Part IX-B
-     (`program_related_investments_total`), both delivered by the
-     `efile` Phase 0 vertical slice — LIVE at
-     `s3://nccsdata/processed/efile/phase0/latest/` as of efile
-     v2026.05 (republished 2026-05-29 with the TY2022/2023 fix). The
-     upstream blocker is cleared and both panels are now built in
-     sector-in-brief-data (panel_gov_grants.R / panel_pf_pri.R, reading
-     phase0/latest and joining EIN against bmf-master-geocoded); the
-     producer must rename its outputs to the standardized names before
-     first publish (ADR 0018 Follow-up). They are not yet published to
-     this prefix or wired into the dashboard. Do NOT wire to NODC's CSV
-     in the interim (ADR 0017 §3/§5). When the panels ship, promote
-     them to the published-files list under s3.* above and include
-     their schemas in data_dictionary.parquet. The efile
-     IRS-instruction spot-check is now finalized (see [[efile]] Open
-     items), so it is no longer a pre-consume caveat.
+  1. **Done — published in v2026.06 (2026-06-03).**
+     `government_grants.parquet` and
+     `program_related_investments.parquet` shipped (names standardized
+     per [[0018-standardize-efile-panel-names]]; source columns per
+     [[0017-efile-phase-0-vertical-slice]] — Form 990 Part VIII line 1e
+     and Form 990-PF Part IX-B, from the `efile` Phase 0 slice; metric
+     columns Title Case, NOT NODC CSV). 2021-2023 only. Both are in the
+     published-files list and data_dictionary.parquet.
+  1b. **Dashboard FIPS-keyed geography cutover (ADR 0021 Pending #3).**
+     v2026.07 (2026-06-04) adds County FIPS + CBSA Code and canonicalizes
+     Census County (NA = unassigned). The dashboard PR should pin
+     v2026.07, declare the two code columns in R/expected_schema.R, move
+     county/CBSA selection to FIPS/code-keyed, and may add a per-state
+     "N records unassigned" stat (derived from each panel's NA-geography
+     cells). cbsa_crosswalk.parquet is data-derived (not the full OMB
+     universe) — fine as a dropdown allowlist of what is in the data, not
+     as a complete reference list. Known effect: CT shows ~14k unassigned
+     (planning-region labels; ADR 0021 Follow-up 4).
   2. `nccs-dataexplorer-data` is dormant but not yet archived (ADR
      0010 step 8). Consumers should treat anything at
      `s3://nccsdata/dataexplorer/visuals/` as superseded.

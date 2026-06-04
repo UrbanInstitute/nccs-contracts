@@ -116,7 +116,7 @@ schema:
 
 consumers:
   - repo: UrbanInstitute/sector-in-brief-data
-    pin: "latest"  # first consumer; left-joins on (geo_state_abbr, geo_county) with no sf/tigris on its side. Re-pin once its cutover is confirmed (ADR 0021 Follow-up 1).
+    pin: "latest"  # first consumer; left-joins on (geo_state_abbr, geo_county) with no sf/tigris on its side. CUTOVER CONFIRMED 2026-06-04 (sector-in-brief-data v2026.07, commit c074f5d); pin stays "latest" (flat layout, no vintage subdir per ADR 0021).
     notes: >
       Canonicalizes/dedupes its county dimension by joining this crosswalk
       on (geo_state_abbr, raw geo_county) -> geo_county_canonical, and may

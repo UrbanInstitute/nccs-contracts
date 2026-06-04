@@ -112,7 +112,7 @@ schema:
 
 consumers:
   - repo: UrbanInstitute/sector-in-brief-data
-    pin: "latest"  # first consumer; derives CENSUS_CBSA_NAME ("Metro/Micro Area") by joining on county_fips = geo_county_fips. Re-pin once its cutover is confirmed (ADR 0021 Follow-up 1).
+    pin: "latest"  # first consumer; derives CENSUS_CBSA_NAME ("Metro/Micro Area") by joining on county_fips = geo_county_fips. CUTOVER CONFIRMED 2026-06-04 (sector-in-brief-data v2026.07, commit c074f5d); pin stays "latest" (flat layout, no vintage subdir per ADR 0021).
     notes: >
       Replaces the repo-local Census delineation file ADR 0010 used to
       derive CENSUS_CBSA_NAME. Chains from [[county-fips-crosswalk]]:

@@ -287,23 +287,60 @@ follow-up; (c) location moved from `geocoding/bmf-master/crosswalks/` to
 a new top-level `crosswalks/` prefix; (d) `resolution` + `tiger_year`
 columns added; (e) flat layout — documented ADR 0013 exception.
 
+### Consumer adoption — sector-in-brief-data (2026-06-04)
+
+**First contracted consumer cut over** (`sector-in-brief-data` commit
+`c074f5d`, shipped in its vintage **v2026.07**). It joins both crosswalks
+per the chain above — replacing its repo-local `(state, county-name)` OMB
+delineation file — and:
+
+- **Canonicalizes county + attaches FIPS.** `Census County` becomes the
+  canonical name; `ambiguous`/`unresolved` labels resolve to **NA
+  ("unassigned"), not raw passthrough** — consistent with the
+  "fall out of FIPS-keyed selection" invariant above. Validated against
+  this ADR's motivating bug: the Detroit-metro over-count drops from
+  33,368 to ~22.5k (FIPS-keyed sum across the 6 Detroit MSA counties).
+- **Treats FIPS/CBSA codes as the identity key, in every panel.**
+  `County FIPS` and `CBSA Code` (both `chr`) are added to every panel as
+  dimensions (cardinality-free — 1:1 with their names); names are
+  display-only. The consumer chose codes-in-every-panel over a
+  lookup-only design so the dashboard filters by code with no name
+  round-trip.
+- **Sets a producer/consumer boundary (consumer-side decision).**
+  `sector-in-brief-data` owns geography *identity* and publishes the
+  enriched `nested_geographies` lookup + vintage-local copies of both
+  crosswalks; the `sector-in-brief` dashboard derives *presentation* at
+  runtime — dropdown options = distinct geographies present in a panel,
+  "N records unassigned" per state = sum of the panel's NA-geography
+  cells. Deliberately **not** pre-baked as artifacts (consistent-by-
+  construction with the panels). Recorded in [[sector-in-brief]].
+- **Surfaces a known coverage hole.** Connecticut's post-2022
+  planning-region labels are `ambiguous` → NA, so ~14k CT orgs land as
+  "unassigned county" downstream. Correct by this ADR's design, but a
+  large, concentrated effect — see Follow-up 4.
+
 **Pending — consumer adoption:**
 
-1. `sector-in-brief-data` joins both crosswalks (county canonicalization
-   + CBSA derivation, replacing its repo-local delineation file). First
-   contracted consumer.
+1. **Done (2026-06-04).** `sector-in-brief-data` joined both crosswalks
+   (see "Consumer adoption" above). First contracted consumer.
 2. The NCCS website BMF data catalog (planned consumer of the CSV
    mirrors).
 3. The `sector-in-brief` dashboard county filter/dropdown moves to
-   FIPS-keyed selection.
+   FIPS-keyed selection. **Unblocked** (v2026.07 in prod since
+   2026-06-04); pending the dashboard PR.
 
 ## Follow-up
 
-1. **Confirm `sector-in-brief-data`'s cutover** to the published
-   crosswalks, then register its real pin in both contracts (currently
-   `latest`).
+1. **Done (2026-06-04).** `sector-in-brief-data`'s cutover is confirmed
+   (v2026.07); both contracts record the consumer with pin `latest` (flat
+   layout has no vintage subdir, so `latest` is the durable pin).
 2. **Register the NCCS website BMF catalog** as a consumer of the CSV
    mirrors once it goes live (placeholder consumer recorded now).
 3. **Vintage migration trigger.** When TIGER/OMB 2024 lands, move both
    crosswalks to `v{YYYY}/` + `latest/` per the revisit trigger above and
    flip `versioned_template`/`latest_template` in both contracts.
+4. **CT planning-region coverage.** The 4 Connecticut planning-region
+   labels resolve to NA, leaving ~14k CT orgs unassigned at county grain
+   for every downstream consumer. Consider resolving CT planning regions
+   to their FIPS (the 2022 county→planning-region delineation) in a future
+   crosswalk vintage so CT regains county-grain geography.
