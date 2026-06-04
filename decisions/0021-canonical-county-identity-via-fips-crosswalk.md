@@ -303,8 +303,9 @@ delineation file — and:
   counties (Wayne, Oakland, Macomb, Washtenaw, Livingston, Monroe,
   St. Clair), where name-based selection produced the 33,368 over-count
   vs ~21k true: on v2026.07, selecting those county names across all
-  states over-counts (501(c)(3), 2026: 30,811) vs FIPS-keyed (19,787),
-  the inflation being same-named counties in other states.
+  states reproduces the 33,368 over-count exactly (501(c)(3) = public
+  charities + private foundations, 2026), vs 21,638 FIPS-keyed — the
+  +11,730 being same-named counties in other states.
 - **Treats FIPS/CBSA codes as the identity key, in every panel.**
   `County FIPS` and `CBSA Code` (both `chr`) are added to every panel as
   dimensions (cardinality-free — 1:1 with their names); names are
