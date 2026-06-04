@@ -40,6 +40,16 @@ and should be a deterministic check.
 Build the **deterministic floor of Loop 3** now, as zero-cost GitHub
 Actions, and defer the semantic agent layer.
 
+> **The guard verifies *acknowledgment*, not *correctness*.** A PR fails
+> only if it changes the contract surface *without saying so* (no
+> `ADR NNNN` breadcrumb and no `contracts-ack` label). It does **not** read
+> the contract YAMLs and **cannot** tell whether a change actually
+> *violates* a contract — a wrong-but-acknowledged change passes green.
+> Judging whether the diff agrees with the ADR/contract is the deferred
+> Loop-3 Copilot agent's job (§7). Don't over-trust the green check: it
+> means "the contract surface was acknowledged," not "this change is
+> contract-compliant."
+
 1. **Enforce the breadcrumb convention; don't just document it.** Any PR in
    an in-scope repo that changes contract-relevant code (what or where the
    repo publishes, or the schema/manifest/dimension shape) must
