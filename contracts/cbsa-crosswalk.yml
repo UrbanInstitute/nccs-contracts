@@ -1,0 +1,172 @@
+# Authored 2026-06-04 against the live artifact and nccs-data-bmf code
+# (scripts/build_cbsa_crosswalk.R, R/publish_cbsa_crosswalk.R,
+# R/publish_crosswalk.R). Per ADR 0021 (amended): published by the producer,
+# joined by consumers; derived FROM [[county-fips-crosswalk]].
+
+name: cbsa-crosswalk
+
+description: >
+  County GEOID -> CBSA/CSA crosswalk. One row per resolved county GEOID
+  from [[county-fips-crosswalk]], mapping it to its Metropolitan/
+  Micropolitan Statistical Area (and Combined Statistical Area, if any)
+  per the OMB delineation. Lets a consumer derive the Metro/Micro Area
+  dimension by joining on county FIPS. Published as parquet (machine
+  contract) + CSV mirror (web catalog) + an ADR 0014 _manifest.json.
+  See [[0021-canonical-county-identity-via-fips-crosswalk]].
+
+producer:
+  repo: UrbanInstitute/nccs-data-bmf
+  publish_path: R/publish_cbsa_crosswalk.R  # thin wrapper over R/publish_crosswalk.R; artifact built by scripts/build_cbsa_crosswalk.R (county GEOID universe from county_fips_crosswalk + OMB List 1 delineation xlsx)
+
+format: parquet  # CSV mirror also published; parquet is the machine contract
+compression: zstd
+partitioned: false  # small single-file lookup (~3,224 rows)
+
+s3:
+  bucket: nccsdata
+  key_prefix: crosswalks/cbsa/
+  # Flat prefix: NO {vintage}/ subdir and NO latest/ mirror — same deliberate
+  # ADR 0013 exception as [[county-fips-crosswalk]] (vintage carried in-column
+  # via delineation_year and in the manifest). Revisit when OMB 2024 lands.
+  versioned_template: null
+  latest_template: crosswalks/cbsa/cbsa_crosswalk.parquet
+  # Co-located at the same prefix:
+  #   crosswalks/cbsa/cbsa_crosswalk.parquet  — machine contract
+  #   crosswalks/cbsa/cbsa_crosswalk.csv      — web/spreadsheet mirror
+  #   crosswalks/cbsa/_manifest.json          — ADR 0014 manifest
+  # Sidecar written by the build but NOT published / NOT contracted:
+  #   data/crosswalks/cbsa_crosswalk_audit.csv  — rural tally + delineation counties absent from the BMF universe
+
+cadence:
+  type: on-change
+  notes: >
+    Rebuilt and republished in lockstep with [[county-fips-crosswalk]]
+    (shared geography vintage — delineation_year must equal the county
+    crosswalk's tiger_year) and when DELINEATION_YEAR advances. Idempotent
+    upload — unchanged files are skipped via the manifest sha256.
+
+manifest:
+  path: crosswalks/cbsa/_manifest.json  # ADR 0014 shape, written by R/manifest.R::write_manifest; `vintage` field = delineation_year (e.g. "2023"); inputs[] records the county_fips_crosswalk (repo input) and the OMB List 1 delineation xlsx URL
+  schema_version: 2  # ADR 0014 standard shape
+
+schema:
+  source: inline
+  # One row per resolved county GEOID in [[county-fips-crosswalk]].
+  # 3,224 rows. Column list matches scripts/build_cbsa_crosswalk.R transmute().
+  columns:
+    - name: county_fips
+      type: string
+      description: >
+        5-char county GEOID. Join key BACK to [[county-fips-crosswalk]]'s
+        geo_county_fips. Unique in this table — a county belongs to at
+        most one CBSA. Leading zeros preserved (string).
+      nullable: false
+    - name: county_name
+      type: string
+      description: >
+        Census NAMELSAD, carried over from [[county-fips-crosswalk]]'s
+        geo_county_canonical.
+      nullable: false
+    - name: cbsa_code
+      type: string
+      description: >
+        5-char CBSA code, leading zeros preserved (string). NA for a rural
+        county that is in no CBSA.
+      nullable: true
+    - name: cbsa_title
+      type: string
+      description: >
+        CBSA title, e.g. "Hartford-West Hartford-East Hartford, CT". NA if
+        rural.
+      nullable: true
+    - name: cbsa_type
+      type: string
+      description: >
+        "Metropolitan Statistical Area" | "Micropolitan Statistical Area".
+        NA if rural.
+      nullable: true
+    - name: central_outlying
+      type: string
+      description: >
+        The county's role within its CBSA: "Central" | "Outlying". NA if
+        rural.
+      nullable: true
+    - name: csa_code
+      type: string
+      description: >
+        3-char Combined Statistical Area code, leading zeros preserved
+        (string). NA if the county is in no CSA.
+      nullable: true
+    - name: csa_title
+      type: string
+      description: >
+        CSA title. NA if the county is in no CSA.
+      nullable: true
+    - name: delineation_year
+      type: int
+      description: >
+        OMB CBSA delineation vintage (default 2023; "List 1"). MUST equal
+        [[county-fips-crosswalk]]'s tiger_year — the delineation is defined
+        over the same county GEOID universe (ADR 0021 invariant).
+      nullable: false
+
+consumers:
+  - repo: UrbanInstitute/sector-in-brief-data
+    pin: "latest"  # first consumer; derives CENSUS_CBSA_NAME ("Metro/Micro Area") by joining on county_fips = geo_county_fips. CUTOVER CONFIRMED 2026-06-04 (sector-in-brief-data v2026.07, commit c074f5d); pin stays "latest" (flat layout, no vintage subdir per ADR 0021).
+    notes: >
+      Replaces the repo-local Census delineation file ADR 0010 used to
+      derive CENSUS_CBSA_NAME. Chains from [[county-fips-crosswalk]]:
+      raw label -> geo_county_fips -> CBSA.
+  - repo: UrbanInstitute/nccs-website  # PLANNED — BMF data catalog consumes the CSV mirror; register the real pin when it goes live (ADR 0021 Follow-up 2).
+    pin: "planned"
+    notes: "Planned: BMF data catalog surfaces the cbsa_crosswalk.csv mirror."
+
+drift_detection:
+  trigger: event
+  schedule: ""
+  event: "publish-crosswalks"  # producer publishes both crosswalks in lockstep
+
+deprecation_window_days: 90
+
+notes: |
+  Authored against the live artifact and producer code on 2026-06-04 per
+  [[0021-canonical-county-identity-via-fips-crosswalk]]. DERIVED from
+  [[county-fips-crosswalk]] (its resolved county GEOIDs are this table's
+  universe) plus the OMB delineation. Published by nccs-data-bmf; the
+  master ([[bmf-master-geocoded]]) is NOT modified — consumers compose
+  the join (ADR 0016).
+
+  ## How to use
+
+  Join on `county_fips = geo_county_fips` AFTER resolving the raw label
+  through [[county-fips-crosswalk]]:
+
+      raw label --(county-fips-crosswalk)--> geo_county_fips
+                --(THIS, on county_fips)----> cbsa_code / cbsa_title / ...
+
+  Rural counties (in no CBSA) carry NA across the CBSA/CSA columns — that
+  is the correct value, not missing data.
+
+  ## Guarantees (ADR 0021 invariants)
+
+  - **CBSA/CSA codes are STRINGS** (5-char CBSA, 3-char CSA), leading
+    zeros significant; a numeric cast corrupts them.
+  - **One row per county GEOID** — `county_fips` is unique (a county
+    belongs to <=1 CBSA).
+  - **Vintage coupling:** `delineation_year` == [[county-fips-crosswalk]]
+    `tiger_year`. Rebuilt and republished together so every county GEOID
+    in one exists in the other.
+
+  ## Supersedes ADR 0010's repo-local CBSA derivation
+
+  ADR 0010 derived `CENSUS_CBSA_NAME` inside sector-in-brief-data from a
+  repo-local Census delineation file keyed on (state, county-name) — the
+  same dirty key that caused the county over-count. This contracted
+  artifact replaces that: derive the metro dimension by joining county
+  FIPS, not county name. See ADR 0021.
+
+  ## Not contracted: the audit sidecar
+
+  `cbsa_crosswalk_audit.csv` (rural tally + delineation counties absent
+  from the BMF universe) is written beside the artifact for human review
+  but is NOT part of the contract surface — no consumer pins it.
