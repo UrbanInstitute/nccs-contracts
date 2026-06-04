@@ -1,59 +1,70 @@
-# INTERIM (status: deferred). Authored in parallel from the agreed target
-# schema per ADR 0021; the artifact is NOT yet published by nccs-data-bmf.
-# Reconcile exact column names, row count, and S3 path against the real
-# artifact once it lands, then flip status -> active. Lines marked
-# CONFIRM below are the points awaiting that reconcile.
+# Reconciled 2026-06-04 against the live artifact and nccs-data-bmf code
+# (scripts/build_county_fips_crosswalk.R, R/publish_county_fips_crosswalk.R,
+# R/publish_crosswalk.R). Per ADR 0021 (amended): published by the producer,
+# joined by consumers; the master is NOT modified.
 
 name: county-fips-crosswalk
-
-# planned but not yet published; YAML reserves the slug and documents the
-# intended shape. Flip to active (or omit) once the artifact is live.
-status: deferred
 
 description: >
   Reusable name->FIPS crosswalk that resolves the BMF's dirty geocoded
   county label to a stable 5-char county GEOID and the canonical Census
   county name. One row per distinct (state, raw county label). Lets any
   consumer holding dirty (state, county-name) strings canonicalize and
-  dedupe by identity rather than by name. See ADR 0021.
+  dedupe by identity rather than by name. Published as parquet (machine
+  contract) + CSV mirror (web catalog) + an ADR 0014 _manifest.json.
+  See [[0021-canonical-county-identity-via-fips-crosswalk]].
 
 producer:
   repo: UrbanInstitute/nccs-data-bmf
-  publish_path: TODO  # CONFIRM: the run script that builds + publishes the crosswalk (lat/lon -> TIGER county spatial join, then write keyed on raw label)
+  publish_path: R/publish_county_fips_crosswalk.R  # thin wrapper over R/publish_crosswalk.R; artifact built by scripts/build_county_fips_crosswalk.R (lat/lon -> tigris::counties(cb=TRUE, year=TIGER_YEAR) spatial join + name-gazetteer fallback)
 
-format: parquet
+format: parquet  # CSV mirror also published; parquet is the machine contract
 compression: zstd
-partitioned: false  # small single-file lookup (~3,638 rows)
+partitioned: false  # small single-file lookup (~3,635 rows)
 
 s3:
   bucket: nccsdata
-  # CONFIRM with nccs-data-bmf. Target sits beside the geocoded master's
-  # other geocoding/bmf-master/ sub-prefixes (merged/, input/).
-  key_prefix: geocoding/bmf-master/crosswalks/
-  versioned_template: null  # CONFIRM. Likely unversioned-overwrite like [[bmf-master-geocoded]]; the artifact is additive across vintages (see invariants), so a single canonical file is reasonable. Revisit alongside the bmf-master vintage migration.
-  latest_template: geocoding/bmf-master/crosswalks/county_fips_crosswalk.parquet  # CONFIRM exact filename
+  key_prefix: crosswalks/county-fips/
+  # Flat prefix: NO {vintage}/ subdir and NO latest/ mirror — a deliberate
+  # exception to ADR 0013 (see the "vintage-columned reference crosswalks"
+  # exemption in [[0013-versioned-producer-outputs]] and ADR 0021). The
+  # geography vintage is carried in-column (tiger_year) and in the manifest
+  # (vintage). Revisit when TIGER 2024 lands: a flat single file cannot hold
+  # two geography vintages, so both crosswalks then move to v{YYYY}/ + latest/.
+  versioned_template: null
+  latest_template: crosswalks/county-fips/county_fips_crosswalk.parquet
+  # Co-located at the same prefix:
+  #   crosswalks/county-fips/county_fips_crosswalk.parquet  — machine contract
+  #   crosswalks/county-fips/county_fips_crosswalk.csv      — web/spreadsheet mirror
+  #   crosswalks/county-fips/_manifest.json                 — ADR 0014 manifest
+  # Sidecar written by the build but NOT published / NOT contracted:
+  #   data/crosswalks/county_fips_crosswalk_audit.csv       — ambiguous + unresolved labels only
 
 cadence:
   type: on-change
   notes: >
     Rebuilt when bmf-master-geocoded is rebuilt and previously-unseen raw
-    (state, county) labels appear. Additive: existing mappings are stable;
-    new labels are appended (ADR 0021 invariant).
+    (state, county) labels appear, or when TIGER_YEAR advances. Republished
+    in lockstep with [[cbsa-crosswalk]] (shared geography vintage — see the
+    vintage-coupling invariant in notes). Additive: existing mappings are
+    stable; new labels are appended (ADR 0021 invariant). Idempotent
+    upload — unchanged files are skipped via the manifest sha256.
 
 manifest:
-  path: TODO  # CONFIRM. Should emit a contract-standard _manifest.json (ADR 0014 shape) once nccs-data-bmf's manifest standardization reaches this artifact; see [[bmf-master]] / ADR 0014 rollout.
-  schema_version: 2  # ADR 0014 standard shape (target)
+  path: crosswalks/county-fips/_manifest.json  # ADR 0014 shape, written by R/manifest.R::write_manifest; `vintage` field = tiger_year (e.g. "2023"); inputs[] records the source geocoded master (+ etag) and the TIGER year
+  schema_version: 2  # ADR 0014 standard shape
 
 schema:
   source: inline
-  # One row per distinct (geo_state_abbr, geo_county_raw). ~3,638 rows.
-  # CONFIRM exact column names/types against the published artifact.
+  # One row per distinct (geo_state_abbr, geo_county_raw). 3,635 rows
+  # (3,619 resolved = 99.6%; 16 ambiguous/unresolved). Column list matches
+  # scripts/build_county_fips_crosswalk.R final select().
   columns:
     - name: geo_state_abbr
       type: string
       description: >
-        Join key. USPS 2-letter state abbreviation, matching the master's
-        geo_state_abbr.
+        Join key. USPS 2-letter state/territory abbreviation, matching the
+        master's geo_state_abbr.
       nullable: false
     - name: geo_county_raw
       type: string
@@ -68,13 +79,14 @@ schema:
       description: >
         5-char county GEOID (state FIPS + county FIPS), leading zeros
         preserved (string, never numeric). The stable identity key —
-        filter/select counties by THIS, not by name (ADR 0021).
-      nullable: false
+        filter/select counties by THIS, not by name (ADR 0021). NA when
+        the label is ambiguous or unresolved.
+      nullable: true
     - name: state_fips
       type: string
       description: >
         2-char state FIPS, the first two characters of geo_county_fips.
-        Leading zero preserved.
+        Leading zero preserved (string).
       nullable: false
     - name: geo_county_canonical
       type: string
@@ -83,39 +95,64 @@ schema:
         County / Parish / Borough / Census Area / Municipality / city /
         Municipio. Independent cities keep their `city` suffix and are
         distinct from any like-named county. Coalesce dirty labels to this
-        for display.
+        for display. NA when ambiguous/unresolved.
+      nullable: true
+    - name: resolution
+      type: string
+      description: >
+        Resolution status of the raw label: "resolved" (unique FIPS +
+        canonical name attached), "ambiguous" (label maps to >1 candidate
+        county and no single one dominates), or "unresolved" (no match).
+        Only `resolved` rows carry non-NA FIPS/canonical-name; the others
+        are enumerated in county_fips_crosswalk_audit.csv.
+      nullable: false
+    - name: tiger_year
+      type: int
+      description: >
+        TIGER/Census boundary vintage the GEOIDs were resolved against
+        (default 2023). MUST equal [[cbsa-crosswalk]]'s delineation_year —
+        the two artifacts share one geography vintage (ADR 0021 invariant).
       nullable: false
 
 consumers:
-  # The producing repo itself is the first consumer: bmf-master-geocoded
-  # joins this crosswalk to canonicalize geo_county and add geo_county_fips.
-  - repo: UrbanInstitute/nccs-data-bmf
-    pin: "latest"
+  - repo: UrbanInstitute/sector-in-brief-data
+    pin: "latest"  # first consumer; left-joins on (geo_state_abbr, geo_county) with no sf/tigris on its side. Re-pin once its cutover is confirmed (ADR 0021 Follow-up 1).
     notes: >
-      Internal: bmf-master-geocoded left-joins on
-      (geo_state_abbr, raw geo_county) -> geo_county_fips +
-      geo_county_canonical. See [[bmf-master-geocoded]].
-  - repo: TODO  # any external consumer canonicalizing its own dirty (state, county) strings; e.g. sector-in-brief-data may adopt geo_county_fips as the geo key (ADR 0021 Follow-up 3).
-    pin: "TODO"
-    notes: "Identify direct external consumers once the artifact is live."
+      Canonicalizes/dedupes its county dimension by joining this crosswalk
+      on (geo_state_abbr, raw geo_county) -> geo_county_canonical, and may
+      key the geo dimension on geo_county_fips. Then chains to
+      [[cbsa-crosswalk]] for the Metro/Micro Area (CBSA) dimension.
+  - repo: UrbanInstitute/nccs-website  # PLANNED — BMF data catalog consumes the CSV mirror; register the real pin when it goes live (ADR 0021 Follow-up 2).
+    pin: "planned"
+    notes: "Planned: BMF data catalog surfaces the county_fips_crosswalk.csv mirror."
 
 drift_detection:
   trigger: event
   schedule: ""
-  event: "publish-master-geocoded"  # CONFIRM: rebuilt in lockstep with bmf-master-geocoded
+  event: "publish-crosswalks"  # producer publishes both crosswalks in lockstep with a bmf-master-geocoded rebuild
 
 deprecation_window_days: 90
 
 notes: |
-  Authored from the agreed target schema in ADR 0021
-  ([[0021-canonical-county-identity-via-fips-crosswalk]]) BEFORE the
-  artifact is published. Treat the CONFIRM-marked fields as provisional
-  until reconciled against the live parquet.
+  Reconciled against the live artifact and producer code on 2026-06-04
+  per [[0021-canonical-county-identity-via-fips-crosswalk]]. Published by
+  nccs-data-bmf; the master ([[bmf-master-geocoded]]) is NOT modified —
+  consumers compose the join (ADR 0016).
+
+  ## The join chain
+
+      raw geocoder label
+         | join THIS crosswalk on (geo_state_abbr, geo_county)
+         v
+      geo_county_fips (+ state_fips, geo_county_canonical, resolution)
+         | join [[cbsa-crosswalk]] on county_fips = geo_county_fips
+         v
+      cbsa_code / cbsa_title / cbsa_type / csa_code / csa_title
 
   ## Why this artifact exists
 
   The BMF's geocoded `geo_county` is dirty free-text (bare vs suffixed,
-  spelling/punctuation variants, ~346 bare-with-sibling strays) and the
+  spelling/punctuation variants, bare-with-sibling strays) and the
   pipeline carries no county FIPS, so consumers cannot dedupe by identity
   and name-only filtering collapses distinct jurisdictions (e.g. "Monroe
   County" exists in 17 states; Baltimore city vs Baltimore County are
@@ -127,27 +164,34 @@ notes: |
 
   ## Guarantees (ADR 0021 invariants)
 
-  - **One canonical name per FIPS.** For every state, distinct
-    `geo_county_fips` count == distinct `geo_county_canonical` count.
-  - **Cities never merge with counties.** Independent cities and their
-    like-named counties carry distinct FIPS and distinct canonical names
-    (the `city` suffix is preserved).
-  - **Counts preserved on canonicalization.** Strays merge by coordinates
-    into their true county; no rows are dropped. Non-geocoded rows (no
-    lat/lon) resolve to `geo_county_fips = NA` in the master.
+  - **FIPS/CBSA/CSA codes are STRINGS.** Leading zeros are significant;
+    a numeric cast corrupts them.
+  - **One canonical name per FIPS** among resolved rows (FIPS->name is a
+    function).
+  - **Cities never merge with counties** (distinct FIPS, distinct
+    canonical names; `city` suffix preserved).
+  - **Vintage coupling:** `tiger_year` == [[cbsa-crosswalk]]
+    `delineation_year`. Rebuilt and republished together.
+  - **Left-join preserves counts.** ambiguous/unresolved labels carry NA
+    FIPS and fall out of FIPS-keyed selection (see the audit sidecar);
+    they are not silently merged.
   - **Additive across vintages.** Existing (state, raw label) -> FIPS
     mappings are stable; new raw labels are appended, never rewritten.
 
   ## Consumer guidance
 
   - **Filter/select counties by `geo_county_fips`, NOT by name.** This is
-    the correct fix for the name-collision class ("Monroe County" is in
-    17 states; independent cities collide with like-named counties).
+    the correct fix for the name-collision class.
   - **To canonicalize a dataset carrying dirty (state, county name):**
     left-join this crosswalk on `(geo_state_abbr, geo_county_raw)` and
-    coalesce to `geo_county_canonical`.
-  - **Affected consumers:** [[sector-in-brief]] / sector-in-brief-data
-    (its county dimension comes straight from `geo_county`; once canonical
-    upstream it needs no change, and may later adopt `geo_county_fips` as
-    the geo key) and the sector-in-brief dashboard (county filter +
-    dropdown; should move to FIPS-keyed selection — ADR 0021 Follow-up 3).
+    coalesce to `geo_county_canonical`. Keep all your rows (left join);
+    unmatched/ambiguous labels resolve to NA.
+  - **For the Metro/Micro Area dimension**, chain to [[cbsa-crosswalk]] on
+    `county_fips = geo_county_fips`.
+
+  ## Not contracted: the audit sidecar
+
+  `county_fips_crosswalk_audit.csv` (ambiguous + unresolved labels only,
+  with candidate GEOIDs and org-share diagnostics) is written beside the
+  artifact for human review but is NOT part of the contract surface — no
+  consumer pins it. The contracted truth is the parquet/CSV + manifest.

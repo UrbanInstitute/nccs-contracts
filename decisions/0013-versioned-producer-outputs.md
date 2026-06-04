@@ -132,6 +132,27 @@ records `latest_template: null`). Vintage subdirs and a per-vintage
 `_manifest.json` still apply. A producer is `latest/`-exempt iff its
 vintages are append-only history rather than superseding snapshots.
 
+**Exemption — vintage-columned reference crosswalks** (added 2026-06-04
+per [[0021-canonical-county-identity-via-fips-crosswalk]]). The geography
+crosswalks under `s3://nccsdata/crosswalks/` ([[county-fips-crosswalk]],
+[[cbsa-crosswalk]]) publish to a **flat prefix with no `{vintage}/`
+subdir and no `latest/` mirror.** Unlike the producers above, their
+*data* vintage is the geography vintage and is carried **in-column**
+(`tiger_year` / `delineation_year`) and in the manifest's `vintage`
+field; the artifacts are small (~3.6k / ~3.2k rows) and additive (new
+raw labels appended, existing mappings stable); and exactly one geography
+vintage is live at a time. The reproducibility path-vintaging buys is
+supplied by the explicit vintage columns, so a flat single file is
+sufficient and a `{vintage}/` + `latest/` split would add ceremony for
+zero benefit *while one geography vintage exists*. **Revisit trigger:**
+when a second geography vintage lands (TIGER/OMB 2024), a flat single
+file cannot hold two delineation years at once — at that point these
+artifacts MUST move to `{key_prefix}/v{YYYY}/` + `latest/` (vintage = the
+geography year, `v{YYYY}` per the Vintage format above) and their
+contracts flip `versioned_template`/`latest_template` accordingly. A
+producer is crosswalk-exempt iff its vintage is an explicit column and
+only one vintage is live.
+
 **Idempotency.** Re-publishing a vintage that already exists on S3
 should be a no-op for unchanged files. Producers fetch the existing
 vintage's manifest (per [[0014-standardize-manifest-shape]]), skip
@@ -177,6 +198,10 @@ implementations):
 - `bmf-lookups` — already at `{YYYY_MM}/` + `latest/`; migrates to
   `v{YYYY.MM}/` at next publish per the vintage-format decision
 - `sector-in-brief-data` — already at `v{YYYY.MM}/` + `latest/`
+- `county-fips-crosswalk`, `cbsa-crosswalk` — **exempt** (flat prefix,
+  no `{vintage}/` / `latest/`); vintage carried in-column. See the
+  "vintage-columned reference crosswalks" exemption above and
+  [[0021-canonical-county-identity-via-fips-crosswalk]].
 
 Deferred (not yet built):
 

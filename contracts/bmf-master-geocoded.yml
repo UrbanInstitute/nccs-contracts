@@ -98,32 +98,35 @@ notes: |
   sector-in-brief; use this artifact directly only for EIN-level detail
   or a non-standard activity definition.
 
-  ## County identity — `geo_county_fips` + canonical `geo_county` (ADR 0021)
+  ## County/CBSA identity is NOT in this artifact — join the crosswalks (ADR 0021)
 
-  PENDING the producer landing it; see [[county-fips-crosswalk]] and
-  [[0021-canonical-county-identity-via-fips-crosswalk]]. Two changes
-  arrive together on the next build:
+  This artifact deliberately carries **no** `geo_county_fips`, CBSA, or
+  canonicalized-county-name column, and `geo_county` stays the **raw**
+  geocoder label. Resolving geographic identity is a consumer-composed
+  join against two published crosswalks:
 
-  - **New column `geo_county_fips`** — string, 5-char county GEOID
-    (state+county FIPS), leading zeros preserved; `NA` for non-geocoded
-    rows. The stable county identity key — filter/select counties by
-    THIS, not by name. Purely additive. It also lands in the
-    `schema.source` data dictionary on the next regeneration.
-  - **`geo_county` becomes canonical**, no longer raw geocoder text. It
-    is overwritten with the Census `NAMELSAD` (correct County / Parish /
-    Borough / Census Area / Municipality / city / Municipio suffix). A
-    data-quality fix to a field that was never reliable (dirty free-text:
-    bare vs suffixed, `"St Louis"`/`"St. Louis"` variants, ~346 strays),
-    not a contract-shape break — but a consumer that hard-coded a raw
-    `geo_county` string must update.
+  - [[county-fips-crosswalk]] — left-join on `(geo_state_abbr, raw
+    geo_county)` to get `geo_county_fips` (5-char GEOID, the stable
+    identity key — filter by THIS, not by name) + canonical
+    `geo_county_canonical` (Census NAMELSAD).
+  - [[cbsa-crosswalk]] — chain on `county_fips = geo_county_fips` for the
+    Metro/Micro Area (CBSA/CSA) dimension.
 
-  Produced by left-joining the published [[county-fips-crosswalk]] on
-  `(geo_state_abbr, <raw geo_county>) -> geo_county_fips +
-  geo_county_canonical`; identity is resolved from the geocoded lat/lon
-  via a one-time TIGER spatial join at the producer. Name collisions that
-  name-only filtering used to merge (Baltimore city vs Baltimore County;
-  `"Monroe County"` exists in 17 states) are now distinct by FIPS. Counts
-  are preserved — strays merge by coordinates, no rows dropped. See ADR
+  **Why not bake these into the master:** per
+  [[0016-no-canonical-cross-dataset-merge]], the master is a producer
+  surface and derived joins live at the consumer. Adding FIPS/CBSA columns
+  would pin a single TIGER/OMB geography vintage into the master and bind
+  every master consumer to it; the crosswalks instead carry their own
+  vintage (`tiger_year`/`delineation_year`) and are joined by whoever needs
+  it. This **reverses an earlier ADR 0021 draft** that had the master
+  absorb `geo_county_fips` and overwrite `geo_county` with the canonical
+  name — see the ADR 0021 Outcome for why it was dropped before execution.
+  Net effect here: a pure non-change. `geo_county` semantics are unchanged;
+  no master consumer can break.
+
+  The name-collision bug class this addresses (Baltimore city vs Baltimore
+  County; `"Monroe County"` in 17 states; the Detroit-metro over-count) is
+  fixed at consumer join time by keying on FIPS rather than name. See ADR
   0021 for the decision and the scope boundary (county + state FIPS only,
   not tract/block/place/ZCTA).
 

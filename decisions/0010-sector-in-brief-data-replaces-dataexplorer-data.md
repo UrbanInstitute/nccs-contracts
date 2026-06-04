@@ -129,6 +129,14 @@ Sequenced; each step gates the next.
 - Adding the SOI 990PF and DAF external sources as contracted upstreams — they remain HTTP/external inputs in the new repo too. Worth a separate ADR if their drift becomes a problem.
 - Producer CI (auto-publish on input drift) — defer until the new repo stabilizes. Manual triggers are fine for the first vintages.
 - The CBSA crosswalk's own contract — it is small enough to ship with the new repo initially; promote to a `nccsdata/lookups/` artifact later if it grows.
+  - **Update (2026-06-04): resolved.** The CBSA crosswalk is now a
+    producer-published contracted artifact ([[cbsa-crosswalk]]) under
+    `s3://nccsdata/crosswalks/cbsa/`, derived from a county-FIPS crosswalk
+    ([[county-fips-crosswalk]]) rather than shipped inside the repo — see
+    [[0021-canonical-county-identity-via-fips-crosswalk]]. `CENSUS_CBSA_NAME`
+    is now derived by joining county FIPS, not the dirty `(state,
+    county-name)` key the repo-local delineation file used (that key was a
+    source of the county over-count ADR 0021 fixes).
 
 ## Outcome (as of 2026-05-21, updated after prod cutover)
 
