@@ -95,7 +95,9 @@ existing API after a deprecation window.
 ### Repo and naming
 
 - **New repo:** working name `UrbanInstitute/nccs-data-api` (or
-  similar); finalized at creation. Old repo
+  similar); finalized at creation. **Finalized 2026-06-04 as
+  `UrbanInstitute/sector-in-brief-api`** (the authoritative name now lives
+  in [[usage-api]]). Old repo
   (`UI-Research/nccs-dataexplorer-api`) is archived after sunset.
 - Repo carries: API code, IaC for the new bucket + lifecycle
   policy, deployment config, the rollup job, and tests.
