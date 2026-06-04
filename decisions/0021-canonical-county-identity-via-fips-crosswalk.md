@@ -9,7 +9,8 @@
 
 A consumer investigation into the Sector-in-Brief dashboard surfaced a
 gross over-count: **33,368** nonprofits reported for the seven
-Detroit-metro counties against **~21,000** from a direct BMF query for
+Southeast Michigan counties (Wayne, Oakland, Macomb,
+Washtenaw, Livingston, Monroe, St. Clair) against **~21,000** from a direct BMF query for
 the same place. The root cause is geographic *identity*, not the data:
 
 1. **`geo_county` is a dirty free-text label.** The BMF's geocoded
@@ -43,7 +44,7 @@ key, so the *same* bug class — and explicitly deferred the CBSA
 crosswalk's own contract as a follow-up. A stable county FIPS makes CBSA
 a clean derived attribute and lets that follow-up land here.
 
-The Detroit-metro over-count is one visible symptom of this whole bug
+The Southeast Michigan over-count is one visible symptom of this whole bug
 class. Cleaning the names alone would not fix it: the city/county
 collisions are genuinely distinct geographies that no spelling
 normalization can separate. The pipeline needs a *stable identity key*.
@@ -244,7 +245,7 @@ but **not** contracted (no consumer pins it):
   change, unlike the original master-canonicalization plan which would
   have been transparent).
 - **The over-count is fixable by every consumer** that adopts FIPS-keyed
-  selection (33,368 → the true ~21k for the seven Detroit-metro
+  selection (33,368 → the true ~21k for the seven Southeast Michigan
   counties). The fix is available at the source; it lands when each
   consumer joins.
 - **A new dependency edge for the dashboard.** The `sector-in-brief`
