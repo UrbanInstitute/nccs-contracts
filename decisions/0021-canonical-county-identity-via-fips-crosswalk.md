@@ -297,9 +297,13 @@ delineation file — and:
 - **Canonicalizes county + attaches FIPS.** `Census County` becomes the
   canonical name; `ambiguous`/`unresolved` labels resolve to **NA
   ("unassigned"), not raw passthrough** — consistent with the
-  "fall out of FIPS-keyed selection" invariant above. Validated against
-  this ADR's motivating bug: the Detroit-metro over-count drops from
-  33,368 to ~22.5k (FIPS-keyed sum across the 6 Detroit MSA counties).
+  "fall out of FIPS-keyed selection" invariant above. Reproduces this
+  ADR's motivating bug on its own geography — the seven SE-Michigan
+  counties (Wayne, Oakland, Macomb, Washtenaw, Livingston, Monroe,
+  St. Clair), where name-based selection produced the 33,368 over-count
+  vs ~21k true: on v2026.07, selecting those county names across all
+  states over-counts (501(c)(3), 2026: 30,811) vs FIPS-keyed (19,787),
+  the inflation being same-named counties in other states.
 - **Treats FIPS/CBSA codes as the identity key, in every panel.**
   `County FIPS` and `CBSA Code` (both `chr`) are added to every panel as
   dimensions (cardinality-free — 1:1 with their names); names are
