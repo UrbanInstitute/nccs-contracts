@@ -2,6 +2,9 @@
 # (scripts/build_county_fips_crosswalk.R, R/publish_county_fips_crosswalk.R,
 # R/publish_crosswalk.R). Per ADR 0021 (amended): published by the producer,
 # joined by consumers; the master is NOT modified.
+# Updated 2026-06-04 per ADR 0023: the 8 Connecticut "<name> County" labels
+# now carry resolution=deferred_ct_planning_region (resolved by coordinate via
+# [[ct-planning-region-crosswalk]], not at this (state, county) grain).
 
 name: county-fips-crosswalk
 
@@ -45,10 +48,11 @@ cadence:
   notes: >
     Rebuilt when bmf-master-geocoded is rebuilt and previously-unseen raw
     (state, county) labels appear, or when TIGER_YEAR advances. Republished
-    in lockstep with [[cbsa-crosswalk]] (shared geography vintage — see the
-    vintage-coupling invariant in notes). Additive: existing mappings are
-    stable; new labels are appended (ADR 0021 invariant). Idempotent
-    upload — unchanged files are skipped via the manifest sha256.
+    in lockstep with [[cbsa-crosswalk]] and [[ct-planning-region-crosswalk]]
+    (shared geography vintage — see the vintage-coupling invariant in notes).
+    Additive: existing mappings are stable; new labels are appended (ADR 0021
+    invariant). Idempotent upload — unchanged files are skipped via the
+    manifest sha256.
 
 manifest:
   path: crosswalks/county-fips/_manifest.json  # ADR 0014 shape, written by R/manifest.R::write_manifest; `vintage` field = tiger_year (e.g. "2023"); inputs[] records the source geocoded master (+ etag) and the TIGER year
@@ -57,8 +61,8 @@ manifest:
 schema:
   source: inline
   # One row per distinct (geo_state_abbr, geo_county_raw). 3,635 rows
-  # (3,619 resolved = 99.6%; 16 ambiguous/unresolved). Column list matches
-  # scripts/build_county_fips_crosswalk.R final select().
+  # (3,615 resolved; 8 deferred_ct_planning_region; 8 ambiguous; 4 unresolved).
+  # Column list matches scripts/build_county_fips_crosswalk.R final select().
   columns:
     - name: geo_state_abbr
       type: string
@@ -80,7 +84,8 @@ schema:
         5-char county GEOID (state FIPS + county FIPS), leading zeros
         preserved (string, never numeric). The stable identity key —
         filter/select counties by THIS, not by name (ADR 0021). NA when
-        the label is ambiguous or unresolved.
+        the label is ambiguous, unresolved, or deferred_ct_planning_region
+        (CT — resolve those by coordinate via [[ct-planning-region-crosswalk]]).
       nullable: true
     - name: state_fips
       type: string
@@ -95,16 +100,19 @@ schema:
         County / Parish / Borough / Census Area / Municipality / city /
         Municipio. Independent cities keep their `city` suffix and are
         distinct from any like-named county. Coalesce dirty labels to this
-        for display. NA when ambiguous/unresolved.
+        for display. NA when ambiguous/unresolved/deferred_ct_planning_region.
       nullable: true
     - name: resolution
       type: string
       description: >
         Resolution status of the raw label: "resolved" (unique FIPS +
         canonical name attached), "ambiguous" (label maps to >1 candidate
-        county and no single one dominates), or "unresolved" (no match).
-        Only `resolved` rows carry non-NA FIPS/canonical-name; the others
-        are enumerated in county_fips_crosswalk_audit.csv.
+        county and no single one dominates), "unresolved" (no match), or
+        "deferred_ct_planning_region" (a Connecticut "<name> County" label —
+        CT's retired counties span multiple 2022 planning regions, so it is
+        resolved by COORDINATE via [[ct-planning-region-crosswalk]], not here;
+        ADR 0023). Only `resolved` rows carry non-NA FIPS/canonical-name; the
+        ambiguous/unresolved are enumerated in county_fips_crosswalk_audit.csv.
       nullable: false
     - name: tiger_year
       type: int
@@ -172,9 +180,9 @@ notes: |
     canonical names; `city` suffix preserved).
   - **Vintage coupling:** `tiger_year` == [[cbsa-crosswalk]]
     `delineation_year`. Rebuilt and republished together.
-  - **Left-join preserves counts.** ambiguous/unresolved labels carry NA
-    FIPS and fall out of FIPS-keyed selection (see the audit sidecar);
-    they are not silently merged.
+  - **Left-join preserves counts.** ambiguous/unresolved/deferred labels
+    carry NA FIPS and fall out of FIPS-keyed selection; they are not silently
+    merged. (deferred = Connecticut, recoverable via the companion below.)
   - **Additive across vintages.** Existing (state, raw label) -> FIPS
     mappings are stable; new raw labels are appended, never rewritten.
 
@@ -188,6 +196,18 @@ notes: |
     unmatched/ambiguous labels resolve to NA.
   - **For the Metro/Micro Area dimension**, chain to [[cbsa-crosswalk]] on
     `county_fips = geo_county_fips`.
+
+  ## Connecticut — resolved by coordinate (ADR 0023)
+
+  CT retired its 8 historical counties for 9 planning regions in 2022. The
+  geocoder still emits old "<name> County" labels, and a retired county spans
+  several planning regions, so it cannot be canonicalized at this (state,
+  county) grain. All 8 CT "<name> County" labels therefore carry
+  `resolution = deferred_ct_planning_region` (NA FIPS) here. Resolve CT
+  instead by COORDINATE via [[ct-planning-region-crosswalk]]: round the
+  geocoded (geo_lat, geo_lon) to 0.01 deg and join on (lat2, lon2) ->
+  geo_county_fips (091xx), then chain [[cbsa-crosswalk]] as usual. Bare CT
+  *town* labels (no "County" suffix) sit in one region and still resolve here.
 
   ## Not contracted: the audit sidecar
 

@@ -111,6 +111,13 @@ notes: |
     `geo_county_canonical` (Census NAMELSAD).
   - [[cbsa-crosswalk]] — chain on `county_fips = geo_county_fips` for the
     Metro/Micro Area (CBSA/CSA) dimension.
+  - [[ct-planning-region-crosswalk]] — Connecticut only. CT's `<name> County`
+    labels are `deferred_ct_planning_region` in county-fips (its retired
+    counties span multiple 2022 planning regions), so resolve CT by
+    COORDINATE: round this artifact's `(geo_lat, geo_lon)` to 0.01 deg and
+    join on `(lat2, lon2)` to get the planning-region `geo_county_fips`, then
+    chain cbsa as above (ADR 0023). The companion joins on the lat/lon the
+    master already carries — still no FIPS added here.
 
   **Why not bake these into the master:** per
   [[0016-no-canonical-cross-dataset-merge]], the master is a producer

@@ -22,10 +22,10 @@ the history behind major calls, see the ADRs in `decisions/`.
 
 | Component | Role | Repo |
 |---|---|---|
-| BMF pipeline | Producer — geocoded master + dated vintages + lookups + geography crosswalks (`county-fips`, `cbsa` under `s3://nccsdata/crosswalks/`, per ADR 0021) | `nccs-data-bmf` |
+| BMF pipeline | Producer — geocoded master + dated vintages + lookups + geography crosswalks (`county-fips`, `cbsa`, and the coordinate-keyed `ct-planning-region` under `s3://nccsdata/crosswalks/`, per ADR 0021 + ADR 0023) | `nccs-data-bmf` |
 | Core 990 pipeline | Producer — IRS SOI extracts, one row per filing | `nccs-data-core` |
 | E-file pipeline | Producer — LIVE (Phase 0). Parses raw IRS 990/990-PF XML into form-agnostic parquet; first vintage `v2026.05` published 2026-05-29. Phase 0 ships two filing-grain metric tables (`government_grants`, `program_related_investments_total`) under `s3://nccsdata/processed/efile/phase0/`; Phase 1+ headline-990 surface still planned. See ADR 0007 / ADR 0017. | `nccs-data-efile` |
-| Consumer-composed joins | Consumers compose BMF × core × e-file joins per use case (per ADR 0016 — no canonical cross-dataset merge). The within-core form union is contracted as `core-panel`. Geographic identity is composed the same way: the producer publishes the `county-fips` and `cbsa` crosswalks (resolution done once), consumers join them onto raw geo labels (per ADR 0021 — the master is deliberately not modified). | n/a |
+| Consumer-composed joins | Consumers compose BMF × core × e-file joins per use case (per ADR 0016 — no canonical cross-dataset merge). The within-core form union is contracted as `core-panel`. Geographic identity is composed the same way: the producer publishes the `county-fips` and `cbsa` crosswalks (resolution done once), consumers join them onto raw geo labels (per ADR 0021 — the master is deliberately not modified). Connecticut, whose retired-county labels can't resolve at the name grain, is recovered by a coordinate join against the `ct-planning-region` companion (per ADR 0023). | n/a |
 | nccsdata R package | Consumer — programmatic reads with arrow filters + local cache | `nccsdata` |
 | API | Consumer + service tier — parametric queries over the merged artifact via DuckDB | TBD (existing API to modernize per ADR 0008) |
 | Sector-in-Brief data | Derived producer — aggregates BMF/core/SOI/DAF into dashboard-ready parquet (replaces nccs-dataexplorer-data per ADR 0010) | `sector-in-brief-data` |
