@@ -1,6 +1,7 @@
-# Producer (new nccs-data-api repo) not yet built. This contract
+# Producer (new sector-in-brief-api repo) not yet built. This contract
 # describes the planned shape per ADR 0008; fields fill in when the
-# rollup job ships.
+# rollup job ships. (Repo finalized as sector-in-brief-api 2026-06-04 —
+# was the working name nccs-data-api in ADR 0008.)
 
 name: usage-api
 description: >
@@ -12,12 +13,13 @@ description: >
   contracted artifact suitable for dashboards and capacity planning.
 
 # --- Upstream sources (not part of this contract; consumed, not published) ---
-# - s3://nccs-data-api/logs/queries/{YYYY-MM-DD}/*.ndjson — per-query
+# - s3://sector-in-brief-api/logs/queries/{YYYY-MM-DD}/*.ndjson — per-query
 #   structured log written live by the API process. The rollup job
-#   reads these; consumers do not.
+#   reads these; consumers do not. (Bucket name provisional — confirm at
+#   repo creation; mirrors the renamed sector-in-brief-api repo.)
 
 producer:
-  repo: UrbanInstitute/nccs-data-api  # to be created per ADR 0008
+  repo: UrbanInstitute/sector-in-brief-api  # to be created per ADR 0008 (working name there was nccs-data-api)
   publish_path: TODO  # e.g. R/rollup_usage.R or jobs/rollup.py
 
 format: parquet
@@ -70,7 +72,7 @@ drift_detection:
 deprecation_window_days: 90
 
 notes: |
-  Coexists with whatever the new nccs-data-api process logs in raw
+  Coexists with whatever the new sector-in-brief-api process logs in raw
   form; this contract covers only the aggregated artifact, not the
   source log files.
 
