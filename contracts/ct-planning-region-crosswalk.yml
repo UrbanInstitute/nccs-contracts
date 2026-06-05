@@ -142,9 +142,9 @@ consumers:
       it overrides the label chain (which mis-assigns ~4.5% of CT points to the
       wrong region and leaves the rest NA), not merely fills its gaps. Closed the
       CT coverage hole surfaced in the v2026.07 cutover.
-  - repo: UrbanInstitute/nccs-website  # PLANNED — BMF data catalog consumes the CSV mirror alongside the other two crosswalks.
-    pin: "planned"
-    notes: "Planned: BMF data catalog surfaces the ct_planning_region_crosswalk.csv mirror."
+  - repo: UrbanInstitute/nccs  # LIVE — BMF data catalog (catalogs/catalog-bmf.qmd) surfaces the ct_planning_region_crosswalk download links (csv + parquet + _manifest.json) as the CT-by-coordinate hop, alongside the other two crosswalks. Live since website commit 8dac174. (Repo name corrected from the stale "nccs-website".)
+    pin: "latest"  # links the flat ct_planning_region_crosswalk.csv/.parquet/_manifest.json (no vintage subdir per ADR 0021); a download/catalog surface, not a programmatic join.
+    notes: "BMF data catalog presents the CT planning-region crosswalk with row count (14,271 coordinate grid) and the TIGER 2023 vintage, offering .csv (web), .parquet (machine), and _manifest.json as downloads."
 
 drift_detection:
   trigger: event
