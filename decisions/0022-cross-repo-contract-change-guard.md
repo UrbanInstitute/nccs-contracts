@@ -199,8 +199,18 @@ changes.
   "one workflow, thin callers" design. The standalone drafts in
   `nccs-data-bmf` / `sector-in-brief-data` are now redundant and are to be
   replaced by thin callers (Migration step 2).
-- **Pending:** Migration steps 2–6 (convert the two drafts → callers; add
-  callers to the remaining in-scope repos with tuned `PATHS_REGEX`; set the
+- **Done (2026-06-05):** Migration **step 2 completed** — `nccs-data-bmf`
+  (PR #20) and `sector-in-brief-data` (PR #3) now carry thin callers of the
+  reusable workflow; their uncommitted standalone drafts are superseded. The
+  cross-repo call was verified live (the guard ran as
+  `contracts-guard / contracts-guard` and passed on both PRs, whose only
+  change was the workflow file — an irrelevant path), and the fail path was
+  verified against controlled inputs (a contract-relevant change with no
+  breadcrumb and no `contracts-ack` label exits non-zero; a breadcrumb or the
+  label flips it to pass).
+- **Pending:** Migration steps 3–6 (add callers to the remaining in-scope
+  repos — `nccs-data-core`, `nccs-data-efile`, `nccsdata`, `sector-in-brief`,
+  `sector-in-brief-api`, `nccs` — each with a tuned `PATHS_REGEX`; set the
   `contract-surface` property + the org ruleset (org-owner request); the
   CLAUDE.md / ARCHITECTURE §9 §10 docs; the follow-on semantic-agent ADR).
 
