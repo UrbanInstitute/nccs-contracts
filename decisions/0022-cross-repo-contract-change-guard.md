@@ -72,9 +72,10 @@ Actions, and defer the semantic agent layer.
    distinct set named by `producer.repo` + `consumers[].repo` across
    `contracts/*.yml`. This is self-maintaining — it grows automatically when
    a contract names a new repo; there is no separate registry. Current set
-   (2026-06-04): `nccs-data-bmf`, `nccs-data-core`, `nccs-data-efile`,
+   (updated 2026-06-05): `nccs-data-bmf`, `nccs-data-core`, `nccs-data-efile`,
    `nccsdata`, `sector-in-brief`, `sector-in-brief-data`,
-   `sector-in-brief-api` (planned), `nccs-website` (planned).
+   `sector-in-brief-api` (planned), `nccs` (live consumer of the geography
+   crosswalks via the BMF data catalog; was the planned "nccs-website").
 
 4. **Strong enforcement via an org ruleset — keyed on a property, not a
    repo list.** Per-repo callers are opt-in (a file each). To make

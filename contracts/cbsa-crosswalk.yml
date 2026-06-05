@@ -126,9 +126,9 @@ consumers:
       Replaces the repo-local Census delineation file ADR 0010 used to
       derive CENSUS_CBSA_NAME. Chains from [[county-fips-crosswalk]]:
       raw label -> geo_county_fips -> CBSA.
-  - repo: UrbanInstitute/nccs-website  # PLANNED — BMF data catalog consumes the CSV mirror; register the real pin when it goes live (ADR 0021 Follow-up 2).
-    pin: "planned"
-    notes: "Planned: BMF data catalog surfaces the cbsa_crosswalk.csv mirror."
+  - repo: UrbanInstitute/nccs  # LIVE — BMF data catalog (catalogs/catalog-bmf.qmd) surfaces the cbsa_crosswalk download links (csv + parquet + _manifest.json) as hop 3 of the geography chain. Live since website commit 75a2277. Resolves ADR 0021 Follow-up 2. (Repo name corrected from the stale "nccs-website".)
+    pin: "latest"  # links the flat cbsa_crosswalk.csv/.parquet/_manifest.json (no vintage subdir per ADR 0021); a download/catalog surface, not a programmatic join.
+    notes: "BMF data catalog presents the CBSA crosswalk with row counts (3,228; 1,915 in a CBSA, 1,313 rural) and the OMB 2023 vintage, offering .csv (web), .parquet (machine), and _manifest.json as downloads."
 
 drift_detection:
   trigger: event
