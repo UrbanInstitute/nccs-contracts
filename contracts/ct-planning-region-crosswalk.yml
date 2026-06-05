@@ -1,0 +1,223 @@
+# Authored 2026-06-04 against the live artifact and nccs-data-bmf code
+# (scripts/build_ct_planning_region_crosswalk.R,
+# R/publish_ct_planning_region_crosswalk.R, R/publish_crosswalk.R). Per
+# ADR 0023: a coordinate-keyed companion that resolves Connecticut, whose
+# retired-county labels are deferred in [[county-fips-crosswalk]]. Published
+# by the producer, joined by consumers; the master is NOT modified.
+
+name: ct-planning-region-crosswalk
+
+description: >
+  Coordinate->planning-region crosswalk for Connecticut. A dense 0.01-degree
+  lookup grid over CT: each cell maps to the 2022 Census planning region
+  (county-equivalent GEOID 091xx) that covers it. CT retired its 8 historical
+  counties for 9 planning regions in 2022, but the geocoder still emits old
+  "<name> County" labels that each span several regions, so CT cannot be
+  resolved at the (state, county-name) grain of [[county-fips-crosswalk]]
+  (where its labels are resolution=deferred_ct_planning_region). A consumer
+  rounds the geocoded (geo_lat, geo_lon) it already holds to 0.01 degrees and
+  joins on (lat2, lon2) to recover the planning-region GEOID, then chains
+  [[cbsa-crosswalk]]. Published as parquet (machine contract) + CSV mirror
+  (web catalog) + an ADR 0014 _manifest.json.
+  See [[0023-ct-planning-region-coordinate-resolution]].
+
+producer:
+  repo: UrbanInstitute/nccs-data-bmf
+  publish_path: R/publish_ct_planning_region_crosswalk.R  # thin wrapper over R/publish_crosswalk.R; artifact built by scripts/build_ct_planning_region_crosswalk.R (TIGER 2023 CT planning-region polygons -> dense 0.01-deg grid -> 5x5 sub-sampled point-in-polygon per cell). No BMF input, no S3 read — derived purely from TIGER, the way cbsa derives from OMB.
+
+format: parquet  # CSV mirror also published; parquet is the machine contract
+compression: zstd
+partitioned: false  # small single-file lookup (~14,271 cells)
+
+s3:
+  bucket: nccsdata
+  key_prefix: crosswalks/ct-planning-region/
+  # Flat prefix: NO {vintage}/ subdir and NO latest/ mirror — same deliberate
+  # ADR 0013 exception as [[county-fips-crosswalk]] / [[cbsa-crosswalk]]
+  # (geography vintage carried in-column via tiger_year and in the manifest).
+  # Revisit when TIGER 2024 lands: all THREE crosswalks then move to
+  # v{YYYY}/ + latest/ together (ADR 0023 extends ADR 0021's trigger).
+  versioned_template: null
+  latest_template: crosswalks/ct-planning-region/ct_planning_region_crosswalk.parquet
+  # Co-located at the same prefix:
+  #   crosswalks/ct-planning-region/ct_planning_region_crosswalk.parquet  — machine contract
+  #   crosswalks/ct-planning-region/ct_planning_region_crosswalk.csv      — web/spreadsheet mirror
+  #   crosswalks/ct-planning-region/_manifest.json                        — ADR 0014 manifest
+  # Sidecar written by the build but NOT published / NOT contracted:
+  #   data/crosswalks/ct_planning_region_crosswalk_audit.csv  — straddle (boundary) cells only
+
+cadence:
+  type: on-change
+  notes: >
+    Rebuilt and republished in lockstep with [[county-fips-crosswalk]] and
+    [[cbsa-crosswalk]] (shared geography vintage — tiger_year must equal the
+    county crosswalk's tiger_year and the CBSA crosswalk's delineation_year)
+    and when TIGER_YEAR advances. Derived purely from TIGER polygons, so the
+    grid is stable for a vintage regardless of BMF data. Idempotent upload —
+    unchanged files are skipped via the manifest sha256.
+
+manifest:
+  path: crosswalks/ct-planning-region/_manifest.json  # ADR 0014 shape, written by R/manifest.R::write_manifest; `vintage` field = tiger_year (e.g. "2023"); inputs[] records the TIGER cb county source + year
+  schema_version: 2  # ADR 0014 standard shape
+
+schema:
+  source: inline
+  # One row per 0.01-deg cell over CT land. ~14,271 rows (all 9 planning
+  # regions; ~3.7% straddle/boundary cells). Column list matches
+  # scripts/build_ct_planning_region_crosswalk.R final select().
+  columns:
+    - name: geo_state_abbr
+      type: string
+      description: >
+        Always "CT" — scopes the grid. Present so a consumer can join on
+        (geo_state_abbr, lat2, lon2) and so CT rows union cleanly with the
+        label-resolved rows from [[county-fips-crosswalk]].
+      nullable: false
+    - name: lat2
+      type: double
+      description: >
+        Join key. The geocoded geo_lat rounded to 0.01 degrees
+        (round(geo_lat, 2)). Consumers must round their org's geo_lat the
+        same way.
+      nullable: false
+    - name: lon2
+      type: double
+      description: >
+        Join key. The geocoded geo_lon rounded to 0.01 degrees
+        (round(geo_lon, 2)).
+      nullable: false
+    - name: geo_county_fips
+      type: string
+      description: >
+        5-char planning-region GEOID (091xx), leading zeros preserved
+        (string, never numeric). SAME column name as
+        [[county-fips-crosswalk]].geo_county_fips and
+        [[cbsa-crosswalk]].county_fips, so CT rows chain to CBSA and union
+        with non-CT rows on one identity column. Never NA — every CT-land
+        cell resolves to exactly one region.
+      nullable: false
+    - name: state_fips
+      type: string
+      description: '2-char state FIPS — always "09" (Connecticut). String, leading zero preserved.'
+      nullable: false
+    - name: geo_county_canonical
+      type: string
+      description: >
+        Canonical Census NAMELSAD of the planning region, e.g.
+        "Greater Bridgeport Planning Region". Same column name/semantics as
+        [[county-fips-crosswalk]].geo_county_canonical.
+      nullable: false
+    - name: area_share
+      type: double
+      description: >
+        Fraction of the cell's 5x5 sub-sample lattice falling in the assigned
+        planning region (1.0 = wholly interior). Diagnostic of boundary
+        proximity; < 0.95 sets `straddle`.
+      nullable: false
+    - name: straddle
+      type: boolean
+      description: >
+        TRUE when area_share < 0.95 — the ~1 km cell crosses a
+        planning-region boundary, so the assigned region is the majority but
+        not unanimous. Consumers needing sub-cell precision there should
+        point-in-polygon the raw coordinate. Straddle cells are also listed
+        in the (uncontracted) audit sidecar.
+      nullable: false
+    - name: tiger_year
+      type: int
+      description: >
+        TIGER/Census boundary vintage the planning-region polygons were cut
+        from (default 2023). MUST equal [[county-fips-crosswalk]]'s
+        tiger_year and [[cbsa-crosswalk]]'s delineation_year — the three
+        artifacts share one geography vintage (ADR 0023 invariant).
+      nullable: false
+
+consumers:
+  - repo: UrbanInstitute/sector-in-brief-data  # PLANNED — would recover the ~14k CT orgs currently "unassigned county" (ADR 0021 Outcome / ADR 0023 Follow-up 1). Needs a coordinate join on its geocoded rows, unioned back with the label-resolved rows. Register the real pin on cutover.
+    pin: "planned"
+    notes: >
+      Planned: resolve CT by joining this companion on
+      (geo_state_abbr, round(geo_lat,2), round(geo_lon,2)) -> geo_county_fips,
+      then chain [[cbsa-crosswalk]]. Closes the CT coverage hole surfaced in
+      its v2026.07 cutover.
+  - repo: UrbanInstitute/nccs-website  # PLANNED — BMF data catalog consumes the CSV mirror alongside the other two crosswalks.
+    pin: "planned"
+    notes: "Planned: BMF data catalog surfaces the ct_planning_region_crosswalk.csv mirror."
+
+drift_detection:
+  trigger: event
+  schedule: ""
+  event: "publish-crosswalks"  # producer publishes all three crosswalks in lockstep with a bmf-master-geocoded rebuild
+
+deprecation_window_days: 90
+
+notes: |
+  Authored against the live artifact and producer code on 2026-06-04 per
+  [[0023-ct-planning-region-coordinate-resolution]] (which resolves
+  [[0021-canonical-county-identity-via-fips-crosswalk]] Follow-up 4).
+  Published by nccs-data-bmf; the master ([[bmf-master-geocoded]]) is NOT
+  modified — consumers compose the join on the geocoded lat/lon it already
+  carries (ADR 0016).
+
+  ## Why this artifact exists
+
+  In 2022 Census retired Connecticut's 8 historical counties for 9 planning
+  regions (county-equivalents, GEOIDs 091xx). The geocoder still emits old
+  "<name> County" labels, and a retired county spreads across several
+  planning regions — so CT cannot be resolved at the (state, county-name)
+  grain that [[county-fips-crosswalk]] uses (its 8 CT "<name> County" labels
+  carry resolution=deferred_ct_planning_region, NA FIPS). Each individual org
+  point, however, falls in exactly one planning region. This companion bakes
+  that point-in-polygon answer into a coordinate grid so consumers resolve CT
+  without doing any GIS, and without a FIPS being added to the master. It is
+  the FIRST coordinate-keyed crosswalk (ADR 0021 scoped per-label resolution;
+  CT's retired-county labels force per-coordinate — see ADR 0023).
+
+  ## The CT join chain (consumer-composed)
+
+      geocoded (geo_lat, geo_lon)
+         | round to 0.01 deg -> (lat2, lon2)
+         | join THIS on (geo_state_abbr, lat2, lon2)        [CT only]
+         v
+      geo_county_fips (091xx) + geo_county_canonical
+         | join [[cbsa-crosswalk]] on county_fips = geo_county_fips
+         v
+      cbsa_code / cbsa_title / cbsa_type / csa_code / csa_title
+
+  Non-CT states use the label chain in [[county-fips-crosswalk]] unchanged.
+  Union the CT coordinate-resolved rows back with the label-resolved rows;
+  both expose geo_county_fips / geo_county_canonical.
+
+  ## Guarantees (ADR 0023 invariants)
+
+  - **GEOIDs are STRINGS** (091xx), leading zero significant; numeric cast
+    corrupts them.
+  - **Complete CT-land coverage.** The grid is cut from TIGER polygons, not
+    from observed data, so every CT coordinate lands on a cell — including
+    addresses not yet in the BMF. (Validated: 100% of 25,922 geocoded CT org
+    points resolve; 1.26% on a straddle cell.)
+  - **Every cell resolves** — geo_county_fips is never NA (unlike the label
+    crosswalk). Boundary uncertainty is surfaced via `straddle`, not NA.
+  - **Three-way vintage coupling.** tiger_year == [[county-fips-crosswalk]]
+    tiger_year == [[cbsa-crosswalk]] delineation_year. Rebuilt and
+    republished together.
+  - **CT's CBSA membership** comes via [[cbsa-crosswalk]], whose universe
+    unions in this companion's 9 GEOIDs (they are NOT resolved rows in
+    [[county-fips-crosswalk]]).
+
+  ## Consumer guidance
+
+  - **Apply only to CT rows** (geo_state_abbr == "CT"); other states use
+    [[county-fips-crosswalk]] on the raw label.
+  - **Round consistently.** Join on round(geo_lat, 2) / round(geo_lon, 2);
+    the grid keys are exact 0.01-deg multiples.
+  - **`straddle` is advisory**, not an error — the assigned region is the
+    area-majority. Re-resolve the raw coordinate by point-in-polygon only if
+    you need sub-cell precision at a boundary.
+
+  ## Not contracted: the audit sidecar
+
+  `ct_planning_region_crosswalk_audit.csv` (the straddle/boundary cells) is
+  written beside the artifact for human review but is NOT part of the
+  contract surface — no consumer pins it. The contracted truth is the
+  parquet/CSV + manifest.

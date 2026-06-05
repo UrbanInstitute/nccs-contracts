@@ -2,6 +2,9 @@
 # (scripts/build_cbsa_crosswalk.R, R/publish_cbsa_crosswalk.R,
 # R/publish_crosswalk.R). Per ADR 0021 (amended): published by the producer,
 # joined by consumers; derived FROM [[county-fips-crosswalk]].
+# Updated 2026-06-04 per ADR 0023: the universe now also unions in the 9
+# Connecticut planning-region GEOIDs from [[ct-planning-region-crosswalk]]
+# (they are deferred, NA-FIPS, in county-fips), so the CT chain reaches CBSA.
 
 name: cbsa-crosswalk
 
@@ -20,7 +23,7 @@ producer:
 
 format: parquet  # CSV mirror also published; parquet is the machine contract
 compression: zstd
-partitioned: false  # small single-file lookup (~3,224 rows)
+partitioned: false  # small single-file lookup (~3,228 rows)
 
 s3:
   bucket: nccsdata
@@ -40,10 +43,12 @@ s3:
 cadence:
   type: on-change
   notes: >
-    Rebuilt and republished in lockstep with [[county-fips-crosswalk]]
-    (shared geography vintage — delineation_year must equal the county
-    crosswalk's tiger_year) and when DELINEATION_YEAR advances. Idempotent
-    upload — unchanged files are skipped via the manifest sha256.
+    Rebuilt and republished in lockstep with [[county-fips-crosswalk]] and
+    [[ct-planning-region-crosswalk]] (shared geography vintage —
+    delineation_year must equal both crosswalks' tiger_year) and when
+    DELINEATION_YEAR advances. Rebuild AFTER the CT companion: this build
+    folds the companion's GEOIDs into the universe. Idempotent upload —
+    unchanged files are skipped via the manifest sha256.
 
 manifest:
   path: crosswalks/cbsa/_manifest.json  # ADR 0014 shape, written by R/manifest.R::write_manifest; `vintage` field = delineation_year (e.g. "2023"); inputs[] records the county_fips_crosswalk (repo input) and the OMB List 1 delineation xlsx URL
@@ -51,15 +56,19 @@ manifest:
 
 schema:
   source: inline
-  # One row per resolved county GEOID in [[county-fips-crosswalk]].
-  # 3,224 rows. Column list matches scripts/build_cbsa_crosswalk.R transmute().
+  # One row per county GEOID in the universe = resolved GEOIDs from
+  # [[county-fips-crosswalk]] UNION the 9 CT planning-region GEOIDs from
+  # [[ct-planning-region-crosswalk]] (ADR 0023). 3,228 rows. Column list
+  # matches scripts/build_cbsa_crosswalk.R transmute().
   columns:
     - name: county_fips
       type: string
       description: >
         5-char county GEOID. Join key BACK to [[county-fips-crosswalk]]'s
-        geo_county_fips. Unique in this table — a county belongs to at
-        most one CBSA. Leading zeros preserved (string).
+        geo_county_fips for non-CT, and to [[ct-planning-region-crosswalk]]'s
+        geo_county_fips for the 9 CT planning-region GEOIDs (091xx). Unique in
+        this table — a county belongs to at most one CBSA. Leading zeros
+        preserved (string).
       nullable: false
     - name: county_name
       type: string
@@ -147,6 +156,13 @@ notes: |
   Rural counties (in no CBSA) carry NA across the CBSA/CSA columns — that
   is the correct value, not missing data.
 
+  **Connecticut:** its `<name> County` labels are deferred in
+  [[county-fips-crosswalk]], so reach the CT planning-region `county_fips`
+  by COORDINATE via [[ct-planning-region-crosswalk]] first, then join here as
+  usual. Folding the CT GEOIDs into this universe is what makes the CT chain
+  resolve (ADR 0023); the absent-from-BMF tally in the audit dropped from the
+  4 CT metros/micros to zero.
+
   ## Guarantees (ADR 0021 invariants)
 
   - **CBSA/CSA codes are STRINGS** (5-char CBSA, 3-char CSA), leading
@@ -154,8 +170,11 @@ notes: |
   - **One row per county GEOID** — `county_fips` is unique (a county
     belongs to <=1 CBSA).
   - **Vintage coupling:** `delineation_year` == [[county-fips-crosswalk]]
-    `tiger_year`. Rebuilt and republished together so every county GEOID
-    in one exists in the other.
+    `tiger_year` == [[ct-planning-region-crosswalk]] `tiger_year` (ADR 0023
+    widened this to three artifacts). Rebuilt and republished together so
+    every county GEOID in the universe exists in the delineation. The 9 CT
+    planning-region GEOIDs enter the universe from the companion, NOT as
+    resolved rows in county-fips (those are `deferred_ct_planning_region`).
 
   ## Supersedes ADR 0010's repo-local CBSA derivation
 
