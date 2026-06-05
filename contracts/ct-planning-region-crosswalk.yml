@@ -133,13 +133,15 @@ schema:
       nullable: false
 
 consumers:
-  - repo: UrbanInstitute/sector-in-brief-data  # PLANNED — would recover the ~14k CT orgs currently "unassigned county" (ADR 0021 Outcome / ADR 0023 Follow-up 1). Needs a coordinate join on its geocoded rows, unioned back with the label-resolved rows. Register the real pin on cutover.
-    pin: "planned"
+  - repo: UrbanInstitute/sector-in-brief-data  # LIVE since v2026.08 (ADR 0023 Follow-up 1). Recovered the ~25.9k geocoded CT orgs from "unassigned county": CT County FIPS + Metro/Micro coverage went 39.7% -> 99.996% (one off-grid border coordinate stays NA).
+    pin: "latest"  # reads the unversioned ct_planning_region_crosswalk.parquet (config.yml inputs.ct_planning_region_crosswalk).
     notes: >
-      Planned: resolve CT by joining this companion on
+      Live in v2026.08. read_bmf resolves CT by joining this companion on
       (geo_state_abbr, round(geo_lat,2), round(geo_lon,2)) -> geo_county_fips,
-      then chain [[cbsa-crosswalk]]. Closes the CT coverage hole surfaced in
-      its v2026.07 cutover.
+      then chains [[cbsa-crosswalk]]. The coordinate is AUTHORITATIVE for CT —
+      it overrides the label chain (which mis-assigns ~4.5% of CT points to the
+      wrong region and leaves the rest NA), not merely fills its gaps. Closed the
+      CT coverage hole surfaced in the v2026.07 cutover.
   - repo: UrbanInstitute/nccs-website  # PLANNED — BMF data catalog consumes the CSV mirror alongside the other two crosswalks.
     pin: "planned"
     notes: "Planned: BMF data catalog surfaces the ct_planning_region_crosswalk.csv mirror."
