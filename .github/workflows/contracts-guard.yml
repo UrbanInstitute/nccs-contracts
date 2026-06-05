@@ -1,0 +1,93 @@
+name: contracts-guard (reusable)
+
+# Reusable deterministic guard for the NCCS contract surface (ADR 0022).
+# Lives ONCE here; each in-scope repo adds a ~10-line caller that passes only
+# its own `paths_regex`. Improving the guard is a single edit here; every
+# caller inherits it. Do NOT hand-copy this into N repos — copies drift.
+#
+# Verifies ACKNOWLEDGMENT, not correctness. When a PR changes contract-relevant
+# code (what/where the repo publishes, or its schema/manifest/dimension shape),
+# it must acknowledge the nccs-contracts impact by one of:
+#   • an `ADR NNNN` breadcrumb in a commit message or the PR body
+#     (per nccs-contracts/CONTRIBUTING.md "Execute downstream"), or
+#   • a `contracts-ack` label (escape hatch for genuinely no-impact changes).
+# It does NOT read the contract YAMLs and cannot tell whether a change actually
+# violates a contract — a wrong-but-acknowledged change passes green. That
+# semantic judgment is the deferred Loop-3 Copilot agent (ARCHITECTURE §9).
+#
+# Caller shape (in each in-scope repo, .github/workflows/contracts-guard.yml):
+#   name: contracts-guard
+#   on:
+#     pull_request:
+#       types: [opened, synchronize, reopened, edited, labeled, unlabeled]
+#   jobs:
+#     contracts-guard:
+#       uses: UrbanInstitute/nccs-contracts/.github/workflows/contracts-guard.yml@main
+#       with:
+#         paths_regex: '^(R/publish_.*\.R|...)$'
+#
+# Always runs and passes when irrelevant (relevance is computed inside the job,
+# no top-level paths filter), so it is safe to mark "required".
+
+on:
+  workflow_call:
+    inputs:
+      paths_regex:
+        description: >-
+          Extended regex over changed file paths that define what/where the
+          calling repo publishes, or its schema/manifest/dimension shape.
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  contracts-guard:
+    runs-on: ubuntu-latest
+    env:
+      PATHS_REGEX: ${{ inputs.paths_regex }}
+      PR_BODY: ${{ github.event.pull_request.body }}
+      PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+      BASE_REF: ${{ github.event.pull_request.base.ref }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Require an nccs-contracts acknowledgment on contract-relevant changes
+        run: |
+          set -euo pipefail
+          git fetch origin "$BASE_REF" --depth=0 || git fetch origin "$BASE_REF"
+          BASE="origin/$BASE_REF"
+
+          CHANGED=$(git diff --name-only "$BASE"...HEAD || true)
+          RELEVANT=$(printf '%s\n' "$CHANGED" | grep -E "$PATHS_REGEX" || true)
+
+          if [ -z "$RELEVANT" ]; then
+            echo "No contract-relevant paths changed; guard passes."
+            exit 0
+          fi
+
+          echo "Contract-relevant files changed in this PR:"
+          printf '%s\n' "$RELEVANT" | sed 's/^/  - /'
+
+          # Escape hatch: explicit label for changes with no contract impact.
+          if printf '%s' "$PR_LABELS" | grep -qiw "contracts-ack"; then
+            echo "Label 'contracts-ack' present — acknowledged; guard passes."
+            exit 0
+          fi
+
+          # Acknowledgment: an `ADR NNNN` breadcrumb in any commit message or the PR body.
+          ADR_RE='ADR[ -]?[0-9]{3,4}'
+          if git log "$BASE"..HEAD --format='%B' | grep -qiE "$ADR_RE"; then
+            echo "ADR breadcrumb found in a commit message; guard passes."
+            exit 0
+          fi
+          if printf '%s' "$PR_BODY" | grep -qiE "$ADR_RE"; then
+            echo "ADR breadcrumb found in the PR body; guard passes."
+            exit 0
+          fi
+
+          echo "::error::This PR changes contract-relevant code (publish targets, S3 paths, schema, manifest, or panel/dimension shape) without acknowledging the nccs-contracts impact. Add an 'ADR NNNN' breadcrumb to a commit message or the PR description and queue the nccs-contracts reconcile, OR add the 'contracts-ack' label if there is genuinely no contract impact. See nccs-contracts/CONTRIBUTING.md."
+          exit 1

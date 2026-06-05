@@ -184,14 +184,25 @@ changes.
 
 ## Outcome
 
-*(reconcile-time; partially started 2026-06-04)*
+*(reconcile-time; partially started 2026-06-04, continued 2026-06-05)*
 
-- **Done:** the API-repo rename reconciled in this same change
+- **Done (2026-06-04):** the API-repo rename reconciled in this same change
   (`contracts/usage-api.yml` + ADR 0008 finalized-name note) — folded in as
   the motivating example. `scripts/reconcile.sh` written and verified in
   both modes. Standalone guard workflows drafted in `nccs-data-bmf` and
-  `sector-in-brief-data` (to be converted to callers per Migration step 2).
-- **Pending:** Migration steps 2–6.
+  `sector-in-brief-data`.
+- **Done (2026-06-05):** Migration **step 1 completed** — the reusable
+  `workflow_call` guard now lives in this repo at
+  `.github/workflows/contracts-guard.yml`, taking a single `paths_regex`
+  input. It was extracted from the two standalone drafts, which differed
+  only in `PATHS_REGEX` (and a few words of the error string), confirming the
+  "one workflow, thin callers" design. The standalone drafts in
+  `nccs-data-bmf` / `sector-in-brief-data` are now redundant and are to be
+  replaced by thin callers (Migration step 2).
+- **Pending:** Migration steps 2–6 (convert the two drafts → callers; add
+  callers to the remaining in-scope repos with tuned `PATHS_REGEX`; set the
+  `contract-surface` property + the org ruleset (org-owner request); the
+  CLAUDE.md / ARCHITECTURE §9 §10 docs; the follow-on semantic-agent ADR).
 
 ## Follow-up
 
