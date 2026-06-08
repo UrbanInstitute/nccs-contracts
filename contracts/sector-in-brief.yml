@@ -26,9 +26,9 @@ partitioned: false  # one file per panel; revisit if growth warrants
 s3:
   bucket: nccsdata
   key_prefix: sector-in-brief/
-  versioned_template: "sector-in-brief/{vintage}/"  # vintage = vYYYY.MM, currently v2026.07
+  versioned_template: "sector-in-brief/{vintage}/"  # vintage = vYYYY.MM, currently v2026.08
   latest_template: sector-in-brief/latest/
-  # Published files (current vintage v2026.07):
+  # Published files (current vintage v2026.08):
   #   number_nonprofits.parquet, finances.parquet, daf.parquet,
   #   pf_grants.parquet, government_grants.parquet,
   #   program_related_investments.parquet, data_dictionary.parquet,
@@ -50,6 +50,12 @@ s3:
   #     canonicalized (NA = unassigned); county_fips_crosswalk.parquet and
   #     cbsa_crosswalk.parquet added; nested_geographies.csv enriched.
   #     See "schema" below.
+  #   v2026.08 (2026-06-08) — Connecticut planning regions (ADR 0023):
+  #     CT resolved by coordinate to its 9 Census planning regions
+  #     (GEOIDs 09110-09190), recovering ~25.9k CT orgs from "unassigned"
+  #     via the [[ct-planning-region-crosswalk]] companion; CT County FIPS +
+  #     Metro/Micro coverage 39.7% -> 99.9996%. Values-only — no schema
+  #     change from v2026.07.
 
 cadence:
   type: on-change
@@ -59,7 +65,7 @@ cadence:
     today; eventual trigger on input contract publication.
 
 manifest:
-  path: "{vintage}/_manifest.json"  # currently sector-in-brief/v2026.05/_manifest.json
+  path: "{vintage}/_manifest.json"  # currently sector-in-brief/v2026.08/_manifest.json
   schema_version: 1
   # Records: git SHA, input S3 paths + ETags, per-file row counts
   # and sha256, build timestamp.
@@ -108,18 +114,19 @@ schema:
 
 consumers:
   - repo: UrbanInstitute/sector-in-brief  # the Shiny dashboard
-    pin: "v2026.06"  # hardcoded in R/s3_sync.R (VINTAGE). v2026.07 cutover pending — see notes.
+    pin: "v2026.07"  # hardcoded in R/s3_sync.R (VINTAGE). v2026.08 cutover pending — see notes.
     notes: >
       Reads via `aws s3 sync` at app startup
       (R/s3_sync.R, called from R/app.R), into committed
       data/ directory. Auto-refresh-on-boot pattern per ADR 0011
       Outcome (the original "remove committed parquet" plan was
       amended at execution time). The dashboard pins a specific
-      vintage (not latest/), so it does NOT auto-pick-up v2026.07
-      even though latest/ now mirrors it. v2026.07 cutover is pending
-      a dashboard PR (ADR 0021 Pending #3): bump VINTAGE to v2026.07,
-      declare County FIPS + CBSA Code in R/expected_schema.R, and move
-      county/CBSA selection from name-based to FIPS/code-keyed.
+      vintage (not latest/), so it does NOT auto-pick-up v2026.08
+      even though latest/ now mirrors it. Currently pinned at v2026.07;
+      the v2026.08 cutover is pending a dashboard PR that bumps VINTAGE
+      to v2026.08 in R/s3_sync.R. Because v2026.08 is values-only (CT
+      planning-region recovery, ADR 0023 — no schema change), the cutover
+      is a pin bump only: no R/expected_schema.R change is required.
 
 drift_detection:
   trigger: event
