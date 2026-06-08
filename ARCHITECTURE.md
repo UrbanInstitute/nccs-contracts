@@ -107,16 +107,21 @@ See `decisions/0002-canonical-merged-artifact.md`.
 
 ## 6. The Service Tier
 
-The API is the general-purpose service tier. It reads canonical S3
-artifacts (primarily `merged`) and serves parametric queries.
+The API is the general-purpose service tier. It reads the contracted
+S3 artifacts directly and composes joins per use case at query time —
+there is no canonical `merged` artifact (ADR 0016) — serving parametric
+queries.
 
 - **Tech baseline:** DuckDB embedded in the API process, querying
   partitioned parquet on S3 (or a local cache). LRU cache for hot
   partitions.
 - **Athena retired** for API runtime. Optionally retained for
   human ad-hoc SQL. See `decisions/0003-retire-athena-for-duckdb.md`.
-- **Dashboard is a consumer of the API**, not a peer reader of S3.
-  Keeps the data path single-source.
+- **Dashboard is a *hybrid* consumer.** Its visualization panels
+  read S3 directly (ADR 0011); its data-download section goes through
+  the API for bulk parametric exports that exceed what the Shiny
+  process can serve (ADR 0026). The viz path stays up even if the API
+  is down — the blast radius of an API outage is downloads only.
 - **R package may eventually migrate** to read from the API instead
   of S3 (particularly when authenticated/metered access matters), but
   that's a later call. Today the package reads S3 directly.
