@@ -46,7 +46,7 @@ flowchart TB
     subgraph CONS["Consumers — each its own data reality"]
         api["Dataexplorer API on Athena<br/>24h emailed results<br/>prod cutover never happened"]
         dash["Dashboard<br/>parquet committed into repo"]
-        rpkg["nccsdata R package<br/>reads raw S3"]
+        rpkg["nccsdata R package<br/>reads processed S3"]
     end
 
     bmf --> raw & u11 & u12
@@ -65,7 +65,7 @@ flowchart TB
 **What's true here.** Each consumer reached its own version of the data.
 The API and dashboard read a **private merge** materialized as an
 Athena table, with the join logic buried in pipeline/DDL code and *no
-audit trail*. The R package and direct-S3 users read the raw artifacts.
+audit trail*. The R package and direct-S3 users read the processed artifacts.
 When a BMF or core column changed, **both realities had to be patched in
 parallel, by hand.** Meanwhile several competing "one unified BMF table"
 products (`harmonized/bmf/unified` V1.1, `bmf/unified/v1.2`) coexisted,
@@ -195,7 +195,7 @@ and why. That legibility is what makes the next state reachable at all.
 
       %% ===== Derived producer tier =====
       subgraph DERIV["Derived producer (consumer + producer)"]
-          sib["sector-in-brief-data<br/>aggregates BMF/CORE/E-File/DAF → dashboard parquet (0010/0019)"]:::live
+          sib["sector-in-brief-data<br/>aggregates BMF/core/SOI/DAF → dashboard parquet (0010/0019)"]:::live
       end
 
       %% ===== Service tier =====
