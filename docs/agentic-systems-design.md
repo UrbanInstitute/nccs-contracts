@@ -35,9 +35,9 @@ flowchart TB
     end
 
     subgraph S3OLD["S3 — undocumented dumping ground"]
-        raw["raw BMF / core"]
-        u11["unified BMF V1.1<br/>(statewise CSVs)"]
-        u12["unified BMF v1.2<br/>(another 'one table')"]
+        raw["processed BMF / core"]
+        u11["unified BMF V1.1<br/>(master BMF with statewise CSVs)"]
+        u12["unified BMF v1.2<br/>(updated 'master table')"]
         merge[("private Athena<br/>merge table<br/>logic in DDL")]
     end
 
@@ -56,6 +56,7 @@ flowchart TB
     raw --> rpkg
     nodc -. ad hoc .-> api
     human(["Maintainer = the integration layer"]) -. parallel hand-edits .-> bmf & merge & dash
+    data(["Raw data"]) -.-> bmf & core
 
     classDef pain fill:#fde,stroke:#b00,color:#000;
     class u11,u12,merge pain;
