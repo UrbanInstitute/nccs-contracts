@@ -87,40 +87,55 @@ world would have no ground truth — only code to imitate.
 ## State 2 — Current: the spine is built, the first agent is piloting
 
 ```mermaid
-flowchart TB
-    subgraph SPINE["nccs-contracts — the legibility spine"]
-        contracts["contracts/*.yml<br/>11 machine-checkable specs"]
-        adrs["decisions/*.md<br/>17 ADRs (the why + revisit triggers)"]
-        validator["validate_contracts.py<br/>(spec well-formedness)"]
-    end
+  flowchart TB
+      subgraph SPINE["nccs-contracts — the legibility spine"]
+          contracts["contracts/*.yml<br/>14 machine-checkable specs<br/>(5 still carry TODO)"]:::progress
+          adrs["decisions/*.md<br/>24 ADRs (the why + revisit triggers)"]:::live
+          validator["validate_contracts.py<br/>(spec well-formedness)"]:::live
+          guard["contracts-guard.yml + adr-required.yml<br/>cross-repo change guard (ADR 0022, rolling out)"]:::progress
+      end
 
-    subgraph PRODN["Producers — converging on the spec"]
-        bmf["BMF → master / geocoded / lookups / legacy<br/>(unified products retired)"]
-        core["Core 990 → 990 / legacy / panel tiers"]
-        efile["E-file Phase 0 — LIVE 2026-05-29<br/>vendored-NODC + build-time verification"]
-        sib["sector-in-brief-data<br/>(derived producer, 6/8 panels)"]
-    end
+      subgraph PRODN["Producers — converging on the spec"]
+          bmf["BMF → master / geocoded / lookups / legacy<br/>(unified products retired, 0005)"]:::live
+          xwalk["Geo crosswalks (NCCS-owned, LIVE)<br/>county-fips · cbsa · ct-planning-region (0021/0023)"]:::live
+          core["Core 990 → 990 / harmonized / legacy / panel tiers (0015)"]:::live
+          efile["E-file Phase 0 — LIVE 2026-05-29<br/>vendored-NODC + build-time verification (0007/0017)"]:::live
+          sib["sector-in-brief-data — derived producer<br/>v2026.08, FIPS+CBSA in every panel (0010/0019)"]:::live
+      end
 
-    subgraph CONSN["Consumers — compose their own joins (no canonical merge)"]
-        dash["Dashboard<br/>auto-syncs from S3 at boot"]
-        rpkg["nccsdata R package"]
-        oldapi["Dataexplorer API<br/>(still old Athena — modernization planned)"]
-    end
+      subgraph CONSN["Consumers — compose their own joins (no canonical merge, 0016)"]
+          dash["Dashboard<br/>auto-syncs from S3 at boot (0011)"]:::live
+          rpkg["nccsdata R package"]:::live
+          adhoc["Ad-hoc data requests<br/>nccs-data-requests (0024, scaffold in progress)"]:::progress
+          oldapi["Dataexplorer API — still old Athena<br/>modernize → sector-in-brief-api (0008)"]:::planned
+      end
 
-    bmf & core & efile --> contracts
-    sib --> contracts
-    contracts --> dash & rpkg & sib
-    adrs -. governs .-> contracts
+      bmf & xwalk & core & efile --> contracts
+      sib --> contracts
+      contracts --> dash & rpkg & sib & adhoc
+      contracts -. modernization target .-> oldapi
+      adrs -. governs .-> contracts
+      validator -. checks .-> contracts
+      guard -. gates .-> bmf & sib
 
-    human(["Maintainer = drift detector,<br/>manually, in Claude sessions"]) -. plan/execute/reconcile .-> adrs
-    copilot["Copilot coding agent<br/>PILOT on nccs-data-bmf<br/>(issue → draft PR → review)"]
-    contracts -. reads as ground truth .-> copilot
-    copilot -. drafts PR .-> bmf
+      human(["Maintainer = drift detector,<br/>manually, in Claude sessions"]):::actor
+      human -. plan / execute / reconcile .-> adrs
+      copilot["Copilot coding agent<br/>PILOT on nccs-data-bmf<br/>(issue → draft PR → review)"]:::progress
+      contracts -. reads as ground truth .-> copilot
+      copilot -. drafts PR .-> bmf
 
-    classDef live fill:#efe,stroke:#0a0,color:#000;
-    classDef wip fill:#ffe,stroke:#aa0,color:#000;
-    class efile live;
-    class copilot,oldapi wip;
+      subgraph LEGEND["Legend — rollout status"]
+          direction LR
+          l1["Live today"]:::live
+          l2["In progress / converging"]:::progress
+          l3["Planned"]:::planned
+          l4(["Actor"]):::actor
+      end
+
+      classDef live     fill:#d8f5d8,stroke:#1a7a1a,color:#000;
+      classDef progress fill:#fff2cc,stroke:#d6a400,color:#000;
+      classDef planned  fill:#e6eefc,stroke:#3b6fd6,stroke-dasharray:5 4,color:#000;
+      classDef actor    fill:#efe0fb,stroke:#8a3ffc,stroke-width:2px,color:#000;
 ```
 
 **What changed.** The contract surface now *exists*. `S3 is the contract
@@ -154,44 +169,85 @@ and why. That legibility is what makes the next state reachable at all.
 ## State 3 — Complete: deterministic checks find drift, agents draft fixes, humans approve
 
 ```mermaid
-flowchart TB
-    subgraph SPINE2["nccs-contracts — ground truth"]
-        contracts2["contracts/*.yml<br/>(fully populated)"]
-        adrs2["decisions/*.md"]
-    end
+  flowchart TB
+      %% ===== Orchestration layer (actors, not data nodes) =====
+      human(["👤 Human Orchestrator<br/>Sets intent, ADRs & guardrails"])
+      claude[["🤖 Claude Code sessions<br/>Execute & remediate"]]
+      human -->|steers / initiates| claude
+      claude -->|proposes changes| pr
 
-    subgraph PRODF["Producers — fully standardized"]
-        prod["BMF · Core · E-file Phase 1+<br/>versioned outputs (0013)<br/>standard manifest (0014)<br/>NCCS-owned concordance"]
-    end
+      %% ===== Spine =====
+      subgraph SPINE["nccs-contracts — ground truth"]
+          contracts["contracts/*.yml"]:::progress
+          adrs["decisions/*.md"]:::live
+      end
+      human -.->|sets intent & guardrails| SPINE
+      SPINE -.->|keeps steering on-plan| claude
 
-    subgraph SERVICE["Service tier"]
-        api2["New DuckDB API on parquet<br/>(Athena retired, 0003/0008)"]
-    end
+      %% ===== Producers =====
+      subgraph PROD["Producers — standard manifest (0014) + versioned outputs (0013)"]
+          bmf["BMF master / vintages / lookups"]:::live
+          core["Core 990 (SOI extracts)"]:::live
+          efile["E-file — Phase 1+ headline-990 surface<br/>(Phase 0 live; Phase 1+ planned, 0007/0017)"]:::progress
+          xwalk["Geo crosswalks (NCCS-owned)<br/>county-fips · cbsa · ct-planning-region (0021/0023)"]:::live
+      end
 
-    subgraph CONSF["Consumers — compose joins per use case"]
-        consumers["dashboard · R package · API · ML"]
-    end
+      %% ===== Derived producer tier =====
+      subgraph DERIV["Derived producer (consumer + producer)"]
+          sib["sector-in-brief-data<br/>aggregates BMF/CORE/E-File/DAF → dashboard parquet (0010/0019)"]:::live
+      end
 
-    subgraph CI["Deterministic GitHub Actions (cheap, always-on)"]
-        check["schema + manifest + sha256 + row-count checks<br/>cron for batch · event for continuous"]
-    end
+      %% ===== Service tier =====
+      subgraph SVC["Service tier"]
+          api["DuckDB-on-parquet API<br/>composes joins per use case — no canonical merge (0016)<br/>Athena retired (0003/0008)"]:::planned
+      end
 
-    prod --> contracts2
-    prod --> check
-    contracts2 --> check
-    contracts2 --> consumers
-    contracts2 --> api2 --> consumers
+      %% ===== Consumers =====
+      subgraph CONS["Consumers — compose joins per use case"]
+          dash["Sector-in-Brief dashboard<br/>reads S3 directly, NOT via API (0011)"]:::live
+          rpkg["nccsdata R package"]:::live
+          apicons["API consumers"]:::planned
+          adhoc["Ad-hoc data requests<br/>nccs-data-requests (0024)"]:::progress
+          stories["Public data stories<br/>nccs website _stories/ (0025)"]:::progress
+      end
 
-    check -- "drift found" --> issue["[drift] issue opened"]
-    issue --> agent["Copilot agent (Opus)<br/>Loop 1 remediation · Loop 2 pin-bumps · Loop 3 PR review"]
-    contracts2 -. read .-> agent
-    adrs2 -. read .-> agent
-    agent -- "drafts PR + diagnosis" --> pr["Pull request"]
-    pr --> approver(["Maintainer = approver, not debugger<br/>0–3 PRs/week"])
-    approver -- merge --> prod
+      %% ===== Agentic operations =====
+      subgraph OPS["Agentic operations"]
+          check["Deterministic GH Actions<br/>schema · manifest · sha256 · row-count<br/>cron (batch) · event (continuous)"]:::progress
+          agent["Copilot agent (Opus)<br/>L1 drift remediation · L2 pin-bumps · L3 PR review"]:::progress
+      end
 
-    classDef done fill:#efe,stroke:#0a0,color:#000;
-    class check,agent done;
+      %% ===== Data + control flow =====
+      bmf & core & efile & xwalk --> contracts
+      bmf & core --> sib
+      bmf & core & efile & xwalk --> check
+      contracts --> check
+      contracts --> dash & rpkg & adhoc & stories
+      contracts --> api --> apicons
+      sib --> dash
+
+      check -- "drift found" --> issue["[drift] issue opened"]:::progress
+      issue --> agent
+      contracts -. read .-> agent
+      adrs -. read .-> agent
+      agent -- "drafts PR + diagnosis" --> pr["Pull request"]
+      pr --> approver(["Maintainer = approver, not debugger<br/>0–3 PRs/week"])
+      approver -- "merge → owning repo (producer or contracts)" --> PROD
+
+      %% ===== Legend =====
+      subgraph LEGEND["Legend — rollout status"]
+          direction LR
+          l1["Live today"]:::live
+          l2["In progress / rolling out"]:::progress
+          l3["Planned target"]:::planned
+          l4(["Actor — human / AI"]):::actor
+      end
+
+      classDef live     fill:#d8f5d8,stroke:#1a7a1a,color:#000;
+      classDef progress fill:#fff2cc,stroke:#d6a400,color:#000;
+      classDef planned  fill:#e6eefc,stroke:#3b6fd6,stroke-dasharray:5 4,color:#000;
+      classDef actor    fill:#efe0fb,stroke:#8a3ffc,stroke-width:2px,color:#000;
+      class human,claude,approver actor;
 ```
 
 **What it buys.** The loop closes. A producer publishes; a **cheap,
