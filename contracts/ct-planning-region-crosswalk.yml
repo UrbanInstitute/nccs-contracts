@@ -133,7 +133,7 @@ schema:
       nullable: false
 
 consumers:
-  - repo: UrbanInstitute/sector-in-brief-data  # LIVE since v2026.08 (ADR 0023 Follow-up 1). Recovered the ~25.9k geocoded CT orgs from "unassigned county": CT County FIPS + Metro/Micro coverage went 39.7% -> 99.996% (one off-grid border coordinate stays NA).
+  - repo: UrbanInstitute/sector-in-brief-data  # LIVE since v2026.08 (ADR 0023 Follow-up 1). Recovered the ~25.9k geocoded CT orgs from "unassigned county": CT County FIPS + Metro/Micro coverage went 39.7% -> 99.9996% (two off-grid orgs stay NA).
     pin: "latest"  # reads the unversioned ct_planning_region_crosswalk.parquet (config.yml inputs.ct_planning_region_crosswalk).
     notes: >
       Live in v2026.08. read_bmf resolves CT by joining this companion on
