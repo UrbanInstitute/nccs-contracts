@@ -55,16 +55,18 @@ existing API after a deprecation window.
   for hot partitions. Per ADR 0003.
 - **No Athena dependency.** Athena may be retained for human
   ad-hoc SQL outside the API; the API runtime does not call it.
-- **Host (resolved 2026-06-09 by Phase-0; reverses the earlier
-  App-Runner lean): Lambda-first hybrid.** Lambda materializes the
-  p50–p95 range (≤ ~10 GB) straight to S3; an **async non-Lambda worker
-  (Fargate / App Runner / Batch — platform TBD)** handles only the p99+
-  giant tail (30–51 GB) and any memory-heavy wide join, surfaced through
+- **Host (confirmed 2026-06-09 by Phase-0 + build step 0; reverses the
+  earlier App-Runner lean): Lambda-first hybrid.** Lambda materializes
+  the bulk of the distribution straight to S3; an **async non-Lambda
+  worker (Fargate / App Runner / Batch — platform TBD)** is reserved
+  only for pathological multi-tier giants (990 + EZ + PF + legacy/efile
+  spanning the 30–51 GB tail), surfaced through
   [[0026-data-download-durable-links-and-telemetry]]'s durable
   `/download/{job_id}`. The binding Lambda constraint is **join memory
-  (10 GB)**, not wall-time — at the measured ~104 MB/s in-region, the
-  15-min wall is ≈ 90 GB of headroom, above the 51 GB observed max.
-  Gated on a wide-join memory check (first build step; see Outcome).
+  (10 GB)**, not wall-time — a real in-Lambda probe of the worst
+  realistic query peaked at **6.0/10 GB (~60%)** and finished in 76 s,
+  writing to the real results bucket at ~67 MB/s, so the 900 s wall is
+  ~60 GB of headroom, above the 51 GB max (see Outcome).
 
 ### Result delivery
 
@@ -170,26 +172,36 @@ started. Evidence: `sector-in-brief-api/phase0/FINDINGS.md`.
   describes no real query). In-region throughput is ~104 MB/s (the
   earlier 1.5 MB/s figure was egress to a local machine, not a host
   signal), so the 15-min Lambda wall ≈ 90 GB headroom > the 51 GB max.
+- **Host confirmed by build step 0 (2026-06-09).** A SAM-deployed Lambda
+  (10 GB / 900 s / 10 GB ephemeral) ran the worst realistic query —
+  widest projection (~250 core columns), all 990 tax years, all states,
+  no filter — as a DuckDB EIN join materialized to the real
+  `sector-in-brief-api-results-stg` bucket: **peak 6.0/10 GB (~60%),
+  76 s, a 4.70 GB / 3.75M-row result written at ~67 MB/s.** Wall-time is
+  not the binding limit (~60 GB headroom > 51 GB max); join memory is,
+  and it held at ~60% on the worst case. This also exercises pattern B
+  end-to-end (materialize → real S3 bucket) and closes the deferred
+  in-region S3-write check.
 - **Names finalized:** results buckets
   `sector-in-brief-api-results-{stg,prod}`; log prefix
   `s3://sector-in-brief-api/logs/…`.
 
 **Diverged or pending:**
 
-- **The full API build is unstarted** — the migration sequence above
-  (deploy, soak, UI cutover, sunset) is still ahead.
-- **The host has one residual that could still pivot it.** The binding
-  Lambda limit is join memory (10 GB) on the widest/largest queries, not
-  wall-time. This is tested as the **first gated build step** (a thin
-  real Lambda running the wide-tail query); if it OOMs, the host pivots
-  to always-async before the full rewrite. The async worker platform
-  (Fargate / App Runner / Batch) is not yet chosen.
-- **In-region S3-write rate** is deferred into the build (measured
-  against the real results bucket + API role, not a throwaway box).
+- **The full API build is still ahead.** Build step 0 (the host-gating
+  in-Lambda probe) is done; the rewrite proper — handler, `template.yaml`
+  results bucket/lifecycle, `/download/{job_id}` + registry, SES receipt,
+  NDJSON telemetry — plus the deploy/soak/cutover/sunset sequence
+  remains.
 - **Production reads depend on the core-parquet promotion** — core-990
   parquet exists on S3 but is not yet contract-canonical; tracked on
   `contracts/core-990.yml` open item #3 and decided separately under
-  [[0003-retire-athena-for-duckdb]].
+  [[0003-retire-athena-for-duckdb]]. Build step 0 surfaced a concrete
+  requirement for that promotion: core parquet has **cross-vintage type
+  drift** (e.g. `gross_income_other` is INT in early years, DOUBLE in
+  2015), so multi-year reads need `read_parquet(union_by_name=True)` and
+  the parquet-canonical contract should assert cross-year schema/type
+  stability.
 
 ## Consequences
 
