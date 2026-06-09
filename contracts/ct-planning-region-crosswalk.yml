@@ -145,6 +145,14 @@ consumers:
   - repo: UrbanInstitute/nccs  # LIVE — BMF data catalog (catalogs/catalog-bmf.qmd) surfaces the ct_planning_region_crosswalk download links (csv + parquet + _manifest.json) as the CT-by-coordinate hop, alongside the other two crosswalks. Live since website commit 8dac174. (Repo name corrected from the stale "nccs-website".)
     pin: "latest"  # links the flat ct_planning_region_crosswalk.csv/.parquet/_manifest.json (no vintage subdir per ADR 0021); a download/catalog surface, not a programmatic join.
     notes: "BMF data catalog presents the CT planning-region crosswalk with row count (14,271 coordinate grid) and the TIGER 2023 vintage, offering .csv (web), .parquet (machine), and _manifest.json as downloads."
+  - repo: UrbanInstitute/sector-in-brief-api  # LIVE in staging (2026-06-09); ADR 0008/0023.
+    pin: "latest"  # reads ct_planning_region_crosswalk.parquet via DuckDB at query time
+    notes: >
+      The data-download API resolves CT by joining this companion on
+      (geo_state_abbr, printf('%.2f', geo_lat), printf('%.2f', geo_lon)) ->
+      geo_county_fips (the coordinate override, AUTHORITATIVE for CT), coalesced
+      ahead of the county-label FIPS before the CBSA chain — mirroring
+      sector-in-brief-data's read_bmf.R (ADR 0023).
 
 drift_detection:
   trigger: event

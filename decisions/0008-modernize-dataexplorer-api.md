@@ -1,6 +1,6 @@
 # 0008 — Modernize the Dataexplorer API
 
-- **Status:** Accepted (partially executed 2026-06-09 — Phase-0 measurement complete; full build not yet started) — see Outcome
+- **Status:** Accepted (partially executed — built + deployed to staging 2026-06-09, slices 1–5.1; soak / UI cutover / prod / sunset pending) — see Outcome
 - **Date:** 2026-05-15
 - **Deciders:** sole maintainer
 
@@ -98,18 +98,23 @@ _Original (superseded for the form by the amendment above):_
   (working name: `nccs-data-api-results`). **Finalized 2026-06-09 as
   `sector-in-brief-api-results-{stg,prod}`** (one per environment); the
   working name predates the 2026-06-04 repo rename and is stale.
-- **30-day S3 lifecycle policy** from day one: objects auto-delete
-  30 days after creation. Users who need persistence re-run the
-  query.
+- **30-day S3 lifecycle policy** from day one, **scoped to the `results/`
+  prefix**: result objects auto-delete 30 days after creation, while the
+  `logs/queries/` NDJSON and the `requests/{job_id}.json` registry sit at
+  sibling prefixes on a longer clock (the two-clocks rule — see
+  [[0026-data-download-durable-links-and-telemetry]] §1/§2). Users who need
+  persistence re-run the query, or use the durable `/download/{job_id}` link.
 - **No prod/stg confusion.** Single bucket per environment, named
   unambiguously. Staging deployment writes to a staging bucket;
   production writes to a production bucket.
 
 ### Usage telemetry
 
-- API logs **every query** to a per-day prefix (**finalized 2026-06-09:**
-  `s3://sector-in-brief-api/logs/queries/{YYYY-MM-DD}/`; the
-  `nccs-data-api` name is stale) as newline-delimited JSON: timestamp,
+- API logs **every query** to a per-day prefix **inside the results bucket**
+  (**as-built 2026-06-09:**
+  `sector-in-brief-api-results-{stg,prod}/logs/queries/{YYYY-MM-DD}/`; the
+  earlier separate-bucket `s3://sector-in-brief-api/logs/…` and the
+  `nccs-data-api` name are both stale) as newline-delimited JSON: timestamp,
   user (or anon), query SQL, result size, duration, success/failure.
   The event set is extended to the three NDJSON types in
   [[0026-data-download-durable-links-and-telemetry]] §4
@@ -182,17 +187,23 @@ started. Evidence: `sector-in-brief-api/phase0/FINDINGS.md`.
   and it held at ~60% on the worst case. This also exercises pattern B
   end-to-end (materialize → real S3 bucket) and closes the deferred
   in-region S3-write check.
-- **Names finalized:** results buckets
-  `sector-in-brief-api-results-{stg,prod}`; log prefix
-  `s3://sector-in-brief-api/logs/…`.
+- **Names finalized (as-built):** the results bucket
+  `sector-in-brief-api-results-{stg,prod}` carries three prefixes — `results/`
+  (30-day lifecycle), `logs/queries/` (per-query NDJSON), and
+  `requests/{job_id}.json` (durable-link registry, longer clock). The earlier
+  separate-bucket log path `s3://sector-in-brief-api/logs/…` was provisional
+  and is corrected here.
 
 **Diverged or pending:**
 
-- **The full API build is still ahead.** Build step 0 (the host-gating
-  in-Lambda probe) is done; the rewrite proper — handler, `template.yaml`
-  results bucket/lifecycle, `/download/{job_id}` + registry, SES receipt,
-  NDJSON telemetry — plus the deploy/soak/cutover/sunset sequence
-  remains.
+- **Built + deployed to staging (2026-06-09).** Slices 1–5.1 shipped — the
+  DuckDB-on-parquet `/data` handler, the `template.yaml` results
+  bucket/lifecycle, durable `/download/{job_id}` + registry, SES receipt, and
+  NDJSON telemetry — deployed to `stg` via a green CI/CD pipeline with a
+  post-deploy smoke gate. Remaining: soak, the sector-in-brief UI cutover,
+  prod, and the legacy-API sunset (migration steps 2–7). The as-built
+  delivery/auth realizations are recorded in
+  [[0026-data-download-durable-links-and-telemetry]]'s Outcome.
 - **Production reads on canonical core parquet — RESOLVED 2026-06-09 by
   [[0027-core-990-parquet-promotion]].** Core parquet is promoted to
   service-tier-canonical (dual-published; CSV mirror on a 90-day window),

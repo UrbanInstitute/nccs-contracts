@@ -129,6 +129,12 @@ consumers:
   - repo: UrbanInstitute/nccs  # LIVE — BMF data catalog (catalogs/catalog-bmf.qmd) surfaces the cbsa_crosswalk download links (csv + parquet + _manifest.json) as hop 3 of the geography chain. Live since website commit 75a2277. Resolves ADR 0021 Follow-up 2. (Repo name corrected from the stale "nccs-website".)
     pin: "latest"  # links the flat cbsa_crosswalk.csv/.parquet/_manifest.json (no vintage subdir per ADR 0021); a download/catalog surface, not a programmatic join.
     notes: "BMF data catalog presents the CBSA crosswalk with row counts (3,228; 1,915 in a CBSA, 1,313 rural) and the OMB 2023 vintage, offering .csv (web), .parquet (machine), and _manifest.json as downloads."
+  - repo: UrbanInstitute/sector-in-brief-api  # LIVE in staging (2026-06-09); ADR 0008/0021/0023.
+    pin: "latest"  # reads cbsa_crosswalk.parquet via DuckDB at query time
+    notes: >
+      The data-download API chains this crosswalk on
+      county_fips = COALESCE(county-fips label FIPS, ct-planning-region FIPS) to
+      add the Metro/Micro (CBSA/CSA) dimension, mirroring sector-in-brief-data.
 
 drift_detection:
   trigger: event

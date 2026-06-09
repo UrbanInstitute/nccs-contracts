@@ -57,6 +57,14 @@ consumers:
   - repo: UrbanInstitute/nccsdata
     pin: "latest"  # no vintage subdirectories yet; consumer reads the unversioned `latest` path. Re-pin to a vintage tag once Open item #2 (vintage migration) lands.
     notes: "nccs_read() reads bmf_master_geocoded.parquet (R/nccs_read.R:401)."
+  - repo: UrbanInstitute/sector-in-brief-api  # LIVE in staging (slices 1-5.1, 2026-06-09); ADR 0008/0016/0026.
+    pin: "latest"  # reads bmf_master_geocoded.parquet via DuckDB at query time
+    notes: >
+      The modernized data-download API opens DuckDB over this parquet and joins
+      it to the requested CORE tiers on lowercase `ein` at query time (ADR 0016,
+      no pre-merged table). `ein` is unique here, so the inner join does not fan
+      out. The API composes the county-fips / cbsa / ct-planning-region joins on
+      top (see those contracts), mirroring sector-in-brief-data's read_bmf.R.
 
 drift_detection:
   trigger: event

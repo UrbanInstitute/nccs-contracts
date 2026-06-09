@@ -133,6 +133,13 @@ consumers:
   - repo: UrbanInstitute/nccs  # LIVE — BMF data catalog (catalogs/catalog-bmf.qmd) surfaces the county_fips_crosswalk download links (csv + parquet + _manifest.json) as hop 1 of the geography chain. Live since website commit 75a2277. Resolves ADR 0021 Follow-up 2. (Repo name corrected from the stale "nccs-website".)
     pin: "latest"  # links the flat county_fips_crosswalk.csv/.parquet/_manifest.json (no vintage subdir per ADR 0021); a download/catalog surface, not a programmatic join.
     notes: "BMF data catalog presents the county FIPS crosswalk with row counts (3,635; 3,615 resolved) and the TIGER 2023 vintage, offering .csv (web), .parquet (machine), and _manifest.json as downloads."
+  - repo: UrbanInstitute/sector-in-brief-api  # LIVE in staging (2026-06-09); ADR 0008/0021.
+    pin: "latest"  # reads county_fips_crosswalk.parquet via DuckDB at query time
+    notes: >
+      The data-download API left-joins this crosswalk on
+      (geo_state_abbr, raw geo_county) -> geo_county_fips / geo_county_canonical
+      (ambiguous -> NULL), exactly mirroring sector-in-brief-data's
+      county_crosswalk.R, then chains [[cbsa-crosswalk]] on the resolved FIPS.
 
 drift_detection:
   trigger: event

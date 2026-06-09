@@ -1,7 +1,8 @@
-# Producer (new sector-in-brief-api repo) not yet built. This contract
-# describes the planned shape per ADR 0008; fields fill in when the
-# rollup job ships. (Repo finalized as sector-in-brief-api 2026-06-04 —
-# was the working name nccs-data-api in ADR 0008.)
+# Producer sector-in-brief-api is BUILT + deployed to staging (2026-06-09,
+# slices 1-5.1); the monthly rollup (jobs/rollup.py) is wired but has not yet
+# run in prod, so the schema columns below stay TODO until it ships its first
+# vintage (per ADR 0008 follow-up #2). (Repo finalized as sector-in-brief-api
+# 2026-06-04 — was the working name nccs-data-api in ADR 0008.)
 
 name: usage-api
 description: >
@@ -16,15 +17,16 @@ description: >
   request-vs-download abandonment rate is a first-class metric.
 
 # --- Upstream sources (not part of this contract; consumed, not published) ---
-# - s3://sector-in-brief-api/logs/queries/{YYYY-MM-DD}/*.ndjson — per-query
-#   structured log written live by the API process. The rollup job
-#   reads these; consumers do not. (Bucket/prefix finalized 2026-06-09 per
-#   the ADR 0008 Phase-0 reconcile.) The log carries the three ADR 0026 §4
-#   event types: request_created, export_materialized, download.
+# - s3://sector-in-brief-api-results-{stg,prod}/logs/queries/{YYYY-MM-DD}/*.ndjson
+#   — per-query structured log written live by the API process, inside the
+#   results bucket (as-built 2026-06-09; the earlier separate
+#   s3://sector-in-brief-api/ path was provisional). The rollup job reads these;
+#   consumers do not. The log carries the three ADR 0026 §4 event types:
+#   request_created, export_materialized, download.
 
 producer:
   repo: UrbanInstitute/sector-in-brief-api  # to be created per ADR 0008 (working name there was nccs-data-api)
-  publish_path: TODO  # e.g. R/rollup_usage.R or jobs/rollup.py
+  publish_path: jobs/rollup.py  # monthly cron (cron(0 8 1 * ? *)); aggregates the prior month's logs/queries/ NDJSON
 
 format: parquet
 compression: zstd
@@ -34,6 +36,10 @@ partitioned: true
 s3:
   bucket: nccsdata
   key_prefix: usage/api/
+  # Stage-aware (as-built): ONLY prod publishes the contracted artifact here
+  # (s3://nccsdata/usage/api/). Staging writes to its own results bucket
+  # (sector-in-brief-api-results-stg/usage/api-stg/) so it can't clobber the
+  # contracted artifact. This contract describes the prod surface.
   versioned_template: TODO
   latest_template: "usage/api/{vintage}/queries.parquet"  # vintage = YYYY_MM
 
