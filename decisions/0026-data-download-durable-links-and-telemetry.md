@@ -1,6 +1,6 @@
 # 0026 — Data-Download UX: Durable Links, Email Receipt by Default, and Download Telemetry
 
-- **Status:** Accepted (planning) — refines [[0008-modernize-dataexplorer-api]]; depends on its build for the runtime/storage baseline. Not yet built.
+- **Status:** Accepted (planning) — refines [[0008-modernize-dataexplorer-api]]; depends on its build for the runtime/storage baseline. Not yet built. **Pattern B (§1) confirmed by data 2026-06-09 (Phase-0): 38.5 % of 2,539 real results exceed the 6 MB inline cap, so materialize-to-S3 is mandatory — see [[0008-modernize-dataexplorer-api]] Outcome.**
 - **Date:** 2026-06-08
 - **Deciders:** sole maintainer
 
@@ -58,7 +58,10 @@ constraint that motivated this work ("Shiny cannot serve that much
 data"): streaming through the API would just relocate the same
 memory/timeout problem one tier over. 0008's synchronous-stream-for-small
 path may remain for programmatic/API-direct callers; the **form** uses
-pattern B uniformly.
+pattern B uniformly. **(Confirmed by Phase-0, 2026-06-09: 38.5 % of
+2,539 real results exceed the 6 MB API-Gateway cap, so pattern B is
+required for the form, not merely preferred — see
+[[0008-modernize-dataexplorer-api]] Outcome.)**
 
 **Two clocks, kept distinct:**
 

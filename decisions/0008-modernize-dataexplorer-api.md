@@ -1,6 +1,6 @@
 # 0008 — Modernize the Dataexplorer API
 
-- **Status:** Accepted (planning; new API not yet built)
+- **Status:** Accepted (partially executed 2026-06-09 — Phase-0 measurement complete; full build not yet started) — see Outcome
 - **Date:** 2026-05-15
 - **Deciders:** sole maintainer
 
@@ -55,8 +55,31 @@ existing API after a deprecation window.
   for hot partitions. Per ADR 0003.
 - **No Athena dependency.** Athena may be retained for human
   ad-hoc SQL outside the API; the API runtime does not call it.
+- **Host (resolved 2026-06-09 by Phase-0; reverses the earlier
+  App-Runner lean): Lambda-first hybrid.** Lambda materializes the
+  p50–p95 range (≤ ~10 GB) straight to S3; an **async non-Lambda worker
+  (Fargate / App Runner / Batch — platform TBD)** handles only the p99+
+  giant tail (30–51 GB) and any memory-heavy wide join, surfaced through
+  [[0026-data-download-durable-links-and-telemetry]]'s durable
+  `/download/{job_id}`. The binding Lambda constraint is **join memory
+  (10 GB)**, not wall-time — at the measured ~104 MB/s in-region, the
+  15-min wall is ≈ 90 GB of headroom, above the 51 GB observed max.
+  Gated on a wide-join memory check (first build step; see Outcome).
 
 ### Result delivery
+
+> **Amended 2026-06-09 (supersedes the sync/async-with-SSE split below
+> for the dashboard form; confirmed by Phase-0 — see Outcome):** the
+> form's delivery is **uniform pattern B** — always materialize the
+> result to the results bucket and return a **presigned URL** via the
+> durable `/download/{job_id}` endpoint, email receipt default-on
+> ([[0026-data-download-durable-links-and-telemetry]]). Phase-0 settled
+> this by data: **38.5 % of 2,539 real results exceed the 6 MB
+> API-Gateway response cap**, so result bytes can never stream back
+> through the API process. 0008's in-band path may still serve small
+> programmatic / API-direct callers, but it is not the form's path.
+
+_Original (superseded for the form by the amendment above):_
 
 - **Synchronous** for queries returning under ~100 MB. Result
   streams back to the client in the same request.
@@ -70,7 +93,9 @@ existing API after a deprecation window.
 ### Result storage
 
 - **New dedicated bucket** with a name that reflects its role
-  (working name: `nccs-data-api-results`; finalize at repo creation).
+  (working name: `nccs-data-api-results`). **Finalized 2026-06-09 as
+  `sector-in-brief-api-results-{stg,prod}`** (one per environment); the
+  working name predates the 2026-06-04 repo rename and is stale.
 - **30-day S3 lifecycle policy** from day one: objects auto-delete
   30 days after creation. Users who need persistence re-run the
   query.
@@ -80,10 +105,14 @@ existing API after a deprecation window.
 
 ### Usage telemetry
 
-- API logs **every query** to a per-day prefix
-  (`s3://nccs-data-api/logs/queries/{YYYY-MM-DD}/`) as
-  newline-delimited JSON: timestamp, user (or anon), query SQL,
-  result size, duration, success/failure.
+- API logs **every query** to a per-day prefix (**finalized 2026-06-09:**
+  `s3://sector-in-brief-api/logs/queries/{YYYY-MM-DD}/`; the
+  `nccs-data-api` name is stale) as newline-delimited JSON: timestamp,
+  user (or anon), query SQL, result size, duration, success/failure.
+  The event set is extended to the three NDJSON types in
+  [[0026-data-download-durable-links-and-telemetry]] §4
+  (`request_created` / `export_materialized` / `download`);
+  `contracts/usage-api.yml` is authoritative.
 - **Monthly rollup** job aggregates the daily logs into a
   contracted parquet artifact published under
   `s3://nccsdata/usage/api/{YYYY_MM}/queries.parquet`. See the new
@@ -115,6 +144,52 @@ existing API after a deprecation window.
 7. Archive `nccs-dataexplorer-prod/` (dead state, immediately) and
    `nccs-dataexplorer-stg/` (after retention for users who pinned
    pre-sunset email links).
+
+## Outcome (Phase 0 — 2026-06-09)
+
+Phase-0 of the `sector-in-brief-api` build ran a vertical slice against
+live `s3://nccsdata` and the legacy results bucket (us-east-1),
+resolving the questions this ADR left open. The full build is not yet
+started. Evidence: `sector-in-brief-api/phase0/FINDINGS.md`.
+
+**Shipped (decided / confirmed):**
+
+- **DuckDB-on-parquet path proven.** One real dashboard-style query —
+  CORE 990 parquet ⋈ `bmf-master-geocoded` parquet, joined on lowercase
+  `ein` at query time (per [[0016-no-canonical-cross-dataset-merge]]),
+  materialized straight to S3 — runs clean. The join is sound: `ein` is
+  unique in bmf-geocoded (3,672,933 distinct rows), so it does not fan
+  out.
+- **Pattern B confirmed by data.** 38.5 % of 2,539 real production
+  results exceed the 6 MB API-Gateway cap → materialize-to-S3 is
+  mandatory, not a preference (see
+  [[0026-data-download-durable-links-and-telemetry]]).
+- **Host decided: Lambda-first hybrid** (reverses the earlier App-Runner
+  lean). The result-size distribution is violently bimodal — p50 0.1 MB,
+  p75 117 MB, p95 11.7 GB, p99 30.7 GB, max 51 GB (the 1.6 GB mean
+  describes no real query). In-region throughput is ~104 MB/s (the
+  earlier 1.5 MB/s figure was egress to a local machine, not a host
+  signal), so the 15-min Lambda wall ≈ 90 GB headroom > the 51 GB max.
+- **Names finalized:** results buckets
+  `sector-in-brief-api-results-{stg,prod}`; log prefix
+  `s3://sector-in-brief-api/logs/…`.
+
+**Diverged or pending:**
+
+- **The full API build is unstarted** — the migration sequence above
+  (deploy, soak, UI cutover, sunset) is still ahead.
+- **The host has one residual that could still pivot it.** The binding
+  Lambda limit is join memory (10 GB) on the widest/largest queries, not
+  wall-time. This is tested as the **first gated build step** (a thin
+  real Lambda running the wide-tail query); if it OOMs, the host pivots
+  to always-async before the full rewrite. The async worker platform
+  (Fargate / App Runner / Batch) is not yet chosen.
+- **In-region S3-write rate** is deferred into the build (measured
+  against the real results bucket + API role, not a throwaway box).
+- **Production reads depend on the core-parquet promotion** — core-990
+  parquet exists on S3 but is not yet contract-canonical; tracked on
+  `contracts/core-990.yml` open item #3 and decided separately under
+  [[0003-retire-athena-for-duckdb]].
 
 ## Consequences
 

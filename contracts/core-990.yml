@@ -96,4 +96,10 @@ notes: |
      yet the contract-canonical format. Decide whether to promote
      parquet to canonical (with CSV mirror) or dual-publish; tied
      to [[0003-retire-athena-for-duckdb]] which assumes parquet
-     reads.
+     reads. **Now load-bearing (sector-in-brief-api Phase-0,
+     2026-06-09):** the modernized API reads core via DuckDB-on-parquet,
+     joining on lowercase `ein` at query time; Phase-0 confirmed the
+     parquet files exist on S3 and read fine, but production reads must
+     not depend on them until the promotion is contract-canonical. The
+     promotion decision is being made under ADR 0003 (maintainer); this
+     contract flips when it lands.

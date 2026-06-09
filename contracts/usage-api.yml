@@ -11,12 +11,16 @@ description: >
   success/failure rates, by day and by query class. Promotes API
   usage from inferred-from-leftover-result-CSVs to a first-class
   contracted artifact suitable for dashboards and capacity planning.
+  Per ADR 0026 §4 the rollup also aggregates the download lifecycle
+  (request_created / export_materialized / download), so the
+  request-vs-download abandonment rate is a first-class metric.
 
 # --- Upstream sources (not part of this contract; consumed, not published) ---
 # - s3://sector-in-brief-api/logs/queries/{YYYY-MM-DD}/*.ndjson — per-query
 #   structured log written live by the API process. The rollup job
-#   reads these; consumers do not. (Bucket name provisional — confirm at
-#   repo creation; mirrors the renamed sector-in-brief-api repo.)
+#   reads these; consumers do not. (Bucket/prefix finalized 2026-06-09 per
+#   the ADR 0008 Phase-0 reconcile.) The log carries the three ADR 0026 §4
+#   event types: request_created, export_materialized, download.
 
 producer:
   repo: UrbanInstitute/sector-in-brief-api  # to be created per ADR 0008 (working name there was nccs-data-api)
@@ -46,12 +50,16 @@ manifest:
 
 schema:
   source: TODO
+  # Source events (ADR 0026 §4, NDJSON): request_created, export_materialized, download.
   # Planned columns (finalize when job ships):
   #   - vintage_month        (date, first of month)
   #   - day                  (date, query date)
   #   - query_class          (string, optional taxonomy of common queries)
-  #   - n_queries            (int)
-  #   - n_unique_users       (int)
+  #   - n_requests           (int)    # request_created events
+  #   - n_exports            (int)    # export_materialized events (successful materializations)
+  #   - n_downloads          (int)    # download events (0..n per job)
+  #   - n_abandoned          (int)    # request_created with no download — bounds the storage budget
+  #   - n_unique_users       (int)    # hashed requester
   #   - bytes_returned_p50   (long)
   #   - bytes_returned_p95   (long)
   #   - duration_ms_p50      (int)
