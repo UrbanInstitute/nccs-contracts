@@ -224,6 +224,18 @@ This is the cheapest loop and the one that catches "I forgot to
 update the contract" mistakes mid-flight rather than at drift-
 detection time.
 
+**The deterministic floor of this loop is live** (ADR 0022). A reusable
+`contracts-guard` GitHub Action in `nccs-contracts` is called by a thin
+per-repo caller in every in-scope repo (all except `sector-in-brief-api`,
+deferred mid-rewrite): a PR that touches contract-relevant paths must
+**acknowledge** the contract impact — an `ADR NNNN` breadcrumb or a
+`contracts-ack` label — or the check fails. It verifies *acknowledgment, not
+correctness*; the Opus agent layer above (does it actually match the ADR /
+break the contract?) is the deliberate follow-on, so the floor runs first and
+targets the agent only where needed. An org ruleset keyed on a
+`contract-surface=true` property (org-owner request) is the remaining step to
+make the check non-optional.
+
 ### What the agents read
 
 - `contracts/*.yml` — source of truth for schemas, paths, cadence,
@@ -295,6 +307,12 @@ When adding a new producer or consumer:
    any coercion they perform.
 5. **Notify the drift detector.** Add the module to the agent's
    watch list (event trigger for continuous producers; cron for batch).
+6. **Add the contract-change guard** (ADR 0022). Drop in the thin
+   `.github/workflows/contracts-guard.yml` caller of the reusable guard in
+   `nccs-contracts`, with a `paths_regex` tuned to what the module publishes
+   (producer) or reads/pins (consumer); add a guard pointer to the module's
+   `CLAUDE.md`; and set the `contract-surface=true` property so the org ruleset
+   covers it. This turns a forgotten contract reconcile into a red check.
 
 A module that skips any of these steps is invisible to the system
 and will break silently. Don't.

@@ -209,17 +209,31 @@ changes.
   verified against controlled inputs (a contract-relevant change with no
   breadcrumb and no `contracts-ack` label exits non-zero; a breadcrumb or the
   label flips it to pass).
-- **Pending:** Migration steps 3–6 (add callers to the remaining in-scope
-  repos — `nccs-data-core`, `nccs-data-efile`, `nccsdata`, `sector-in-brief`,
-  `sector-in-brief-api`, `nccs` — each with a tuned `PATHS_REGEX`; set the
-  `contract-surface` property + the org ruleset (org-owner request); the
-  CLAUDE.md / ARCHITECTURE §9 §10 docs; the follow-on semantic-agent ADR).
+- **Done (2026-06-09):** Migration **step 3 completed** — thin callers merged
+  across the remaining in-scope repos: `nccs-data-core` (PR #8),
+  `nccs-data-efile` (PR #10 — which also added that repo's first `CLAUDE.md`),
+  `nccsdata` (PR #21), `sector-in-brief` (PR #56), and `nccs` (PR #86). Each
+  carries a `PATHS_REGEX` tuned to its surface — publish/config/parquet for the
+  producers (`core`), publish/manifest/dictionary/value-gate for `efile`, and
+  the read/pin/url/catalog surface for the consumers (`nccsdata`,
+  `sector-in-brief`, `nccs`). CLAUDE.md guard pointers landed in the same PRs.
+  With `nccs-data-bmf` + `sector-in-brief-data` (step 2), **every in-scope repo
+  now carries the guard except `sector-in-brief-api`**, deferred until its
+  rewrite settles (its publish/config layout is a moving target mid-build per
+  [[0008-modernize-dataexplorer-api]] / [[0028-api-realization-lambda-first-hybrid]]).
+  ARCHITECTURE §9 (Loop 3) and §10 updated in this same change.
+- **Pending:** the `sector-in-brief-api` caller (deferred, above); the
+  `contract-surface=true` custom property + the requiring org ruleset (step 4,
+  org-owner request); the follow-on Loop-3 semantic-agent ADR (step 6 /
+  Follow-up 4); and tuning `paths_regex_for()` in `scripts/reconcile.sh` for
+  `nccs-data-core`/`nccs-data-efile` (Follow-up 5).
 
 ## Follow-up
 
-1. Convert drafts → callers; roll out to the full in-scope set.
+1. **Done 2026-06-09** — converted drafts → callers and rolled out to the full
+   in-scope set (except the deferred `sector-in-brief-api`).
 2. Org ruleset on `contract-surface=true` (org-owner request).
-3. CLAUDE.md pointers + ARCHITECTURE §9/§10 updates.
+3. **Done 2026-06-09** — CLAUDE.md guard pointers added; ARCHITECTURE §9/§10 updated.
 4. Open the follow-on ADR for the Copilot Loop-3 semantic agent.
 5. Tune `paths_regex_for()` in `scripts/reconcile.sh` for `nccs-data-core`
    and `nccs-data-efile` (currently the generic default) so their audits
