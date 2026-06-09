@@ -9,23 +9,27 @@ name: core-990
 description: >
   Core 990 datasets derived from IRS Statistics of Income (SOI) extracts.
   One row per filing, split across four form types: 990, 990combined,
-  990ez, 990pf. Published per tax_year × form_type as CSV today;
-  parquet migration is a prerequisite for the API service-tier work
-  (see decisions/0003).
+  990ez, 990pf. Published per tax_year × form_type. Dual-published as
+  parquet (service-tier canonical — the API's read target per
+  decisions/0003) + a CSV mirror retained for existing consumers
+  through a 90-day window, per ADR 0027. The parquet carries
+  cross-vintage type drift; multi-year reads use union_by_name=True
+  (see Open items #3).
 
 producer:
   repo: UrbanInstitute/nccs-data-core
-  publish_path: R/08_upload.R  # called by R/run_pipeline.R; uses aws s3 sync of processed/core/
+  publish_path: R/08_upload.R  # called by R/run_pipeline.R; uses aws s3 sync of processed/core/. Parquet form via R/09_parquet.R (canonical per ADR 0027).
 
-format: csv  # CSV today; parquet target via R/09_parquet.R (not yet contract-canonical)
-compression: none
+format: parquet  # service-tier canonical per ADR 0027 (dual-publish); CSV mirror co-published — see s3.csv_mirror_template
+compression: snappy  # arrow::write_parquet default (R/09_parquet.R:39, no compression= arg); CSV mirror uncompressed
 partitioned: true  # partitioned by tax_year × form_type directories
 
 s3:
   bucket: nccsdata
   key_prefix: processed/core/
   versioned_template: null  # no per-vintage subdirectories today; flagged for migration under ADR 0013
-  latest_template: "processed/core/{tax_year}/{form}/core_{tax_year}_{form}.csv"
+  latest_template: "processed/core/{tax_year}/{form}/core_{tax_year}_{form}.parquet"  # service-tier canonical (ADR 0027)
+  csv_mirror_template: "processed/core/{tax_year}/{form}/core_{tax_year}_{form}.csv"  # retained for existing consumers through the 90-day window (ADR 0027)
   # Co-located sub-artifacts per (tax_year, form):
   #   core_{tax_year}_{form}_dictionary.csv  — column metadata (per-partition)
   #   core_{tax_year}_{form}_quality.html    — validation report (gzipped on upload per
@@ -91,21 +95,16 @@ notes: |
   2. **No vintage subdirectories.** Producer overwrites
      `processed/core/{tax_year}/{form}/...` on each run. Migrate
      per [[0013-versioned-producer-outputs]].
-  3. **Parquet target deferred.** `nccs-data-core/R/09_parquet.R`
-     exists and writes parquet copies, but parquet output is not
-     yet the contract-canonical format. Decide whether to promote
-     parquet to canonical (with CSV mirror) or dual-publish; tied
-     to [[0003-retire-athena-for-duckdb]] which assumes parquet
-     reads. **Now load-bearing (sector-in-brief-api Phase-0,
-     2026-06-09):** the modernized API reads core via DuckDB-on-parquet,
-     joining on lowercase `ein` at query time; Phase-0 confirmed the
-     parquet files exist on S3 and read fine, but production reads must
-     not depend on them until the promotion is contract-canonical. The
-     promotion decision is being made under ADR 0003 (maintainer); this
-     contract flips when it lands. **Requirement surfaced by
-     sector-in-brief-api build step 0 (2026-06-09):** the present parquet
-     has cross-vintage type drift (e.g. `gross_income_other` is INT in
-     early years but DOUBLE in 2015, out of INT32 range), so DuckDB
-     multi-year globs must read with `union_by_name=True`. A
-     parquet-canonical core contract should assert cross-year schema/type
-     stability so consumers don't carry that workaround.
+  3. **Parquet target — RESOLVED 2026-06-09 by [[0027-core-990-parquet-promotion]].**
+     Parquet is promoted to **service-tier-canonical** (the API's read
+     target; dual-published, with the CSV mirror above retained for
+     existing consumers through a 90-day window). The producer already
+     dual-writes both forms (`R/09_parquet.R`).
+     **Known cross-vintage type drift (route B):** `gross_income_other`
+     is INT in early years but DOUBLE in 2015 (out of INT32 range), and
+     DuckDB infers a glob's schema from the first file — so **multi-year
+     reads must use `read_parquet(..., union_by_name=True)`**. The
+     contract does **not** yet assert cross-year type stability;
+     stabilizing the column types in `nccs-data-core` (retiring the
+     `union_by_name` workaround) is a producer fast-follow tracked in
+     ADR 0027.
