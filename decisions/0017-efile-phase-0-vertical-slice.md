@@ -1,6 +1,6 @@
 # 0017 — E-file Phase 0 Vertical Slice and Transition to NCCS-Owned Concordance
 
-- **Status:** Executed (Phase 0 shipped; current vintage `v2026.06` as of 2026-06-09; Phase 0.5/1+ still planned)
+- **Status:** Executed (Phase 0 shipped; current vintage `v2026.06` as of 2026-06-09; Phase 0.5 executed 2026-06-09; Phase 1+ planned)
 - **Date:** 2026-05-22 (executed 2026-05-29)
 - **Deciders:** sole maintainer
 - **Related:** [[0001-s3-as-contract-surface]], [[0004-cadence-aware-drift-detection]], [[0007-efile-urban-owned-producer]], [[0010-sector-in-brief-data-replaces-dataexplorer-data]], [[0013-versioned-producer-outputs]], [[0014-standardize-manifest-shape]], [[0016-no-canonical-cross-dataset-merge]]
@@ -186,6 +186,11 @@ Phase 0.5 layer-1 inventory (decision §3) — same code, smaller
 scope.
 
 ### 3. Transition to NCCS-owned, XSD-driven concordance (Phase 0.5 workstream)
+
+> **Executed 2026-06-09** — see the Outcome subsection "Phase 0.5 — two-layer
+> concordance" below and the producer build record
+> `nccs-data-efile/decisions/0003-two-layer-concordance.md` (authoritative).
+> The decision text below is the original Phase 0.5 framing, left intact.
 
 In parallel with or immediately following Phase 0 shipping, NCCS
 builds its own concordance infrastructure. The architecture is
@@ -490,9 +495,10 @@ minimums; and `xsd_verification.passed` is true alongside ~60
 `found:false` mismatch rows that target bare-element XPath variants
 rather than the `...Amt` leaves actually extracted.
 
-Phase 0.5 (NCCS-owned two-layer concordance, §3) and Phase 1+ remain
-planned. Decision §5's sector-in-brief panels (`gov_grants`, `pf_pri`)
-are not yet built — the upstream blocker is now cleared.
+Phase 0.5 (NCCS-owned two-layer concordance, §3) is **executed**
+(2026-06-09 — see the subsection below); Phase 1+ remains planned.
+Decision §5's sector-in-brief panels (`gov_grants`, `pf_pri`) are not
+yet built — the upstream blocker is now cleared.
 
 ### v2026.06 — perf-only re-extract + population-wide gate (2026-06-09)
 
@@ -532,6 +538,38 @@ widened accordingly; and the §2.3 IRS-instruction spot-check was
 landed, "(CONFIRM PAGE)" placeholders removed). The `found:false`
 `xsd_verification` rows are the expected dead XPath variants (one variant
 per (field, year, version) resolves — the pass condition), not a defect.
+
+### Phase 0.5 — two-layer concordance (executed 2026-06-09)
+
+The §3 transition to an NCCS-owned, XSD-driven concordance shipped (producer
+PRs #6 / #7 / #8 / #9 / #11). Authoritative build record:
+`nccs-data-efile/decisions/0003-two-layer-concordance.md`.
+
+- **Layer 1 — mechanical XSD inventory.** `build_xsd_inventory()` enumerates
+  every element per `(tax_year, version)` from the in-scope form roots
+  (990 + 990PF + ReturnHeader), never hand-edited, published to
+  `s3://nccsdata/processed/efile/concordance/layer1/{date}/` + `latest/`
+  (23,699 rows over 16 cells). Producer-internal — **not** a contract surface,
+  per §3.
+- **Layer 2 — curated dictionary, now the single source of truth.**
+  `inst/concordance/nccs_dictionary.csv` drives schema verification directly;
+  the parallel hand-maintained `phase0_claims` list was retired. The gate
+  (`verify_dictionary_against_inventory`) checks each claim resolves to a leaf
+  with a type-class-consistent XSD type — 34/34 verify, 0 mismatches (down from
+  the ~80 dead-variant rows of the old per-claim re-walk). The manifest's
+  `xsd_verification` **shape is unchanged** — no contract change.
+- **NODC demoted to a comparison artifact.** `compare_dictionary_to_nodc()` is
+  an informational, non-blocking diff of Layer 2 against the full NODC
+  concordance; NODC stays vendored at a pinned SHA for provenance +
+  `drift_check`. This fulfils §3's end-state: correctness now rests on NCCS's
+  own checks against the IRS XSDs (Layer 1), not on trusting NODC.
+
+**Deferred (tracked in producer ADR 0003 Open items, not reopened here):** widen
+the inventory roots to schedules / 990EZ before Layer 2 claims fields on them
+(Phase 1+); enforce the type-class check for non-numeric `data_type`s; and
+republish Layer 1 to S3 to include the `2023v6.0` cell added after the last
+publish (a freshness fix — the build's gate rebuilds the inventory and is
+unaffected).
 
 ## Consequences
 
