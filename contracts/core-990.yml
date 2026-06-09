@@ -102,4 +102,10 @@ notes: |
      parquet files exist on S3 and read fine, but production reads must
      not depend on them until the promotion is contract-canonical. The
      promotion decision is being made under ADR 0003 (maintainer); this
-     contract flips when it lands.
+     contract flips when it lands. **Requirement surfaced by
+     sector-in-brief-api build step 0 (2026-06-09):** the present parquet
+     has cross-vintage type drift (e.g. `gross_income_other` is INT in
+     early years but DOUBLE in 2015, out of INT32 range), so DuckDB
+     multi-year globs must read with `union_by_name=True`. A
+     parquet-canonical core contract should assert cross-year schema/type
+     stability so consumers don't carry that workaround.
