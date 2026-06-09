@@ -5,6 +5,7 @@
 - **Deciders:** sole maintainer
 - **Related:** [[0001-s3-as-contract-surface]], [[0004-cadence-aware-drift-detection]], [[0007-efile-urban-owned-producer]], [[0010-sector-in-brief-data-replaces-dataexplorer-data]], [[0013-versioned-producer-outputs]], [[0014-standardize-manifest-shape]], [[0016-no-canonical-cross-dataset-merge]]
 - **Amends:** [[0007-efile-urban-owned-producer]] (inserts Phase 0 ahead of original Phase 1; shifts concordance posture from "adapt NODC with attribution" to "vendor NODC during a bounded transition window, then transition to an NCCS-owned XSD-driven concordance"; corrects license claim)
+- **Amended by:** [[0028-efile-wholesale-relational-extraction]] (2026-06-09) — inverts §3's end-state: Layer 1 now **drives wholesale extraction** to a normalized relational tier (header + child tables, incremental, scalar-first); Layer 2 becomes demand-driven curated views on top, which remain the contracted surface.
 
 ## Context
 
