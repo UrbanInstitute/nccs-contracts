@@ -175,9 +175,11 @@ schema:
   # nccs-data-efile README and propagates into each _manifest.json.
   #
   # Build-time trust verification (every Phase 0 build, ADR 0017 §2):
-  #   1. XSD existence check — each XPath claim resolved against the
-  #      mirrored IRS XSD for that (tax_year, version); results in
-  #      manifest.xsd_verification.
+  #   1. Schema verification — Layer 2's dictionary claims are checked
+  #      against the Layer 1 XSD inventory (existence + leaf + type-class)
+  #      via verify_dictionary_against_inventory; results in
+  #      manifest.xsd_verification (shape unchanged). Inventory-backed as of
+  #      Phase 0.5; replaced the per-claim live XSD re-walk.
   #   2. Value-distribution sanity check — asserts type, min/max within
   #      empirically-pinned bands, and null-rate. As of producer PR #5
   #      (effective next rebuild) min/max are computed over the FULL
@@ -191,10 +193,15 @@ schema:
   #      crosswalk and the dictionary's irs_instruction_citation.
   #      Finalized 2026-05-29 (producer ADR 0002 gate 5); see "Open items".
   #
-  # Phase 1+ runs natively off the NCCS-owned two-layer concordance
-  # (layer 1 = mechanical XSD XPath inventory; layer 2 = curated
-  # semantic dictionary with per-field IRS citations), with NODC
-  # demoted to an automated comparison artifact (ADR 0017 §3).
+  # As of Phase 0.5 (executed 2026-06-09; ADR 0017 §3 + producer
+  # nccs-data-efile/decisions/0003) the build runs off the NCCS-owned
+  # two-layer concordance: layer 1 = mechanical XSD inventory (published to
+  # processed/efile/concordance/layer1/ — producer-internal, NOT a contract
+  # surface), layer 2 = the curated nccs_dictionary.csv, now the single
+  # source of truth the schema gate verifies against layer 1. NODC is
+  # demoted to an informational, non-blocking comparison artifact (still
+  # vendored at a pinned SHA for provenance + drift_check). The manifest's
+  # xsd_verification shape is unchanged.
 
 consumers:
   - repo: UrbanInstitute/sector-in-brief-data  # Phase 0 primary consumer per ADR 0017 §3/§5
