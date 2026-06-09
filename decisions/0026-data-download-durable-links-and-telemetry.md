@@ -1,6 +1,6 @@
 # 0026 — Data-Download UX: Durable Links, Email Receipt by Default, and Download Telemetry
 
-- **Status:** Accepted (planning) — refines [[0008-modernize-dataexplorer-api]]; depends on its build for the runtime/storage baseline. Not yet built. **Pattern B (§1) confirmed by data 2026-06-09 (Phase-0): 38.5 % of 2,539 real results exceed the 6 MB inline cap, so materialize-to-S3 is mandatory — see [[0008-modernize-dataexplorer-api]] Outcome.**
+- **Status:** Accepted — **built + deployed to staging 2026-06-09** (slices 1–5.1; see Outcome). Refines [[0008-modernize-dataexplorer-api]]. Pattern B (§1) confirmed by data (Phase-0): 38.5 % of 2,539 real results exceed the 6 MB inline cap, so materialize-to-S3 is mandatory.
 - **Date:** 2026-06-08
 - **Deciders:** sole maintainer
 
@@ -143,6 +143,40 @@ immediate in-browser link plus an explicit "we've also emailed this to
 you"; and a clear progress state for the rare export slow enough to wait
 on. CSV is the primary format for this audience; parquet is offered as an
 option.
+
+## Outcome (built + deployed to staging — 2026-06-09)
+
+Built in `sector-in-brief-api` (slices 1–5.1) and deployed to `stg` via a green
+CI/CD pipeline with a post-deploy smoke gate. The request/response interface is
+OpenAPI in that repo (`openapi.yaml`, per §5) — referenced, not re-homed here.
+As-built:
+
+- **§1 pattern B** — `POST /data` runs the DuckDB join, materializes the result
+  to the results bucket (`results/` prefix), and returns presigned URLs; bytes
+  never flow through the API. Confirmed mandatory by Phase-0 (38.5 % > 6 MB cap).
+- **§2 durable link + registry** — `GET /download/{job_id}` resolves the S3
+  registry `requests/{job_id}.json`; redirects to a freshly-issued presigned
+  URL, or **re-materializes** from the stored params if the 30-day lifecycle
+  swept the result. The registry sits on a longer clock than `results/`.
+- **§3 email receipt, default-on** — SES sends the durable `/download/{job_id}`
+  link from a verified urban.org sender.
+- **§4 telemetry** — three NDJSON events (`request_created`,
+  `export_materialized`, `download`) written to the results bucket's
+  `logs/queries/{YYYY-MM-DD}/`; the monthly rollup (`jobs/rollup.py`) aggregates
+  them into the contracted [[usage-api]] artifact.
+- **Auth split (refines §5).** `POST /data` is a Lambda **Function URL** with
+  `AuthType: AWS_IAM` — the sector-in-brief server signs SigV4 via a dedicated
+  invoke IAM user; `GET /download/{job_id}` is a **separate, public** Function
+  URL (`AuthType: NONE`) so the emailed link is clickable without signing. No
+  API Gateway (sidesteps its 29 s / 6 MB limits). The download function is the
+  same code gated `DOWNLOAD_ONLY`.
+- **Size pre-check (refines §6).** Realized as an `estimate: true` flag on
+  `POST /data`: the API returns exact `row_count` + a sampled byte estimate with
+  no materialization; the dashboard presents it before the user commits to a
+  large export.
+
+Pending (not in the staging build): the §6 dashboard-form rework lands with the
+sector-in-brief UI cutover (ADR 0008 migration step 3).
 
 ## Consequences
 

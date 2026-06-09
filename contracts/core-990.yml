@@ -63,6 +63,16 @@ consumers:
   - repo: UrbanInstitute/nccs-data-core
     pin: "n/a"
     notes: "Internal: input to run_build_panel.R which produces core-panel (processed_merged/core/)."
+  - repo: UrbanInstitute/sector-in-brief-api  # LIVE in staging (slices 1-5.1, 2026-06-09); ADR 0008/0016.
+    pin: "latest"  # reads the canonical core parquet (per ADR 0027) via DuckDB at query time
+    notes: >
+      The data-download API reads the contracted CORE parquet (canonical per
+      [[0027-core-990-parquet-promotion]]) and joins it to [[bmf-master-geocoded]]
+      on lowercase `ein` at query time (ADR 0016). Reads multiple tax_year/form
+      partitions with `union_by_name=true` (the documented cross-vintage
+      type-drift workaround; producer type-stabilization is the route-A
+      fast-follow). This is the live service-tier dependency that made the
+      parquet promotion (open item #3) load-bearing.
 
 drift_detection:
   trigger: cron
