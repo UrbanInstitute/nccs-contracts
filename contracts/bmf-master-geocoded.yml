@@ -137,6 +137,14 @@ notes: |
   0021 for the decision and the scope boundary (county + state FIPS only,
   not tract/block/place/ZCTA).
 
+  ## EIN join key — unique, no fan-out (ADR 0016)
+
+  `ein` is the key for consumer-composed BMF × core × e-file joins
+  (per [[0016-no-canonical-cross-dataset-merge]]). Confirmed unique in
+  this artifact 2026-06-09 (sector-in-brief-api Phase-0): 3,672,933
+  rows, all distinct EINs — an inner join onto this artifact does not
+  fan out the other side, so the query-time join needs no dedup step.
+
   ## Open items
 
   1. **No `_manifest.json`.** Same gap as [[bmf-master]] —
