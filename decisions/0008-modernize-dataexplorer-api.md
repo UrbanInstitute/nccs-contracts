@@ -193,15 +193,14 @@ started. Evidence: `sector-in-brief-api/phase0/FINDINGS.md`.
   results bucket/lifecycle, `/download/{job_id}` + registry, SES receipt,
   NDJSON telemetry — plus the deploy/soak/cutover/sunset sequence
   remains.
-- **Production reads depend on the core-parquet promotion** — core-990
-  parquet exists on S3 but is not yet contract-canonical; tracked on
-  `contracts/core-990.yml` open item #3 and decided separately under
-  [[0003-retire-athena-for-duckdb]]. Build step 0 surfaced a concrete
-  requirement for that promotion: core parquet has **cross-vintage type
-  drift** (e.g. `gross_income_other` is INT in early years, DOUBLE in
-  2015), so multi-year reads need `read_parquet(union_by_name=True)` and
-  the parquet-canonical contract should assert cross-year schema/type
-  stability.
+- **Production reads on canonical core parquet — RESOLVED 2026-06-09 by
+  [[0027-core-990-parquet-promotion]].** Core parquet is promoted to
+  service-tier-canonical (dual-published; CSV mirror on a 90-day window),
+  so the API can read canonical core in production. The cross-vintage type
+  drift is handled with `read_parquet(union_by_name=True)` and documented
+  in `contracts/core-990.yml`; stabilizing the column types in
+  `nccs-data-core` (retiring that workaround) is a producer fast-follow
+  per ADR 0027.
 
 ## Consequences
 
