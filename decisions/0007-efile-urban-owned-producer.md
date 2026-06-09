@@ -3,7 +3,7 @@
 - **Status:** Accepted; amended by [[0017-efile-phase-0-vertical-slice]] on 2026-05-22. The producer (`nccs-data-efile`) is now built and **Phase 0 has executed** (current vintage `v2026.06`) — see [[0017-efile-phase-0-vertical-slice]] for current state. This ADR remains the original framing.
 - **Date:** 2026-05-15
 - **Deciders:** sole maintainer
-- **Amended by:** [[0017-efile-phase-0-vertical-slice]] — inserts a Phase 0 vertical slice ahead of the original Phase 1; corrects the NODC license claim (ODC-By, not MIT); replaces "adapt NODC concordance with attribution" with a two-layer NCCS-owned concordance (mechanical XSD inventory + curated semantic dictionary) built during a Phase 0.5 workstream, with NODC vendored at a pinned SHA as a *bounded transition input* — not a permanent reference. Read this ADR for the original framing; read 0017 for the current intended state.
+- **Amended by:** [[0017-efile-phase-0-vertical-slice]] — inserts a Phase 0 vertical slice ahead of the original Phase 1; corrects the NODC license claim (ODC-By, not MIT); replaces "adapt NODC concordance with attribution" with a two-layer NCCS-owned concordance (mechanical XSD inventory + curated semantic dictionary) built during a Phase 0.5 workstream, with NODC vendored at a pinned SHA as a *bounded transition input* — not a permanent reference. **Further amended by [[0028-efile-wholesale-relational-extraction]]** (2026-06-09) — replaces the curated Phase 1/2/3 phasing with **wholesale** extraction to a normalized relational tier, and reassigns the *researcher catalog* from NODC to an NCCS-owned raw tier (NODC stays a comparison artifact only). Read this ADR for the original framing; read 0017 + 0028 for the current intended state.
 
 ## Context
 
