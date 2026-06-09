@@ -1,10 +1,15 @@
-# Phase 0 vertical slice is LIVE. First vintage `v2026.05` published
-# 2026-05-29 to s3://nccsdata/processed/efile/phase0/{vintage}/ with a
-# latest/ mirror, producer git SHA a9c32e5 (rebuilt + republished the
-# same day to fix the TY2022/2023 version-key bug). This contract is populated
-# from the published artifact (manifest, dictionaries, quality JSON),
-# not from the plan. Phases 1-3 below remain planned future state per
-# ADR 0007 as amended by ADR 0017.
+# Phase 0 vertical slice is LIVE. Current vintage `v2026.06` published
+# 2026-06-08 to s3://nccsdata/processed/efile/phase0/{vintage}/ with a
+# latest/ mirror, producer git SHA 22b131b. v2026.06 is a PERF-ONLY
+# re-extract of v2026.05 (namespace-aware XPath; same field set, identical
+# row counts and null rates to four decimals) — the contract surface
+# (schema, names, grain) is UNCHANGED; only the vintage and an internal
+# build-time gate changed (see ADR 0017 Outcome). The first vintage was
+# v2026.05 (SHA a9c32e5, 2026-05-29; rebuilt that day to fix the
+# TY2022/2023 version-key bug). This contract is populated from the
+# published artifact (manifest, dictionaries, quality JSON), not from the
+# plan. Phases 1-3 below remain planned future state per ADR 0007 as
+# amended by ADR 0017.
 
 name: efile
 description: >
@@ -68,7 +73,7 @@ partitioned: false
 s3:
   bucket: nccsdata
   key_prefix: processed/efile/phase0/
-  versioned_template: "processed/efile/phase0/{vintage}/"   # vintage = vYYYY.MM (build month); currently v2026.05
+  versioned_template: "processed/efile/phase0/{vintage}/"   # vintage = vYYYY.MM (build month); currently v2026.06
   latest_template: "processed/efile/phase0/latest/"          # full copy of the newest vintage, not a symlink
   # Phase 0 layout per published vintage (each file present in both
   # {vintage}/ and latest/):
@@ -94,9 +99,9 @@ cadence:
     weekly cron check per ADR 0004 / ADR 0017 §2, not the publish hook.
 
 manifest:
-  path: "{vintage}/_manifest.json"  # currently processed/efile/phase0/v2026.05/_manifest.json
+  path: "{vintage}/_manifest.json"  # currently processed/efile/phase0/v2026.06/_manifest.json
   schema_version: 1
-  # Phase 0 manifest shape (as published in v2026.05), beyond the
+  # Phase 0 manifest shape (as published in v2026.06; unchanged from v2026.05), beyond the
   # standard files[]/vintage/timestamp:
   #   producer                      string   # "nccs-data-efile"
   #   producer_git_sha              string   # exact producer commit built from
@@ -117,7 +122,7 @@ manifest:
   #                     found, actual_type, matches_expected,
   #                     xsd_version_used, aliased_from, alias_reason }
   #     aliases[]     { tax_year, version, xsd_from, reason }  # XSD version substitutions
-  #   value_distribution:           # per-field sampled null_rate, numeric range, breaches[]
+  #   value_distribution:           # per-field null_rate + numeric min/max/p50/p99 + breaches[] (v2026.06 manifest: sampled; min/max move to full-population from the next rebuild per ADR 0017 / producer PR #5)
   # NOTE: field names here are the realized ones and differ from the
   # ADR 0017 §2 sketch (nodc_concordance_s3_prefix not _s3_path;
   # gt_lake_snapshot_timestamp_utc not _timestamp; nested
@@ -173,13 +178,18 @@ schema:
   #   1. XSD existence check — each XPath claim resolved against the
   #      mirrored IRS XSD for that (tax_year, version); results in
   #      manifest.xsd_verification.
-  #   2. Value-distribution sanity check — sampled extraction asserts
-  #      type/range/null-rate; breaches in manifest.value_distribution
-  #      and per-file *_quality.json.
+  #   2. Value-distribution sanity check — asserts type, min/max within
+  #      empirically-pinned bands, and null-rate. As of producer PR #5
+  #      (effective next rebuild) min/max are computed over the FULL
+  #      population (order statistics a sample cannot bound) with widened
+  #      bands (government_grants [-1e8, 5e10]; PRI [-1e8, 1e10]); null-rate
+  #      stays sampled. Breaches in manifest.value_distribution and per-file
+  #      *_quality.json; heavy-tail diagnostics added per PR #5. v2026.06's
+  #      published manifest predates PR #5 (sample-based).
   #   3. IRS instruction spot-check — one-time human cross-reference
   #      per field at adoption, citation captured in the layer-2
   #      crosswalk and the dictionary's irs_instruction_citation.
-  #      See "Open items" below: NOT yet finalized in v2026.05.
+  #      Finalized 2026-05-29 (producer ADR 0002 gate 5); see "Open items".
   #
   # Phase 1+ runs natively off the NCCS-owned two-layer concordance
   # (layer 1 = mechanical XSD XPath inventory; layer 2 = curated
@@ -256,13 +266,17 @@ notes: |
      so data is unaffected. The corrected citations are now live in
      the published *_dictionary.csv as of the 2026-05-29 republish
      (producer SHA a9c32e5; verified in phase0/latest/).
-  2. Value-range breaches passed the build. government_grants max is
-     ~1.32e10, above the [0, 1e10] sane ceiling ADR 0017 §2.2 named;
-     both fields carry negative minimums (government_grants -5,653,277;
-     PRI -55,000). PRI's quality check flagged a null_rate breach
-     (observed 0.6094 vs configured 0.9 floor) as non-fatal. Confirm
-     these are intended (legitimate amended/negative filings) or
-     tighten the gate.
+  2. Value-range breaches — RESOLVED by producer PR #5 (2026-06-09).
+     government_grants max ~1.32e10 (above the old [0, 1e10] ceiling)
+     and the negative minimums (government_grants -5,653,277; PRI
+     -55,000) were investigated against source XML and accepted as
+     real-as-filed (Battelle-class federal-lab grants; contribution
+     clawbacks/restatements). The gate now evaluates min/max over the
+     full population with widened bands (government_grants [-1e8, 5e10];
+     PRI [-1e8, 1e10]); the null-rate stays sampled and its band was
+     re-pinned at v2026.06 (PRI [0.50, 0.72]), so the earlier 0.9-floor
+     flag no longer applies. Effective from the next rebuild —
+     v2026.06's published manifest predates PR #5.
   3. xsd_verification.passed = true while mismatches[] lists 48
      found:false entries (of 80 checks). Those checks target the
      concordance's bare-element XPath variants (e.g.

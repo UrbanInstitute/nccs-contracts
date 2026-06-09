@@ -1,6 +1,6 @@
 # 0017 — E-file Phase 0 Vertical Slice and Transition to NCCS-Owned Concordance
 
-- **Status:** Executed (Phase 0 shipped; Phase 0.5/1+ still planned)
+- **Status:** Executed (Phase 0 shipped; current vintage `v2026.06` as of 2026-06-09; Phase 0.5/1+ still planned)
 - **Date:** 2026-05-22 (executed 2026-05-29)
 - **Deciders:** sole maintainer
 - **Related:** [[0001-s3-as-contract-surface]], [[0004-cadence-aware-drift-detection]], [[0007-efile-urban-owned-producer]], [[0010-sector-in-brief-data-replaces-dataexplorer-data]], [[0013-versioned-producer-outputs]], [[0014-standardize-manifest-shape]], [[0016-no-canonical-cross-dataset-merge]]
@@ -156,13 +156,24 @@ element actually is:
    the element exists at that path with the declared type. Fails
    the build on mismatch. Catches XPath typos, schema drift NODC
    missed, and silent renames.
-2. **Value-distribution sanity check.** Sample N filings per
-   (tax_year, form_type), extract the value, and assert: numeric
-   where claimed numeric, value within a sane range for the
-   semantic claim (e.g., `government_grants` is USD in
-   [0, 1e10]), non-null rate matches expectation for that form.
-   Distribution outliers are logged to `quality.json`; egregious
-   ones fail the build.
+2. **Value-distribution sanity check.** Assert each value is numeric
+   where claimed numeric, that **min/max over the full population**
+   fall within empirically-pinned value bands, and that the per-form
+   null rate matches expectation. min/max are order statistics, so
+   they are checked against the population, not a sample — a sample
+   cannot bound them; the null rate stays on a stratified sample,
+   where a proportion is robust. The bands are pinned from observed
+   vintages and widened to admit the verified-real tail
+   (`government_grants` USD in [-1e8, 5e10]; `program_related_investments_total`
+   in [-1e8, 1e10] — the GG max ≈ $13.2B is a real Battelle-class
+   federal-lab manager, and negative values pair with contribution
+   clawbacks/restatements; both verified against source XML, not
+   extraction defects). Heavy-tail diagnostics (an order-statistic
+   ladder + Pareto tail-mass shares) are recorded in `quality.json`
+   and the manifest; egregious breaches fail the build. (Population
+   method + widened bands finalized in the producer ADR
+   `nccs-data-efile/decisions/0002` Outcome / PR #5; see this ADR's
+   Outcome.)
 3. **IRS instruction spot-check (one-time per field).** At
    adoption, the maintainer manually cross-references NODC's
    `description` against IRS form instructions for that field,
@@ -482,6 +493,45 @@ rather than the `...Amt` leaves actually extracted.
 Phase 0.5 (NCCS-owned two-layer concordance, §3) and Phase 1+ remain
 planned. Decision §5's sector-in-brief panels (`gov_grants`, `pf_pri`)
 are not yet built — the upstream blocker is now cleared.
+
+### v2026.06 — perf-only re-extract + population-wide gate (2026-06-09)
+
+The current published vintage is now **`v2026.06`** (producer git SHA
+`22b131b`, manifest `build_timestamp_utc` 2026-06-08T20:18:00Z),
+superseding v2026.05 in `phase0/latest/`. It is a **perf-only
+re-extract** — namespace-aware XPath replacing `xml_ns_strip` (producer
+commit `c3673ae`) — and is **behavior-preserving**: row counts
+(`government_grants` 1,412,695; PRI 526,807) and per-column null rates
+(0.6417 / 0.6178) are identical to v2026.05 to four decimals, confirming
+the parse-cost refactor changed only cost, not extraction semantics. The
+**contract surface (schema, names, grain) is unchanged**; `contracts/efile.yml`
+is bumped to v2026.06 but its field set and `schema_version` are not.
+
+**Build-time value-distribution gate method changed** (decision §2 item 2,
+amended above). v2026.06 was the first vintage built under the strict
+gate with thresholds pinned from v2026.05, but it was *accepted*
+(producer ADR `nccs-data-efile/decisions/0002` Outcome, 2026-06-09) with
+a non-blocking follow-up: the gate evaluated min/max on a stratified
+sample (which cannot bound order statistics), and the configured bands
+were too tight for the verified-real tail. That follow-up landed in
+producer **PR #5** (commit `a3dcdde`): min/max are now evaluated over the
+**full population**, the bands were widened (`government_grants`
+[-1e8, 5e10]; `program_related_investments_total` [-1e8, 1e10]), the
+null-rate check stays on the sample, and heavy-tail diagnostics (order-
+statistic ladder + Pareto tail-mass shares) were added. This is a
+producer-code change effective from the **next rebuild** — v2026.06's
+*published* manifest (SHA `22b131b`) predates PR #5 and still carries the
+sample-based `value_distribution` block.
+
+This resolves two items left open at v2026.05 execution (above): the
+">1e10 `government_grants` max and negative minimums" were investigated
+against source XML and **accepted as real-as-filed** (Battelle-class
+federal-lab grants; contribution clawbacks/restatements), with the bands
+widened accordingly; and the §2.3 IRS-instruction spot-check was
+**finalized 2026-05-29** (producer ADR 0002 gate-5 record — citations
+landed, "(CONFIRM PAGE)" placeholders removed). The `found:false`
+`xsd_verification` rows are the expected dead XPath variants (one variant
+per (field, year, version) resolves — the pass condition), not a defect.
 
 ## Consequences
 

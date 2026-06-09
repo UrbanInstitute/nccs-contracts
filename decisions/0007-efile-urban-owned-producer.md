@@ -1,6 +1,6 @@
 # 0007 — E-file as a Contracted Urban-Owned Producer
 
-- **Status:** Accepted (planning; pipeline not yet built); amended by [[0017-efile-phase-0-vertical-slice]] on 2026-05-22
+- **Status:** Accepted; amended by [[0017-efile-phase-0-vertical-slice]] on 2026-05-22. The producer (`nccs-data-efile`) is now built and **Phase 0 has executed** (current vintage `v2026.06`) — see [[0017-efile-phase-0-vertical-slice]] for current state. This ADR remains the original framing.
 - **Date:** 2026-05-15
 - **Deciders:** sole maintainer
 - **Amended by:** [[0017-efile-phase-0-vertical-slice]] — inserts a Phase 0 vertical slice ahead of the original Phase 1; corrects the NODC license claim (ODC-By, not MIT); replaces "adapt NODC concordance with attribution" with a two-layer NCCS-owned concordance (mechanical XSD inventory + curated semantic dictionary) built during a Phase 0.5 workstream, with NODC vendored at a pinned SHA as a *bounded transition input* — not a permanent reference. Read this ADR for the original framing; read 0017 for the current intended state.
