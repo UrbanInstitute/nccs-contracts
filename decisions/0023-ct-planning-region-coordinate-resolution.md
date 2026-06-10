@@ -188,6 +188,17 @@ the two affected crosswalks:
 - Producer PRs #18 (artifact + producer docs) and #19 (guidebook index)
   merged to `nccs-data-bmf` `main`.
 
+**Consumer adoption — sector-in-brief-api (2026-06-09).** The modernized
+data-download API adopts the CT companion from the start: it resolves CT by
+joining this crosswalk on `(geo_state_abbr, printf('%.2f', geo_lat),
+printf('%.2f', geo_lon)) → geo_county_fips` (the AUTHORITATIVE CT override),
+chaining [[cbsa-crosswalk]] on the resolved FIPS — so its CT orgs resolve to
+planning-region FIPS rather than landing unassigned. Live in staging (slices
+1–5.1); recorded in the [[ct-planning-region-crosswalk]] consumer entry. Note
+the contrast with Follow-up 1: `sector-in-brief-data` still carries the ~14k-org
+CT hole pending its own adoption, so the two consumers' CT geography can differ
+until that lands.
+
 ## Follow-up
 
 1. **`sector-in-brief-data` adopts the CT companion** to recover the ~14k

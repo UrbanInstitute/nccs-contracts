@@ -65,6 +65,17 @@ consumers:
       no pre-merged table). `ein` is unique here, so the inner join does not fan
       out. The API composes the county-fips / cbsa / ct-planning-region joins on
       top (see those contracts), mirroring sector-in-brief-data's read_bmf.R.
+      It also derives two classification columns from this artifact, mirroring
+      sector-in-brief-data: `org_type` from `subsection_code` + `foundation_code`
+      (the 501(c) subsection with the 501(c)(3) public-charity/private-foundation
+      split — `derive_organization_type`), and `nteev2_subsector_definition`,
+      which it **overrides**: this artifact already carries a column of that name,
+      but the API replaces it with the dashboard-canonical
+      `table_builder_subsector.R` labels (EDU/HEL become "(minus
+      Universities/Hospitals)", and UNU/unmapped/NULL fold into "Other", so it is
+      null-free). Heads-up for reconciliation: the API's
+      `nteev2_subsector_definition` values therefore DIFFER from this artifact's
+      raw column of the same name — same column name, two intended value sets.
 
 drift_detection:
   trigger: event

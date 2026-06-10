@@ -334,6 +334,13 @@ delineation file — and:
 3. The `sector-in-brief` dashboard county filter/dropdown moves to
    FIPS-keyed selection. **Unblocked** (v2026.07 in prod since
    2026-06-04); pending the dashboard PR.
+4. **Done (2026-06-09).** `sector-in-brief-api` (the modernized data-download
+   API) composes both crosswalk joins at query time over
+   [[bmf-master-geocoded]], left-joining county-fips on `(geo_state_abbr, raw
+   geo_county)` (ambiguous → NULL) and chaining [[cbsa-crosswalk]] on the
+   resolved FIPS — mirroring `sector-in-brief-data`'s `county_crosswalk.R`.
+   Live in staging (slices 1–5.1); recorded in those contracts' consumer
+   entries (per [[0008-modernize-dataexplorer-api]]).
 
 ## Follow-up
 
