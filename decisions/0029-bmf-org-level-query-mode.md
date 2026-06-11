@@ -121,8 +121,9 @@ case (all 115 columns, whole registry, unfiltered) is 35.7s against the 900s
 wall and 1.85 GB against the 10 GB memory cap. Because BMF mode is always one
 row per EIN, ~3.5 GB is a *hard* output ceiling — no fat tail, so (unlike
 core) it needs no async-worker fallback. RSS holding at 1.85 GB while writing
-3.5 GB also confirms DuckDB streams the `COPY` (closes [[0008-modernize-dataexplorer-api]]
-FINDINGS gate-3 open items #2 peak-join-memory and #3 streaming-COPY, for this mode).
+3.5 GB also confirms DuckDB streams the `COPY` (closes, for this mode, the
+gate-3 open items #2 peak-join-memory and #3 streaming-COPY in the producer's
+`sector-in-brief-api/phase0/FINDINGS.md` that [[0008-modernize-dataexplorer-api]] cites as its evidence).
 
 **Bug found by the measurement (fixed in PR #6):** the unfiltered worst case
 initially *hung*. Decomposition localized it to `_bmf_source()`'s CT
