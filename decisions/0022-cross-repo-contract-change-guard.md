@@ -220,7 +220,7 @@ changes.
   With `nccs-data-bmf` + `sector-in-brief-data` (step 2), **every in-scope repo
   now carries the guard except `sector-in-brief-api`**, deferred until its
   rewrite settles (its publish/config layout is a moving target mid-build per
-  [[0008-modernize-dataexplorer-api]] / [[0028-api-realization-lambda-first-hybrid]]).
+  [[0008-modernize-dataexplorer-api]]).
   ARCHITECTURE §9 (Loop 3) and §10 updated in this same change.
 - **Pending:** the `sector-in-brief-api` caller (deferred, above); the
   `contract-surface=true` custom property + the requiring org ruleset (step 4,

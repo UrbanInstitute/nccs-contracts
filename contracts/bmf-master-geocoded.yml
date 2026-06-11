@@ -76,6 +76,14 @@ consumers:
       null-free). Heads-up for reconciliation: the API's
       `nteev2_subsector_definition` values therefore DIFFER from this artifact's
       raw column of the same name — same column name, two intended value sets.
+      As of ADR 0029 the API also reads this artifact in an org-level mode
+      (`source=bmf`): no CORE join, one row per `ein` (the whole registry, incl.
+      non-filers), filtered by `active_years` as a lifespan OVERLAP —
+      `first_year_in_bmf <= max AND last_year_in_bmf >= min` (the active-window
+      rule in the "Counting active orgs" note below), NOT an `IN` on a single
+      lifespan column (~19x wrong). When that filter is applied the API forces
+      both `first_year_in_bmf` and `last_year_in_bmf` into the output for
+      provenance.
 
 drift_detection:
   trigger: event
