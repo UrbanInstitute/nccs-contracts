@@ -3,6 +3,7 @@
 - **Status:** Accepted (partially executed — built + deployed to staging 2026-06-09, slices 1–5.1; soak / UI cutover / prod / sunset pending) — see Outcome
 - **Date:** 2026-05-15
 - **Deciders:** sole maintainer
+- **Extended by:** [[0029-bmf-org-level-query-mode]] (2026-06-11) — adds a second query mode (`source=bmf`) alongside the CORE-join mode specified here: an org-level registry read of bmf-master-geocoded (no CORE join, incl. non-filers), filtered by `active_years` as a lifespan overlap. Additive — does not change this ADR's host/timing or contract-surface decisions.
 
 ## Context
 
