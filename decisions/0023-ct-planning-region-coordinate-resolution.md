@@ -199,6 +199,18 @@ the contrast with Follow-up 1: `sector-in-brief-data` still carries the ~14k-org
 CT hole pending its own adoption, so the two consumers' CT geography can differ
 until that lands.
 
+**Join-implementation hazard (surfaced 2026-06-11, [[0029-bmf-org-level-query-mode]]
+Outcome).** The `geo_state_abbr = 'CT'` term above must be a **two-sided
+equi-join key** (`b.geo_state_abbr = ct._ct_state`, carrying the `'CT'` literal
+on the crosswalk side), **not** a single-sided constant filter on the probe row.
+As a constant filter, DuckDB hash-joins on the rounded `(lat2, lon2)` cell
+alone, so any non-CT org sharing a 0.01° cell with a CT crosswalk point fans
+out before the state predicate prunes it — on a weakly-filtered, full-registry
+query this explodes into the billions and hangs. Latent for label-first
+consumers (they reduce to a small state before the join); it bit the API's
+unfiltered `source=bmf` worst case. Not BMF-specific — any consumer of this
+crosswalk must key the state on **both** sides. Fixed in sector-in-brief-api PR #6.
+
 ## Follow-up
 
 1. **`sector-in-brief-data` adopts the CT companion** to recover the ~14k

@@ -1,10 +1,10 @@
 # 0029 — BMF Org-Level Query Mode (`source=bmf`) with Lifespan-Overlap Filtering
 
-- **Status:** Accepted (planning; not yet executed) — built on branch `feat/bmf-source-mode` in sector-in-brief-api, not yet merged/deployed
+- **Status:** Accepted (executed 2026-06-11; merged to sector-in-brief-api `main` via PR #5, worst-case timing measured in-region — see Outcome)
 - **Date:** 2026-06-11
 - **Deciders:** sole maintainer
 - **Related:** [[0008-modernize-dataexplorer-api]], [[0016-no-canonical-cross-dataset-merge]], [[0026-data-download-durable-links-and-telemetry]], [[0003-retire-athena-for-duckdb]]
-- **Follow-up (contracts to touch at reconcile):** `contracts/bmf-master-geocoded.yml` — add the `active_years` lifespan-overlap usage to the `sector-in-brief-api` consumer entry.
+- **Follow-up (reconciled):** `contracts/bmf-master-geocoded.yml` — `active_years` lifespan-overlap usage added to the `sector-in-brief-api` consumer entry (done, PR #24).
 
 ## Context
 
@@ -98,8 +98,44 @@ not otherwise pick columns for the caller.
   OpenAPI lives in the API repo, not here).
 - No artifact contract changes shape. Only the consumer *note* on
   bmf-master-geocoded gains the lifespan-filter usage (Follow-up above).
-- Host/timing decision from [[0008-modernize-dataexplorer-api]] is
-  unaffected: BMF mode does strictly less work than core (no big join,
-  lighter peak memory), so it is bounded above by core's measured
-  in-region worst case. A real worst-case wall-time still needs an
-  in-region run (dev-box S3-from-internet timing is invalid).
+- Host/timing: BMF mode is **Lambda-safe with no tail** — measured
+  in-region, see Outcome. Unlike core's fat-tailed result distribution
+  ([[0008-modernize-dataexplorer-api]]), BMF output has a hard ceiling
+  (one row per EIN), so it never needs the async worker.
+
+## Outcome (2026-06-11)
+
+Built and merged to sector-in-brief-api `main` (PR #5). Worst-case timing
+measured **in-region** (us-east-1; dev-box S3-from-internet timing is
+invalid — gate-3 showed ~70x egress skew), `COPY` to local disk to isolate
+read+join+materialize from the S3 upload, peak RSS unconstrained:
+
+| scenario | columns | rows | output | wall | peak RSS |
+|----------|---------|------|--------|------|----------|
+| unfiltered, geo cols | 6 | 3.67M | 234 MB | 6.8s | 273 MB |
+| unfiltered, ALL cols | 115 | 3.67M | 3.5 GB | 35.7s | 1.85 GB |
+| `active_years` filter | 8 | 1.70M | 125 MB | 6.9s | 298 MB |
+
+**Lambda-safe with an order of magnitude of headroom.** The absolute worst
+case (all 115 columns, whole registry, unfiltered) is 35.7s against the 900s
+wall and 1.85 GB against the 10 GB memory cap. Because BMF mode is always one
+row per EIN, ~3.5 GB is a *hard* output ceiling — no fat tail, so (unlike
+core) it needs no async-worker fallback. RSS holding at 1.85 GB while writing
+3.5 GB also confirms DuckDB streams the `COPY` (closes, for this mode, the
+gate-3 open items #2 peak-join-memory and #3 streaming-COPY in the producer's
+`sector-in-brief-api/phase0/FINDINGS.md` that [[0008-modernize-dataexplorer-api]] cites as its evidence).
+
+**Bug found by the measurement (fixed in PR #6):** the unfiltered worst case
+initially *hung*. Decomposition localized it to `_bmf_source()`'s CT
+planning-region join ([[0023-ct-planning-region-coordinate-resolution]]):
+`b.geo_state_abbr = 'CT'` was a single-sided constant filter, not a join key,
+so DuckDB hash-joined on the rounded `printf('%.2f', lat/lon)` coordinates
+alone and probed all 3.67M rows — non-CT orgs sharing a 2dp coordinate cell
+with CT crosswalk points fanned out into the billions before the state filter
+pruned them. Latent until now because gate-3's spike had no crosswalk joins
+and every prior query filtered to a small state first (reducing `b` before the
+join); it is **not BMF-specific** — any weakly-filtered core query could hit
+it too. Fix: carry the `'CT'` literal on the ct side so
+`b.geo_state_abbr = ct._ct_state` is a real two-sided equi-join key; non-CT
+rows miss the hash immediately. Same results, full-registry `_bmf_source()`
+now 1.35s (was: hung).
