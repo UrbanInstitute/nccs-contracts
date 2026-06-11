@@ -1,6 +1,6 @@
 # 0030 — Async Giant-Export Worker (Fargate) for the Data-Download Tail
 
-- **Status:** Accepted (planning; not yet executed) — finalizes the "platform TBD" tail of [[0008-modernize-dataexplorer-api]]
+- **Status:** Accepted (executed 2026-06-11; deployed to staging + verified end-to-end — see Outcome) — finalizes the "platform TBD" tail of [[0008-modernize-dataexplorer-api]]
 - **Date:** 2026-06-11
 - **Deciders:** sole maintainer
 - **Related:** [[0008-modernize-dataexplorer-api]] (Lambda-first hybrid; this finalizes its async half), [[0026-data-download-durable-links-and-telemetry]] (durable `/download/{job_id}` + email receipt — the delivery this reuses), [[0029-bmf-org-level-query-mode]] (BMF mode has a hard ceiling and never needs this)
@@ -123,3 +123,25 @@ uniformly.
    (`ASYNC_THRESHOLD_BYTES`, cluster/task/subnets/SG).
 4. **Deploy + smoke** (operator): deploy to staging; force a broad request over
    the threshold; assert `pending` → worker runs → `ready` → durable link + email.
+
+## Outcome (2026-06-11)
+
+Built and merged to sector-in-brief-api `main` (PR #10; `ASYNC_THRESHOLD_BYTES`
+promoted to a deploy parameter in PR #11) and **deployed + verified end-to-end on
+staging**:
+
+- A broad (no-state-filter) request routed to async returned **202 `pending`**
+  with a `job_id`; the **Fargate task** materialized it (`"async": true`,
+  result_copy 6.1 s) and flipped the registry to `ready`; the durable
+  `GET /download/{job_id}` then **302-redirected** to the result. Every new piece
+  — estimate gate → `ecs:RunTask` dispatch → container worker → status flip →
+  durable redirect — exercised.
+- Routing is calibrated: a real broad query (3.48M rows, **310 MB**, 7 cols) is
+  *under* the 8 GB threshold and correctly stayed **synchronous**; the giant tail
+  is what crosses it. The threshold is a deploy parameter (`AsyncThresholdBytes`),
+  so test (low) vs prod (8 GB) is a deploy flag.
+- Safe rollout confirmed: all ECS resources are gated on `WorkerVpcId`, so the
+  stack runs fully synchronous until the worker params are supplied.
+
+No nccs-contracts artifact changed shape; the build lives entirely in
+sector-in-brief-api (`template.yaml` + `query/worker.py` + routing).
