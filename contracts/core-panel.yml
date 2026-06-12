@@ -55,7 +55,10 @@ schema:
 consumers:
   - repo: UrbanInstitute/sector-in-brief-data
     pin: "latest"  # reads via sector-in-brief-data/config.yml:11 inputs.core_pf; covers 990-PF panel
-    notes: "Consumes the 990pf family only (single form, no intersection issue with the 990combined files). 990combined is consumed from core-990 (modern) and core-legacy directly."
+    notes: "Consumes the 990pf family only (single form, no intersection issue with the 990combined files). Historically read 990combined from core-990 (modern) + core-legacy directly; realigning onto this panel to match the canonical API per ADR 0031 (tracked in sector-in-brief #77)."
+  - repo: UI-Research/sector-in-brief-api
+    pin: "latest"  # query/query.py CORE_PREFIX
+    notes: "Canonical CORE form->tier router (ADR 0031). Reads BOTH the 990combined and 990pf families from this panel (full range 1987-2024); 990/990ez come from core-990 (2012+). 990combined here is the 990+990EZ common-variable-set union."
 
 drift_detection:
   trigger: event
