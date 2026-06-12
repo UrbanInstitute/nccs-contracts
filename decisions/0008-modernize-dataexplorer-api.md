@@ -1,6 +1,6 @@
 # 0008 — Modernize the Dataexplorer API
 
-- **Status:** Accepted (partially executed — built + deployed to staging 2026-06-09, slices 1–5.1; soak / UI cutover / prod / sunset pending) — see Outcome
+- **Status:** Accepted (executed — staging 2026-06-09, prod deployed + sector-in-brief UI cutover 2026-06-12; 1-week prod soak in progress, legacy-API sunset pending) — see Outcome
 - **Date:** 2026-05-15
 - **Deciders:** sole maintainer
 - **Extended by:** [[0029-bmf-org-level-query-mode]] (2026-06-11) — adds a second query mode (`source=bmf`) alongside the CORE-join mode specified here: an org-level registry read of bmf-master-geocoded (no CORE join, incl. non-filers), filtered by `active_years` as a lifespan overlap. Additive — does not change this ADR's host/timing or contract-surface decisions.
@@ -206,6 +206,19 @@ started. Evidence: `sector-in-brief-api/phase0/FINDINGS.md`.
   prod, and the legacy-API sunset (migration steps 2–7). The as-built
   delivery/auth realizations are recorded in
   [[0026-data-download-durable-links-and-telemetry]]'s Outcome.
+- **Prod deployed + sector-in-brief UI cutover (2026-06-12).** The prod stack
+  (`sector-in-brief-api-prod`) is live — query/download Function URLs, the
+  `sector-in-brief-api-results-prod` bucket (30-day lifecycle), and the
+  [[0030-async-giant-export-worker]] Fargate worker (enabled, image pushed, 8 GB
+  threshold). Verified against `query-prod`: byte-identical code to staging (same
+  `CodeSha256`), modern + pre-2012 990combined exports (per
+  [[0031-core-tier-routing-api-canonical]]), the empty-`IN` `400` guard, parquet,
+  and the async-`202` wiring; the `sector-in-brief-dashboard-invoke` caller is
+  authorized on the prod ARN. The `sector-in-brief` dashboard switched its prod
+  pointer to the new API the same day (**migration step 3**) and is serving real
+  download traffic at ~0% errors — **step 4 (1-week soak) is underway**. Remaining:
+  legacy-API sunset (steps 5–7), gated behind the soak; the 90-day deprecation
+  window runs from this cutover date.
 - **Production reads on canonical core parquet — RESOLVED 2026-06-09 by
   [[0027-core-990-parquet-promotion]].** Core parquet is promoted to
   service-tier-canonical (dual-published; CSV mirror on a 90-day window),
