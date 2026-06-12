@@ -216,7 +216,14 @@ started. Evidence: `sector-in-brief-api/phase0/FINDINGS.md`.
   and the async-`202` wiring; the `sector-in-brief-dashboard-invoke` caller is
   authorized on the prod ARN. The `sector-in-brief` dashboard switched its prod
   pointer to the new API the same day (**migration step 3**) and is serving real
-  download traffic at ~0% errors — **step 4 (1-week soak) is underway**. Remaining:
+  download traffic at ~0% errors — **step 4 (1-week soak) is underway**.
+  **Migration step 2 (shadow soak) was deliberately skipped**, not deferred: it
+  diffs new-vs-old API outputs for the same query, but the new API reads
+  *different* underlying data (canonical core parquet per
+  [[0027-core-990-parquet-promotion]]; the panel's intersected 990combined column
+  surface per [[0031-core-tier-routing-api-canonical]]), so an output-equality
+  comparison against the legacy API has no meaningful baseline. Correctness was
+  validated directly against `query-prod` (above) instead. Remaining:
   legacy-API sunset (steps 5–7), gated behind the soak; the 90-day deprecation
   window runs from this cutover date.
 - **Production reads on canonical core parquet — RESOLVED 2026-06-09 by
