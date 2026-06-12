@@ -264,7 +264,7 @@ started. Evidence: `sector-in-brief-api/phase0/FINDINGS.md`.
 ## Deprecation window
 
 The existing API receives a **90-day sunset window** from the date
-of UI cutover (step 4 above). During the window:
+of UI cutover (step 3 above). During the window:
 
 - Both APIs run in parallel.
 - The old endpoint returns results normally, with a deprecation
