@@ -85,7 +85,10 @@ The routing lives in `sector-in-brief-api` `query/query.py` (`CORE_PREFIX`).
 
 - `sector-in-brief-api`: **done** — `CORE_PREFIX` routing + raise-on-missing (PR #19,
   closed #14), deployed to staging 2026-06-12.
-- `sector-in-brief` dashboard: route `990combined` through `processed_merged/core/`
-  to match the API (owner-driven; tracked in `sector-in-brief` #77).
+- `sector-in-brief` dashboard: **done** — the dashboard calls the API and never
+  reads CORE from S3 itself, so routing stays API-side; its only job was to offer
+  each form's real year range. The form-specific picker floor (`990combined`/
+  `990pf` → 1989, standalone `990`/`990ez` → 2012) shipped in `sector-in-brief`
+  #80, live in prod 2026-06-12 (`sector-in-brief` #77 closed).
 - `contracts/core-panel.yml`: add `sector-in-brief-api` as a consumer of the
   `990combined` + `990pf` families (done in this change).
