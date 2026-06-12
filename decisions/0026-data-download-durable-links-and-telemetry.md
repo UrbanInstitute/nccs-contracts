@@ -1,6 +1,6 @@
 # 0026 — Data-Download UX: Durable Links, Email Receipt by Default, and Download Telemetry
 
-- **Status:** Accepted — **built + deployed to staging 2026-06-09** (slices 1–5.1; see Outcome). Refines [[0008-modernize-dataexplorer-api]]. Pattern B (§1) confirmed by data (Phase-0): 38.5 % of 2,539 real results exceed the 6 MB inline cap, so materialize-to-S3 is mandatory.
+- **Status:** Accepted — executed: **staging 2026-06-09, prod cutover 2026-06-12** (slices 1–5.1 + the §6 dashboard-form rework & post-staging UX/correctness hardening, sector-in-brief PRs #68–#82; see Outcome). Refines [[0008-modernize-dataexplorer-api]]. Pattern B (§1) confirmed by data (Phase-0): 38.5 % of 2,539 real results exceed the 6 MB inline cap, so materialize-to-S3 is mandatory.
 - **Date:** 2026-06-08
 - **Deciders:** sole maintainer
 
@@ -144,7 +144,7 @@ you"; and a clear progress state for the rare export slow enough to wait
 on. CSV is the primary format for this audience; parquet is offered as an
 option.
 
-## Outcome (built + deployed to staging — 2026-06-09)
+## Outcome (staging 2026-06-09; prod cutover 2026-06-12)
 
 Built in `sector-in-brief-api` (slices 1–5.1) and deployed to `stg` via a green
 CI/CD pipeline with a post-deploy smoke gate. The request/response interface is
@@ -175,8 +175,19 @@ As-built:
   no materialization; the dashboard presents it before the user commits to a
   large export.
 
-Pending (not in the staging build): the §6 dashboard-form rework lands with the
-sector-in-brief UI cutover (ADR 0008 migration step 3).
+**§6 dashboard-form rework + UI cutover — shipped (was pending at staging).**
+The Custom Panel Datasets form was rewired to this API and hardened over a
+post-staging round: four form types incl. first-class 990-PF, BMF org-level mode
+([[0029-bmf-org-level-query-mode]]), async-202 email-and-wait
+([[0030-async-giant-export-worker]]), FIPS-keyed county selection
+([[0021-canonical-county-identity-via-fips-crosswalk]]), region→state picker
+scoping, a bypass-proof pre-submit validation gate, friendly surfacing of the
+API's validation `400`s, and form-specific year coverage
+([[0031-core-tier-routing-api-canonical]]). **Cut over to prod 2026-06-12**
+(sector-in-brief PRs #68–#82, ADR 0008 migration step 3): the prod dashboard
+points at `query-prod` via a deploy-time `.Renviron`, never a code edit
+(`download_api_config()` is env-driven). 1-week prod soak in progress;
+legacy-API sunset pending ([[0008-modernize-dataexplorer-api]]).
 
 ## Consequences
 
