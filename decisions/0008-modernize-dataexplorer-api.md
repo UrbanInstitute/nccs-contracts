@@ -4,6 +4,7 @@
 - **Date:** 2026-05-15
 - **Deciders:** sole maintainer
 - **Extended by:** [[0029-bmf-org-level-query-mode]] (2026-06-11) — adds a second query mode (`source=bmf`) alongside the CORE-join mode specified here: an org-level registry read of bmf-master-geocoded (no CORE join, incl. non-filers), filtered by `active_years` as a lifespan overlap. Additive — does not change this ADR's host/timing or contract-surface decisions.
+- **Extended by:** [[0031-core-tier-routing-api-canonical]] (2026-06-12) — pins *which* CORE tier the API reads per form (990combined/990pf from `core-panel`/`processed_merged/`, full range; 990/990ez from `core-990`/`processed/core/`, 2012+) and makes the API canonical for that routing (the dashboard conforms). Fixes the original `processed/core/`-only read that couldn't serve pre-2012.
 
 ## Context
 

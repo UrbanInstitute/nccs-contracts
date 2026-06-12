@@ -5,6 +5,7 @@
 - **Deciders:** sole maintainer
 - **Supersedes:** [[0002-canonical-merged-artifact]]
 - **Related:** [[0003-retire-athena-for-duckdb]], [[0004-cadence-aware-drift-detection]], [[0015-core-contract-surface-restructure]]
+- **Refined by:** [[0031-core-tier-routing-api-canonical]] (2026-06-12) — the "consumers compose their own merges" note here (and `core-panel.yml`'s) said the download API would read 990combined from `core-990` + `core-legacy` directly; 0031 instead routes the API's 990combined/990pf through `core-panel` and makes the API canonical. 0016's core thesis (no pre-merged cross-dataset artifact) is unchanged.
 
 ## Context
 
