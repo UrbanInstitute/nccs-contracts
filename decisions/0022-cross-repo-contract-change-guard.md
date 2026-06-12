@@ -87,6 +87,27 @@ Actions, and defer the semantic agent layer.
    a request to the org owner. Per-repo opt-in is the fallback that works
    without it.
 
+   > **Amended 2026-06-12 — the org ruleset is not attainable.** Org-owner
+   > access "does not seem like a possibility" (maintainer is repo-admin, not
+   > org-owner, and that is not expected to change). The org-wide,
+   > property-keyed ruleset above is therefore **superseded** by a **per-repo
+   > ruleset** that requires the `contracts-guard / contracts-guard` status
+   > check on the default branch — applied on each repo where the maintainer
+   > *has* admin (`nccs-data-core`, `nccs-data-bmf` confirmed; verify the rest).
+   > Repos the maintainer doesn't admin keep the guard **advisory** (it runs
+   > via the caller but isn't required) until admin is obtained. The ruleset
+   > carries **no bypass actors** — the guard's own escape hatch
+   > (`contracts-ack` label or `ADR NNNN` breadcrumb) is the relief valve;
+   > break-glass is temporarily setting the ruleset `enforcement` to
+   > `disabled`. Artifacts: `scripts/contract-surface-ruleset.json` +
+   > `scripts/apply-contract-surface-ruleset.sh` (dry-run by default).
+   > Tradeoff vs. the property-keyed org ruleset: a new in-scope repo is **not**
+   > auto-covered — applying the ruleset becomes an explicit step in the
+   > "Adding a New Module" checklist (ARCHITECTURE §10), and the per-repo
+   > ruleset *also* forces the PR flow on its targets (direct-to-main pushes
+   > can no longer satisfy the required check), tightening a gap the original
+   > plan left open.
+
 5. **A companion audit helper** — `scripts/reconcile.sh` (this repo), the
    inverse of the guard. `reconcile.sh <ADR>` lists what was executed for a
    decision across siblings; bare `reconcile.sh` audits recent
@@ -176,8 +197,11 @@ changes.
    `sector-in-brief-data`) into thin callers of the reusable workflow.
 3. **Add callers** to the rest of the in-scope set, with a tuned
    `PATHS_REGEX` each.
-4. **Set the `contract-surface=true` custom property** on the in-scope
-   repos and **ask the org owner** to add the requiring ruleset.
+4. ~~Set the `contract-surface=true` custom property on the in-scope repos and
+   ask the org owner to add the requiring ruleset.~~ **Superseded 2026-06-12
+   (org-owner not attainable):** apply a **per-repo ruleset** requiring the
+   `contracts-guard / contracts-guard` check on the default branch of each
+   repo the maintainer admins, via `scripts/apply-contract-surface-ruleset.sh`.
 5. **Add `CLAUDE.md` pointers** per repo; update `ARCHITECTURE.md` §9 (this
    is the deterministic floor of Loop 3) and §10 (onboarding step).
 6. **Follow-on:** the Copilot Loop-3 semantic agent, in its own ADR,
@@ -222,17 +246,30 @@ changes.
   rewrite settles (its publish/config layout is a moving target mid-build per
   [[0008-modernize-dataexplorer-api]]).
   ARCHITECTURE §9 (Loop 3) and §10 updated in this same change.
-- **Pending:** the `sector-in-brief-api` caller (deferred, above); the
-  `contract-surface=true` custom property + the requiring org ruleset (step 4,
-  org-owner request); the follow-on Loop-3 semantic-agent ADR (step 6 /
-  Follow-up 4); and tuning `paths_regex_for()` in `scripts/reconcile.sh` for
+- **Done (2026-06-12):** Migration **step 4 re-scoped** — the org-wide
+  property-keyed ruleset is abandoned (org-owner not attainable) in favour of a
+  per-repo ruleset (see Decision §4 amendment). Shipped the reusable artifacts:
+  `scripts/contract-surface-ruleset.json` (requires the `contracts-guard /
+  contracts-guard` check on `~DEFAULT_BRANCH`, no bypass actors) and
+  `scripts/apply-contract-surface-ruleset.sh` (dry-run by default; skips repos
+  where the maintainer lacks admin or that lack the guard caller, so a required
+  check can never strand a repo). **Not yet applied to any repo** — run with
+  `--apply` against `nccs-data-core` / `nccs-data-bmf` to enforce.
+- **Pending:** *apply* the per-repo ruleset on the admin'd repos (artifact
+  ready, above); the `sector-in-brief-api` caller (deferred, mid-rewrite);
+  admin-verify + roll the ruleset to the remaining in-scope repos; the
+  follow-on Loop-3 semantic-agent ADR (step 6 / Follow-up 4); and tuning
+  `paths_regex_for()` in `scripts/reconcile.sh` for
   `nccs-data-core`/`nccs-data-efile` (Follow-up 5).
 
 ## Follow-up
 
 1. **Done 2026-06-09** — converted drafts → callers and rolled out to the full
    in-scope set (except the deferred `sector-in-brief-api`).
-2. Org ruleset on `contract-surface=true` (org-owner request).
+2. ~~Org ruleset on `contract-surface=true` (org-owner request).~~
+   **Superseded 2026-06-12** by the per-repo ruleset (Decision §4 amendment,
+   Outcome). Remaining work is to *apply* it on the admin'd repos and verify
+   admin on the rest. The org-owner path is closed, not pending.
 3. **Done 2026-06-09** — CLAUDE.md guard pointers added; ARCHITECTURE §9/§10 updated.
 4. Open the follow-on ADR for the Copilot Loop-3 semantic agent.
 5. Tune `paths_regex_for()` in `scripts/reconcile.sh` for `nccs-data-core`

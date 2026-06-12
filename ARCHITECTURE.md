@@ -232,9 +232,12 @@ deferred mid-rewrite): a PR that touches contract-relevant paths must
 `contracts-ack` label — or the check fails. It verifies *acknowledgment, not
 correctness*; the Opus agent layer above (does it actually match the ADR /
 break the contract?) is the deliberate follow-on, so the floor runs first and
-targets the agent only where needed. An org ruleset keyed on a
-`contract-surface=true` property (org-owner request) is the remaining step to
-make the check non-optional.
+targets the agent only where needed. To make the check **non-optional**, each
+repo the maintainer admins gets a **per-repo ruleset** requiring the
+`contracts-guard / contracts-guard` check on its default branch (ADR 0022 §4,
+amended — the org-wide property-keyed ruleset was abandoned as it needs
+org-owner rights; `scripts/apply-contract-surface-ruleset.sh`). Repos the
+maintainer doesn't admin keep the guard advisory until admin is obtained.
 
 ### What the agents read
 
@@ -311,8 +314,10 @@ When adding a new producer or consumer:
    `.github/workflows/contracts-guard.yml` caller of the reusable guard in
    `nccs-contracts`, with a `paths_regex` tuned to what the module publishes
    (producer) or reads/pins (consumer); add a guard pointer to the module's
-   `CLAUDE.md`; and set the `contract-surface=true` property so the org ruleset
-   covers it. This turns a forgotten contract reconcile into a red check.
+   `CLAUDE.md`; and — if the maintainer admins the repo — apply the per-repo
+   ruleset (`scripts/apply-contract-surface-ruleset.sh`) so the check is
+   *required*, not just advisory. This turns a forgotten contract reconcile
+   into a red check.
 
 A module that skips any of these steps is invisible to the system
 and will break silently. Don't.
