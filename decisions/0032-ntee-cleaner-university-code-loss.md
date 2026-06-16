@@ -202,10 +202,12 @@ remains the separate `bmf-master` Open item #2). Consumers ([[nccsdata]],
 `sector-in-brief-api`) inherit the corrected values on the next republish.
 
 The general default for a value-change *is* a 90-day window; skipping it here is
-a deliberate exception justified by "the old values are a bug, not a contract." A
-**separate ADR** will formalize the override mechanism — when a critical
-downstream defect justifies bypassing the standard window — so this exception is
-not treated as the new default. Consumers that aggregate on `nteev2_subsector`
+a deliberate exception justified by "the old values are a bug, not a contract."
+[[0033-deprecation-window-policy-and-critical-bug-override]] formalizes this
+override mechanism — a programmer may shorten or waive the window for a critical
+correctness/data-corruption/security defect, recording the harm and the chosen
+window (here: zero) — so this exception is not treated as the new default. This
+change is the first invocation of that override. Consumers that aggregate on `nteev2_subsector`
 (the dashboard "Universities" cut, any `EDU`/subsector roll-up) are notified that
 `UNI`/`EDU`/`UNU` membership shifts at the cutover, effective immediately.
 
