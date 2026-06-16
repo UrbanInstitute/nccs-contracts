@@ -1,6 +1,6 @@
 # 0032 — Correct NTEE Cleaning So `nteev2_subsector = UNI` Holds Actual Universities
 
-- **Status:** Accepted (planning; not yet executed) — gated on the open measurement below
+- **Status:** Accepted (partially executed 2026-06-16) — measurement done + producer fix implemented in `nccs-data-bmf`; rebuild/republish + contract-YAML reconcile pending. See Outcome.
 - **Date:** 2026-06-16
 - **Deciders:** sole maintainer; BMF data owner
 - **Related:** [[0021-canonical-county-identity-via-fips-crosswalk]] (same consumer-investigation → producer-defect pattern), [[0009-sector-in-brief-dashboard-hygiene]], [[0016-no-canonical-cross-dataset-merge]], [[0010-sector-in-brief-data-replaces-dataexplorer-data]], [[0022-cross-repo-contract-change-guard]], [[0008-modernize-dataexplorer-api]], [[bmf-master-geocoded]], [[bmf-lookups]], [[nccsdata]], [[sector-in-brief]]
@@ -103,7 +103,26 @@ already fires on `R/transform_*`-adjacent changes in the BMF repo).
    remain `UNU` (no code to validate); whether they warrant separate handling is
    a follow-up note, not part of this fix.
 
+4. **Resolve INVALID/UNDEFINED to `UNU` (adopted 2026-06-16).** A row whose
+   `ntee_code_clean` is `INVALID`/`UNDEFINED` must resolve to `UNU` ("unknown"),
+   **not** inherit a real subsector from its raw first letter. If we could not
+   validate a code, inferring `EDU` from a leading `B` is a fabricated
+   classification. The measurement found **12,667** such rows previously
+   mislabeled this way (4,885 `EDU`, 4,179 `HMS`, 1,679 `HEL`, 788 `PSB`,
+   725 `ART`, …); they now fold into `UNU`. This is the correct policy and is
+   implemented alongside #1–#3 (the prior "defer" stance is superseded).
+
 ### Open question to resolve first (cheapest decisive measurement)
+
+> **RESOLVED 2026-06-16.** Measured over the full `2026-06-BMF.csv`
+> (1,966,267 rows; `scripts/measure_ntee_fix_blast_radius.R`). Confirmed the
+> 4-char layout is `[letter][2-digit subgroup at chars 2–3][trailing modifier
+> at char 4]` (modifier usually a letter `Z` or `0`) — i.e. the inverse of what
+> the old code assumed — and it is uniform enough that `substr(1,3)` is the
+> correct rule. Blast radius: **+39,390** rows recovered `INVALID→valid` against
+> **58** malformed-junk codes correctly invalidated; `UNI` 603→**3,589**, `HOS`
+> 525→**5,621**; `nteev2_code == Z99` 69.4%→**30.7%**. The rule below is now
+> locked; see Outcome.
 
 **Instrument before committing to the exact rule.** Validate the 4-char-format
 hypothesis against a real BMF: confirm that for 4-char `NTEE_CD` values the
@@ -173,18 +192,61 @@ measurement confirms the format and the blast radius.
 
 ## Deprecation window
 
-Value change on a published column → default **90-day** window from the
-corrected republish, coordinated through the [[0022-cross-repo-contract-change-guard]]
-guard. Consumers that filter or aggregate on `nteev2_subsector` (notably the
-dashboard's "Universities" cut and any `EDU` roll-up) should be notified that
-`UNI`/`EDU` membership shifts at the cutover.
+**Decided (2026-06-16): immediate cutover — overwrite `latest` in place, no
+90-day window for this change.** The old `UNI`/`EDU` values are *wrong* (no real
+university ever reached `UNI`), so preserving them for a window has negative
+value — it would prolong a known-incorrect classification. The corrected build
+overwrites the existing unversioned [[bmf-master-geocoded]]/[[bmf-master]]
+`latest` paths directly; no versioned-subdir machinery is introduced here (that
+remains the separate `bmf-master` Open item #2). Consumers ([[nccsdata]],
+`sector-in-brief-api`) inherit the corrected values on the next republish.
+
+The general default for a value-change *is* a 90-day window; skipping it here is
+a deliberate exception justified by "the old values are a bug, not a contract." A
+**separate ADR** will formalize the override mechanism — when a critical
+downstream defect justifies bypassing the standard window — so this exception is
+not treated as the new default. Consumers that aggregate on `nteev2_subsector`
+(the dashboard "Universities" cut, any `EDU`/subsector roll-up) are notified that
+`UNI`/`EDU`/`UNU` membership shifts at the cutover, effective immediately.
+
+## Outcome
+
+### Shipped (in `nccs-data-bmf`, 2026-06-16 — code only, not yet republished)
+
+The locked rule, implemented in `R/transform_ntee_code.R` (commits carry an
+`ADR 0032` breadcrumb):
+
+1. **Clean-code:** both `.len == 4` branches collapse to `substr(1, 3)` — the
+   positional asymmetry is gone. `B430 → B43`.
+2. **`nteev2_code` rebuild:** middle component = the cleaned, lookup-validated
+   NTEE-CC code; `Z99` only when invalid/undefined. (The old `.int23`-based
+   formula is deleted — single source of truth, per the Invariants.)
+3. **Subsector:** `UNI`/`HOS` key off `ntee_code_clean`, not the derived code.
+4. **INVALID/UNDEFINED → `UNU`** (Decision 4, adopted): unvalidated codes no
+   longer inherit a subsector from the raw first letter.
+
+Verified by re-running the **real edited transform** over all 1,966,267 rows:
+`UNI=3,589`, `HOS=5,621`, `Z99=30.7%`, and `UNU` 590,238 → **602,905** (+12,667
+from the INVALID→UNU policy; `EDU` −4,885, `HMS` −4,179, …) — matches the
+measurement projection exactly. Of the 3,589 orgs with a genuine university
+code, **0 reached `UNI` before** (all in `EDU`). Regression guard
+`scripts/check_ntee_university_coverage.R` added and passing (incl. an
+INVALID→`UNU` fixture); it also asserts the Invariants.
+
+### Diverged or pending
+
+- **Republish = overwrite `latest` in place** (Deprecation-window decision),
+  rebuilt off the **newest raw BMF vintage** — scope to **start** is
+  current-vintage reprocess → master refresh; the full legacy reprocess
+  (1989–2022) is deferred to a follow-up batch. Published
+  [[bmf-master-geocoded]] still carries old values until that rebuild runs.
+- **`nccs-data-bmf` PR** — code staged locally; ADR 0022 guard will fire on
+  `R/transform_*` (breadcrumb in place).
 
 ## Follow-up
 
-1. **Run the open measurement** (above) in `nccs-data-bmf` against a real BMF;
-   record the confirmed 4-char format and the record-flip count before writing
-   the fix. A concrete fix proposal + implementation plan for the producer repo
-   is being drafted for review before any code lands.
+1. ~~**Run the open measurement.**~~ **Done 2026-06-16** — see the RESOLVED note
+   and Outcome. Confirmed format + blast radius before the rule was locked.
 2. **Reconcile the contracts** ([[bmf-master-geocoded]], [[bmf-lookups]]) and
    `ARCHITECTURE.md` once the rule is fixed and the blast radius is known; record
    the corrected `nteev2_subsector` semantics and the value-change window.
