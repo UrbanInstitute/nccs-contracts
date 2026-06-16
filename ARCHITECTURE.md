@@ -147,9 +147,13 @@ Cadence determines drift-detection trigger. See
   the manifest. Versions are additive; renames are breaking changes
   with a glide path.
 - **Breaking changes get a deprecation window.** Producer publishes
-  both old and new for a documented period (default 90 days).
+  both old and new for a documented period (default 90 days; ADR 0033).
   Consumers update at their cadence. ADR required for any breaking
-  change.
+  change. **Critical-bug override:** for a correctness, data-corruption,
+  or security defect where keeping the old behavior live prolongs the
+  harm, the programmer may shorten or waive the window at their
+  discretion, recording the harm and the chosen window in that change's
+  ADR (ADR 0033).
 - **`_latest` is for humans, not production.** Pipelines reading
   `_latest` are accepting that they may break; that's a deliberate
   choice, not a default.
