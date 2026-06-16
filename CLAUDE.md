@@ -13,7 +13,7 @@ House rules:
 
 - Any change that alters a contract's shape, a producer/consumer pattern, or a load-bearing technology choice requires a new ADR in `decisions/`. Update `ARCHITECTURE.md` to reflect the new state; the ADR preserves the why.
 - Contract YAMLs are authoritative. If a producer or consumer drifts from its contract, the contract isn't wrong by default — investigate which side is out of date.
-- Default deprecation window for breaking changes is 90 days.
+- Default deprecation window for breaking changes is 90 days (ADR 0033). A programmer may shorten or waive it at their discretion for a critical bug — a correctness, data-corruption, or security defect where keeping the old behavior live prolongs the harm — recording the harm and the chosen window in that change's ADR.
 - This repo has no runtime; CI here will eventually validate the YAMLs against schema and against live S3, but doesn't yet.
 
 ## Current state of play
