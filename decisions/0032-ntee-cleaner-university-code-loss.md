@@ -1,6 +1,6 @@
 # 0032 — Correct NTEE Cleaning So `nteev2_subsector = UNI` Holds Actual Universities
 
-- **Status:** Accepted (partially executed 2026-06-16) — measurement done + producer fix implemented in `nccs-data-bmf`; rebuild/republish + contract-YAML reconcile pending. See Outcome.
+- **Status:** Accepted (partially executed 2026-06-17) — measurement done, producer fix shipped in `nccs-data-bmf` (PR #23), `latest` republished as a **current-vintage-only** reprocess (legacy 1989–2022 deferred), and contracts reconciled against the published parquet. `UNI`/`HOS` corrected; `nteev2_code` `Z99` share still elevated (58.2%, vs ~30.7% full-fix target) pending the legacy batch. See Outcome.
 - **Date:** 2026-06-16
 - **Deciders:** sole maintainer; BMF data owner
 - **Related:** [[0021-canonical-county-identity-via-fips-crosswalk]] (same consumer-investigation → producer-defect pattern), [[0009-sector-in-brief-dashboard-hygiene]], [[0016-no-canonical-cross-dataset-merge]], [[0010-sector-in-brief-data-replaces-dataexplorer-data]], [[0022-cross-repo-contract-change-guard]], [[0008-modernize-dataexplorer-api]], [[bmf-master-geocoded]], [[bmf-lookups]], [[nccsdata]], [[sector-in-brief]]
@@ -235,23 +235,41 @@ code, **0 reached `UNI` before** (all in `EDU`). Regression guard
 `scripts/check_ntee_university_coverage.R` added and passing (incl. an
 INVALID→`UNU` fixture); it also asserts the Invariants.
 
-### Diverged or pending
+### Republished (master `latest`)
 
 - **Republish = overwrite `latest` in place** (Deprecation-window decision),
-  rebuilt off the **newest raw BMF vintage** — scope to **start** is
-  current-vintage reprocess → master refresh; the full legacy reprocess
-  (1989–2022) is deferred to a follow-up batch. Published
-  [[bmf-master-geocoded]] still carries old values until that rebuild runs.
-- **`nccs-data-bmf` PR** — code staged locally; ADR 0022 guard will fire on
-  `R/transform_*` (breadcrumb in place).
+  rebuilt off the **newest raw BMF vintage** — scope is current-vintage
+  reprocess → master refresh; the full legacy reprocess (1989–2022) is deferred
+  to a follow-up batch.
+- **`nccs-data-bmf` PR** — shipped (PR #23, merged); ADR 0022 guard fired on
+  `R/transform_*` (`contracts-guard` green).
+- **Published-artifact verification** (against the live `bmf-master-geocoded`
+  parquet, published 2026-06-17 — the producer emits no `_manifest.json`, so
+  provenance is the object's own digest): `nteev2_subsector` — UNI 4,189, HOS
+  7,199, EDU 396,552, UNU 700,405; `nteev2_code` `Z99` share 58.2% (down from
+  69.4%, not yet at the ~30.7% full-fix target — legacy 1989–2022 reprocess
+  deferred). Provenance: sha256
+  `82aec1278ff35a6da4abd12baa590d661390d93e1f040f9534d99f99dfdf9208`, row_count
+  3,687,435, built_at `2026-06-17T17:43:38Z` (S3 `LastModified`). The
+  immediate-cutover deprecation window (ADR 0033 override) starts at this
+  republish. Manifest emission tracked as [[bmf-master-geocoded]] Open item #1.
+
+### Diverged
+
+- The INVALID→`UNU` policy (Decision 4) was promoted from deferred to adopted
+  during implementation, after the measurement showed the `nteev2_code` defect
+  dominated; shipped in the same PR rather than split out.
 
 ## Follow-up
 
 1. ~~**Run the open measurement.**~~ **Done 2026-06-16** — see the RESOLVED note
    and Outcome. Confirmed format + blast radius before the rule was locked.
-2. **Reconcile the contracts** ([[bmf-master-geocoded]], [[bmf-lookups]]) and
-   `ARCHITECTURE.md` once the rule is fixed and the blast radius is known; record
-   the corrected `nteev2_subsector` semantics and the value-change window.
+2. **Done 2026-06-16** (this reconcile) — [[bmf-master-geocoded]] records the
+   corrected `nteev2_subsector`/`nteev2_code` semantics + the immediate-cutover
+   window. [[bmf-lookups]] needs **no change**: the `ntee_code` lookup itself was
+   never wrong — the transform discarded valid codes — so the lookup universe is
+   unchanged. `ARCHITECTURE.md` unchanged (no producer-pattern or contract-shape
+   change; values shifted within an existing column).
 3. **Dashboard-side fix** — do not offer a "Universities" filter backed by an
    empty/garbage subsector; tracked against [[0009-sector-in-brief-dashboard-hygiene]].
 4. **CMU-style null-NTEE orgs** — decide whether orgs with no IRS NTEE warrant a

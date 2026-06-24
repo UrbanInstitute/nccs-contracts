@@ -172,6 +172,38 @@ notes: |
   rows, all distinct EINs — an inner join onto this artifact does not
   fan out the other side, so the query-time join needs no dedup step.
 
+  ## NTEE subsector classification corrected (ADR 0032, 2026-06-16)
+
+  `nteev2_subsector` / `nteev2_code` / `nteev2` carry **corrected** values as of
+  the 2026-06-17 master republish. The producer's `transform_ntee_code.R` was
+  discarding valid 4-char NTEE codes (`B430 → B00 → INVALID`) and deriving the
+  subsector from a parallel formula that could never emit the university codes,
+  so `UNI` held no real universities. The fix (see
+  [[0032-ntee-cleaner-university-code-loss]]) cleans `Bxy0` codes to their valid
+  3-char form, keys the subsector off the lookup-validated cleaned code, and
+  folds INVALID/UNDEFINED rows into `UNU`. Measured in the published parquet
+  (3,687,435 rows; sha256 `82aec127…`; published 2026-06-17) — note this is the
+  **current-vintage reprocess only**, with the legacy 1989–2022 batch deferred
+  (see [[0032-ntee-cleaner-university-code-loss]] Outcome), so the Z99 share is
+  only partway to target:
+
+  - `UNI` 603 → **4,189** (was 100% junk; now genuine `B40–B43,B50`);
+    `HOS` 525 → **7,199**.
+  - `nteev2_code == Z99` **69.4% → 58.2%** — reduced but still elevated; expected
+    to fall further once the deferred legacy reprocess lands.
+  - INVALID/UNDEFINED `ntee_code_clean` (33,463 + 634,886 rows) now fold to
+    `nteev2_subsector = UNU` (700,405 total) rather than inheriting a subsector
+    from the raw first letter.
+
+  **Value change on a published column, immediate cutover** (no 90-day window) —
+  the old values were a bug, not a contract, per the ADR 0033 critical-bug
+  override. Consumers inherit the corrected values on read:
+  [[nccsdata]] bundles the column directly; `sector-in-brief-api` relabels it
+  (see the consumer note above) — its mechanism is unchanged, but its `EDU`
+  "(minus Universities)" bucket now actually excludes universities, and "Other"
+  no longer absorbs the formerly-misclassified `UNI`. Dashboard follow-up tracked
+  against [[0009-sector-in-brief-dashboard-hygiene]].
+
   ## Open items
 
   1. **No `_manifest.json`.** Same gap as [[bmf-master]] —
