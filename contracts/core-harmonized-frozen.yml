@@ -47,14 +47,55 @@ s3:
   key_prefix: harmonized/core/
   versioned_template: null  # frozen; no per-vintage subdirs. The mart filename carries the only version token (HRMN-V0/V1).
   latest_template: null     # not applicable — frozen surface, no _latest mirror
-  # Realized layout (per subsector S = {501c3-pc, 501c3-pf, 501c3-pz, 501ce-pc, 501ce-pz}):
-  #   harmonized/core/{S}/CORE-{year}-{CLASS}-HRMN.csv            base harmonized CSV, vintages 2012-2022
-  #   harmonized/core/{S}/marts/CORE-{year}-{CLASS}-HRMN-V{N}.csv per-year mart, to 2023 (N = 0 or 1, varies by subsector)
-  #   harmonized/core/{S}/full/CORE-FULL-{CLASS}-HRMN-V1.parquet  full per-subsector parquet
-  #   harmonized/core/{S}/dd/DD-CORE-{CLASS}-HRMN-V1.csv          data dictionary
+  # Realized layout (4 of 5 subsectors carry base CSVs; 501c3-pf is marts-only):
+  #   harmonized/core/{S}/CORE-{year}-{CLASS}-HRMN.csv            base harmonized CSV — ABSENT for 501c3-pf; years vary (1989-2022 for the pz/ce-pz panels, 2012-2022 for the pc/ce-pc panels)
+  #   harmonized/core/{S}/marts/CORE-{year}-{CLASS}-HRMN-V{N}.csv per-year mart — V1 for all subsectors EXCEPT 501c3-pf (V0); pf marts span 1987-2023
+  #   harmonized/core/{S}/full/CORE-FULL-{CLASS}-HRMN-V{N}.parquet full per-subsector parquet — V1 except 501c3-pf (V0)
+  #   harmonized/core/{S}/dd/DD-CORE-{CLASS}-HRMN-V1.csv          data dictionary (V1) — EXCEPT 501c3-pf, whose dict is DD-PF-HRMN-V0.csv (no CLASS token, V0)
   #   harmonized/core/CORE-HRMN_dd.csv                            top-level dictionary
-  # ~231 objects total; LastModified 2023-12-05 .. 2025-04-21. Exact
-  # subsector × vintage × family enumeration is an Open item below.
+  # 232 objects total (233 listed - 1 zero-byte dir marker); LastModified
+  # 2023-12-05 .. 2025-04-21. Full per-(subsector, family, version) counts +
+  # contiguous year ranges in the inventory: block below (ADR 0035 Follow-up 3).
+
+# ---- ADR 0035 Follow-up 3: enumerated inventory (live S3, 2026-06-26) ----
+# Cross-checked against the _manifest.json's 232 file entries; every year span contiguous.
+inventory:
+  object_count: 232          # 233 listed - 1 zero-byte 'harmonized/core/' dir marker
+  total_bytes: 29925863035
+  families: { base: 90, marts: 131, dd: 5, full_parquet: 5, top_level_dict: 1 }
+  top_level:
+    - { key: CORE-HRMN_dd.csv, family: dict }
+  subsectors:
+    501c3-pc:
+      class_token: 501C3-CHARITIES-PC
+      base  : { count:  11, version:  -, years: "2012-2022 (n=11, contiguous)" }
+      marts : { count:  12, version: V1, years: "2012-2023 (n=12, contiguous)" }
+      dd    : { count:   1, version: V1 }
+      full  : { count:   1, version: V1 }
+    501c3-pf:
+      class_token: 501C3-PRIVFOUND-PF
+      base  : { count:   0 }   # ABSENT — pf panel is marts-only
+      marts : { count:  37, version: V0, years: "1987-2023 (n=37, contiguous)" }
+      dd    : { count:   1, version: V0, filename: DD-PF-HRMN-V0.csv }  # irregular: no CLASS token
+      full  : { count:   1, version: V0 }
+    501c3-pz:
+      class_token: 501C3-CHARITIES-PZ
+      base  : { count:  34, version:  -, years: "1989-2022 (n=34, contiguous)" }
+      marts : { count:  35, version: V1, years: "1989-2023 (n=35, contiguous)" }
+      dd    : { count:   1, version: V1 }
+      full  : { count:   1, version: V1 }
+    501ce-pc:
+      class_token: 501CE-NONPROFIT-PC
+      base  : { count:  11, version:  -, years: "2012-2022 (n=11, contiguous)" }
+      marts : { count:  12, version: V1, years: "2012-2023 (n=12, contiguous)" }
+      dd    : { count:   1, version: V1 }
+      full  : { count:   1, version: V1 }
+    501ce-pz:
+      class_token: 501CE-NONPROFIT-PZ
+      base  : { count:  34, version:  -, years: "1989-2022 (n=34, contiguous)" }
+      marts : { count:  35, version: V1, years: "1989-2023 (n=35, contiguous)" }
+      dd    : { count:   1, version: V1 }
+      full  : { count:   1, version: V1 }
 
 # Retention guarantee (ADR 0035). The reason this contract exists.
 retention:
@@ -100,7 +141,7 @@ manifest:
   # last_modified}, keyed by path relative to harmonized/core/.
 
 schema:
-  source: "harmonized/core/{subsector}/dd/DD-CORE-{CLASS}-HRMN-V1.csv"  # per-subsector dictionary; top-level CORE-HRMN_dd.csv also present
+  source: "harmonized/core/{subsector}/dd/DD-CORE-{CLASS}-HRMN-V1.csv"  # per-subsector dictionary (V1) — EXCEPT 501c3-pf, whose dict is harmonized/core/501c3-pf/dd/DD-PF-HRMN-V0.csv (no CLASS token, V0). Top-level CORE-HRMN_dd.csv also present.
   # Key column: EIN2 (EIN-XX-XXXXXXX). Also carries F9_00_ORG_EIN
   # (raw 9-digit) and the F9_* / SA/SB/SC field families. See
   # conventions/ein-format.md for EIN2 <-> ein reconciliation.
@@ -138,10 +179,14 @@ notes: |
     - [[core-legacy]]      processed_legacy/core/          (pre-2012 rehydration tier)
 
   ## Open items
-  1. **Enumerate exact inventory** — subsector × vintage × file-family,
-     and the per-subsector mart version token (V0 vs V1; 501c3-pf marts
-     observed as V0, 501c3-pc as V1). Needed so drift checks coverage
-     completeness, not just prefix presence. (ADR 0035 Follow-up 3.)
+  1. **Exact inventory — DONE (enumerated 2026-06-26, ADR 0035 Follow-up 3).**
+     See the `inventory:` block above (cross-checked against the manifest's
+     232 entries). Drift detection can now assert per-(subsector, family,
+     version) object counts and contiguous year ranges, not merely prefix
+     presence. **Verified finding: the version token splits by subsector, not
+     by family** — 501c3-pf is V0 across all families (base ABSENT; marts/dd/
+     full all V0; dd is the irregular DD-PF-HRMN-V0.csv, no CLASS token); the
+     other four subsectors are V1 across all families.
   2. **S3-level non-deletion control — DONE (applied 2026-06-26).**
      Bucket-policy Deny on s3:DeleteObject + s3:DeleteObjectVersion for
      `harmonized/core/*` (Sid ProtectFrozenHarmonizedCore-ADR0035),

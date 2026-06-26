@@ -141,8 +141,14 @@ override does not apply (a frozen artifact prolongs no harm).
    219/233 objects use multipart ETags (ETag ≠ MD5). ETag+size detects
    overwrite/disappearance; per-file sha256 (and `row_count`/`columns`) can be backfilled
    later without reshaping (recorded in the manifest's `deviations[]`).
-3. **Enumerate exact inventory** (subsector × vintage × file-family, and the V0/V1
-   mart-version split) in `core-harmonized-frozen.yml` so drift detection checks
-   coverage completeness, not just prefix presence.
+3. **✅ APPLIED 2026-06-26 — Exact inventory enumerated** in
+   `core-harmonized-frozen.yml` (the `inventory:` block; cross-checked against the
+   manifest's 232 file entries, every year span contiguous). Per-(subsector, family,
+   version) object counts + year ranges — drift detection can now assert coverage
+   completeness, not merely prefix presence. **Verified finding:** the version token
+   splits by **subsector, not family** — 501c3-pf is V0 across all families (base
+   ABSENT, marts-only; dd is the irregular `DD-PF-HRMN-V0.csv`, no CLASS token); the
+   other four subsectors are V1 across all families. Also corrected the `s3:`
+   realized-layout comment + `schema.source` (the pf dictionary exception).
 4. **Register external consumers** as they surface, so "advance notice" has an
    addressable list.
