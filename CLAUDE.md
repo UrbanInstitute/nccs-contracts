@@ -4,6 +4,7 @@ Sibling repos live one level up under `../` (nccsdata is the most mature consume
 
 Start every non-trivial task by reading:
 
+0. `BACKLOG.md` — the maintainer's prioritized next-steps list (boot here first; the workflow is plan-here → execute-downstream → reconcile-here). Keep it updated at the reconcile step.
 1. `ARCHITECTURE.md` — current-state system description.
 2. `decisions/` — ADRs for the load-bearing calls (0001 S3 surface, 0002 merged artifact, 0003 DuckDB over Athena, 0004 cadence-aware drift detection). Read the ones relevant to the task.
 3. `contracts/_template.yml` — the canonical shape every contract follows.
@@ -19,3 +20,12 @@ House rules:
 ## Current state of play
 
 Scaffolding (ARCHITECTURE, four ADRs, contract template, six stub contracts) was just committed. The immediate next work is filling the TODOs in `contracts/*.yml` from authoritative sources — for each, that means reading the producer repo's publish code and inspecting the actual S3 layout. Start there unless directed elsewhere.
+
+## Shared workstream context
+
+This is one of the NCCS core data repos. The shared architecture &
+data-engineering doctrine (change management, the machinery-enforced quality
+bar, canonical-mapping discipline, source/geography rules) is single-sourced in
+the home Claude folder and imported here:
+
+@~/.claude/nccs-architecture-context.md
