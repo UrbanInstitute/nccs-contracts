@@ -1,0 +1,138 @@
+# Created 2026-06-26 per ADR 0035.
+#
+# This contract covers the FROZEN, RETAINED harmonized CORE surface at
+# s3://nccsdata/harmonized/core/ — the output of the first CORE
+# engineering run (2024 pipeline, commit 9cbdb5d; objects frozen
+# 2023-12-05 .. 2025-04-21). It is real, consumer-facing, and keyed on
+# EIN2. External research packages (incl. the NODC / irs990efile
+# lineage) read these paths and join on EIN2.
+#
+# DO NOT confuse with:
+#   - contracts/core-harmonized.yml  → s3://nccsdata/intermediate/core/harmonized/
+#                                       (the CURRENT pipeline's internal build tier,
+#                                        retired per ADR 0015 — a different path)
+#   - contracts/core-990.yml         → processed/core/ (current consumer surface)
+#   - contracts/core-panel.yml       → processed_merged/core/ (within-core union)
+#
+# ADR 0035 corrects ADR 0015's claim that harmonized/core/ was a
+# "phantom contract." It is not; it is retained and protected here.
+
+name: core-harmonized-frozen
+status: frozen   # published, retained indefinitely, NO longer updated; see ADR 0035 Conventions
+
+description: >
+  Frozen, retained harmonized CORE surface from the first engineering
+  run (2024 pipeline) at s3://nccsdata/harmonized/core/. Per-subsector
+  harmonized 990 microdata (base CSVs + cross-year marts + a full
+  parquet + dictionaries), keyed on EIN2 (EIN-XX-XXXXXXX). No longer
+  produced; retained indefinitely as a stable interface for existing
+  external consumers under a non-deletion + deprecation-window
+  guarantee (ADR 0035). NOT a freshness source — new consumers should
+  use core-990 / core-panel (processed*/core/, keyed on clean `ein`).
+
+producer:
+  repo: UrbanInstitute/nccs-data-core
+  publish_path: null  # no longer produced — frozen output of the retired 2024 pipeline (commit 9cbdb5d)
+  interim_note: >
+    Frozen artifact, no active producer. The 2026 pipeline rewrite
+    moved production to the processed*/core/ tiers; these files are
+    retained, not regenerated.
+
+format: csv      # base CSVs, marts, and dictionaries are CSV; the per-subsector full/ artifact is parquet
+compression: none
+partitioned: true  # by subsector (501c3-pc/pf/pz, 501ce-pc/pz) × {base, marts/, full/, dd/}
+
+s3:
+  bucket: nccsdata
+  key_prefix: harmonized/core/
+  versioned_template: null  # frozen; no per-vintage subdirs. The mart filename carries the only version token (HRMN-V0/V1).
+  latest_template: null     # not applicable — frozen surface, no _latest mirror
+  # Realized layout (per subsector S = {501c3-pc, 501c3-pf, 501c3-pz, 501ce-pc, 501ce-pz}):
+  #   harmonized/core/{S}/CORE-{year}-{CLASS}-HRMN.csv            base harmonized CSV, vintages 2012-2022
+  #   harmonized/core/{S}/marts/CORE-{year}-{CLASS}-HRMN-V{N}.csv per-year mart, to 2023 (N = 0 or 1, varies by subsector)
+  #   harmonized/core/{S}/full/CORE-FULL-{CLASS}-HRMN-V1.parquet  full per-subsector parquet
+  #   harmonized/core/{S}/dd/DD-CORE-{CLASS}-HRMN-V1.csv          data dictionary
+  #   harmonized/core/CORE-HRMN_dd.csv                            top-level dictionary
+  # ~231 objects total; LastModified 2023-12-05 .. 2025-04-21. Exact
+  # subsector × vintage × family enumeration is an Open item below.
+
+# Retention guarantee (ADR 0035). The reason this contract exists.
+retention:
+  retained: true
+  frozen_since: "2025-04-21"        # last object LastModified; nothing written after
+  delete_policy: protected          # files MUST NOT be deleted; see enforcement note
+  move_or_remove_requires:
+    advance_notice: true            # notify known consumers before any change
+    deprecation_window_days: 90     # ADR 0033 default; critical-bug override does NOT apply (frozen → no harm to prolong)
+    on_retirement: archive-with-notice  # if ever retired, follow ADR 0005 (archive + reachable replacement), never silent delete
+  enforcement: >
+    This YAML DECLARES the guarantee; drift detection OBSERVES deletion
+    after the fact. APPLIED 2026-06-26 (ADR 0035 Follow-up 1): an
+    S3-level bucket-policy Deny (Sid ProtectFrozenHarmonizedCore-ADR0035;
+    Action s3:DeleteObject + s3:DeleteObjectVersion; Resource
+    arn:aws:s3:::nccsdata/harmonized/core/*) now prevents deletion of
+    this prefix for all principals — verified live (get-bucket-policy
+    shows the Sid; an AccessDenied delete dry-run on a nonexistent key
+    confirmed the explicit deny). Applied on the nccs-data-core side via
+    read-merge; the two pre-existing public statements (PublicRead,
+    PublicListPublishedTiers) were preserved byte-for-byte. s3:PutObject
+    is intentionally NOT yet denied, so the one-time _manifest.json write
+    (Follow-up 2) can still proceed; full immutability (adding
+    s3:PutObject) is a later step after the manifest lands. Runbook:
+    notes/adr-0035-s3-enforcement.md.
+
+cadence:
+  type: on-change
+  notes: "Frozen — never rebuilt. Retained as-is."
+
+manifest:
+  path: null  # none today. ADR 0035 Follow-up 2: add a one-time _manifest.json so integrity (not just presence) is verifiable.
+  schema_version: 1
+
+schema:
+  source: "harmonized/core/{subsector}/dd/DD-CORE-{CLASS}-HRMN-V1.csv"  # per-subsector dictionary; top-level CORE-HRMN_dd.csv also present
+  # Key column: EIN2 (EIN-XX-XXXXXXX). Also carries F9_00_ORG_EIN
+  # (raw 9-digit) and the F9_* / SA/SB/SC field families. See
+  # conventions/ein-format.md for EIN2 <-> ein reconciliation.
+
+consumers:
+  - repo: external/NODC-irs990efile-lineage
+    pin: "frozen"
+    notes: >
+      Research packages associated with the advisory affiliate read
+      harmonized/core/ paths directly and join on EIN2. Not an
+      Urban-controlled repo; the reason the non-deletion guarantee
+      exists. Register concrete consumers here as they are confirmed
+      (ADR 0035 Follow-up 4).
+
+drift_detection:
+  trigger: cron
+  schedule: "0 8 * * MON"
+  event: ""
+  # For a frozen surface, "drift" = an object disappeared or was
+  # modified after frozen_since. Either is a guarantee breach to alert on.
+
+deprecation_window_days: 90
+
+notes: |
+  Provenance: contents verified against live S3 (`--profile thiya`)
+  2026-06-26. EIN2 sample `EIN-38-2787387` (CORE-2023-501C3-CHARITIES-PC-HRMN-V1.csv).
+
+  Sibling contracts:
+    - [[core-harmonized]]  intermediate/core/harmonized/  (current pipeline build tier; RETIRED, ADR 0015 — different path)
+    - [[core-990]]         processed/core/                 (active consumer surface, clean `ein`)
+    - [[core-panel]]       processed_merged/core/          (within-core form union)
+    - [[core-legacy]]      processed_legacy/core/          (pre-2012 rehydration tier)
+
+  ## Open items
+  1. **Enumerate exact inventory** — subsector × vintage × file-family,
+     and the per-subsector mart version token (V0 vs V1; 501c3-pf marts
+     observed as V0, 501c3-pc as V1). Needed so drift checks coverage
+     completeness, not just prefix presence. (ADR 0035 Follow-up 3.)
+  2. **S3-level non-deletion control — DONE (applied 2026-06-26).**
+     Bucket-policy Deny on s3:DeleteObject + s3:DeleteObjectVersion for
+     `harmonized/core/*` (Sid ProtectFrozenHarmonizedCore-ADR0035),
+     verified live. See `retention.enforcement` and the runbook
+     `notes/adr-0035-s3-enforcement.md`. Full immutability (+s3:PutObject)
+     still pending — deferred until after the Follow-up 2 manifest write.
+  3. **No `_manifest.json`** — ADR 0035 Follow-up 2 / [[0014-standardize-manifest-shape]].

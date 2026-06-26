@@ -8,11 +8,19 @@
 # surface happens in R/08_upload.R promote_harmonized_to_processed.
 #
 # The original 2026-05-15 stub at this path described a different
-# (pre-`intermediate/`) layout under s3://nccsdata/harmonized/core/
-# that the modern producer never actually wrote to. Retiring the
-# contract removes the gap between spec and reality.
+# (pre-`intermediate/`) layout under s3://nccsdata/harmonized/core/.
+# The MODERN producer never wrote there — but the 2024 run-1 pipeline
+# (commit 9cbdb5d) DID, and those ~231 objects are still live, frozen,
+# and consumed externally (keyed on EIN2). That published surface is
+# NOT a phantom; it is now contracted and protected under
+# core-harmonized-frozen.yml (ADR 0035, which corrects ADR 0015's
+# "phantom contract" characterization). THIS contract remains scoped
+# only to the current pipeline's intermediate/core/harmonized/ build
+# tier, which stays retired and uncontracted.
 #
 # Where to look instead:
+#   - core-harmonized-frozen.yml → harmonized/core/ (the FROZEN run-1
+#                                  surface; retained + protected, ADR 0035)
 #   - core-990.yml          → processed/core/ (the consumer surface)
 #   - core-legacy.yml       → processed_legacy/core/ (rehydration tier;
 #                              consumed internally by the merged build)
