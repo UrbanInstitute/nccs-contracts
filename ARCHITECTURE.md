@@ -154,6 +154,13 @@ Cadence determines drift-detection trigger. See
   harm, the programmer may shorten or waive the window at their
   discretion, recording the harm and the chosen window in that change's
   ADR (ADR 0033).
+- **Retained frozen surfaces never delete silently.** A published
+  surface that is no longer produced but still has consumers is marked
+  `status: frozen` and retained indefinitely under a non-deletion +
+  advance-notice + 90-day deprecation guarantee; if ever retired for
+  real it follows the archive-with-notice pattern (ADR 0005), never a
+  silent delete. First instance: the run-1 `harmonized/core/` surface
+  (ADR 0035, contract `core-harmonized-frozen`).
 - **`_latest` is for humans, not production.** Pipelines reading
   `_latest` are accepting that they may break; that's a deliberate
   choice, not a default.

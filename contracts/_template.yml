@@ -10,6 +10,11 @@ name: example-artifact
 #   retired  — was published, no longer is; YAML kept for slug
 #              resolution and history. Body should explain why
 #              and point at any replacement contract.
+#   frozen   — published and retained indefinitely under a
+#              non-deletion + deprecation-window guarantee, but no
+#              longer updated (no new vintages, no fixes). Existing
+#              consumers may keep reading; not a freshness source.
+#              Carries a `retention:` block. See ADR 0035.
 #   deferred — planned but not yet published; YAML reserves the
 #              slug and documents intended shape.
 # status: active
