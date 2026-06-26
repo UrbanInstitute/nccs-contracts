@@ -1,0 +1,110 @@
+# Authored 2026-06-24 against the live artifact and nccs-data-bmf code
+# (scripts/build_ntee_resolved_crosswalk.R, R/publish_ntee_resolved_crosswalk.R,
+# R/publish_crosswalk.R). Per ADR 0034: a per-EIN crosswalk recovering NTEE for
+# orgs the IRS later NULLed. Published by the producer, joined by consumers on
+# `ein`; the master is NOT modified (ADR 0016).
+
+name: ntee-resolved-crosswalk
+
+description: >
+  Per-EIN NTEE classification resolved across every vintage of both BMF
+  pipelines (current monthly + legacy 501CX). Aggregates the verbatim
+  ntee_code_raw (vintage-invariant) per EIN and cleans the distinct codes once
+  via the current transform_ntee_code, then exposes four parallel resolutions —
+  ntee_current (may be NULL), ntee_most_recent, ntee_modal, and
+  ntee_code_distribution (JSON) — each with _subsector/_nteev2, plus
+  n_distinct_codes / n_vintages_with_ntee / ntee_agreement. Recovers a usable
+  code for orgs whose NTEE_CD is NULL in the current BMF but populated earlier
+  (motivating case: Carnegie Mellon 25-0969449 — NULL in current, B43 in
+  legacy). Published as parquet (machine contract) + CSV mirror + ADR 0014
+  _manifest.json. Consumers join by ein and pick the resolution rule.
+  See [[0034-ntee-resolved-crosswalk]].
+
+producer:
+  repo: UrbanInstitute/nccs-data-bmf
+  publish_path: R/publish_ntee_resolved_crosswalk.R  # thin wrapper over R/publish_crosswalk.R; artifact built by scripts/build_ntee_resolved_crosswalk.R (DuckDB aggregate of ntee_code_raw over both pipelines' intermediate parquets; distinct codes cleaned via transform_ntee_code).
+
+format: parquet  # CSV mirror also published; parquet is the machine contract
+compression: zstd
+partitioned: false  # single-file per-EIN lookup (~3.6M rows)
+
+s3:
+  bucket: nccsdata
+  key_prefix: crosswalks/ntee-resolved/
+  # Flat prefix (same ADR 0013 exception as the geography crosswalks): NO
+  # {vintage}/ subdir and NO latest/ mirror. The vintage is carried in the
+  # manifest (`vintage` = YYYY_MM of the newest current vintage). Unlike the
+  # geography crosswalks this tracks the monthly BMF, not a TIGER year.
+  versioned_template: null
+  latest_template: crosswalks/ntee-resolved/ntee_resolved_crosswalk.parquet
+  # Co-located at the same prefix:
+  #   crosswalks/ntee-resolved/ntee_resolved_crosswalk.parquet  — machine contract
+  #   crosswalks/ntee-resolved/ntee_resolved_crosswalk.csv      — web/spreadsheet mirror (~640 MB)
+  #   crosswalks/ntee-resolved/_manifest.json                   — ADR 0014 manifest
+
+cadence:
+  type: monthly
+  notes: >
+    Rebuilt and republished after each new monthly current BMF lands, so
+    ntee_current tracks the newest vintage. The legacy half is static.
+    Idempotent upload — unchanged files skipped via manifest sha256.
+
+manifest:
+  path: crosswalks/ntee-resolved/_manifest.json  # ADR 0014 shape; `vintage` = YYYY_MM; inputs[] records the two intermediate prefixes + sha256 of transform_ntee_code.R and the legacy 5-char lookup
+  schema_version: 2
+
+schema:
+  source: inline
+  # One row per EIN (universe = any EIN carrying an NTEE in >=1 vintage).
+  # ~3,613,958 rows. Columns match build_ntee_resolved_crosswalk.R setcolorder().
+  columns:
+    - {name: ein,                        type: string, nullable: false, description: "Formatted EIN (XX-XXXXXXX) — join key."}
+    - {name: ntee_current,               type: string, nullable: true,  description: "Cleaned NTEE-CC from the latest current vintage; NA if never in current or IRS-NULLed."}
+    - {name: ntee_current_subsector,     type: string, nullable: true,  description: "NTEEv2 subsector (e.g. UNI/HOS/EDU) for the current code."}
+    - {name: ntee_current_nteev2,        type: string, nullable: true,  description: "Full NTEEv2 code for the current code."}
+    - {name: current_vintage,            type: string, nullable: true,  description: "YYYY_MM of the latest current vintage observed for the EIN."}
+    - {name: ntee_most_recent,           type: string, nullable: true,  description: "Cleaned NTEE-CC from the newest vintage carrying a non-null code (any source)."}
+    - {name: ntee_most_recent_subsector, type: string, nullable: true,  description: "NTEEv2 subsector for the most-recent code."}
+    - {name: ntee_most_recent_nteev2,    type: string, nullable: true,  description: "Full NTEEv2 code for the most-recent code."}
+    - {name: ntee_most_recent_vintage,   type: string, nullable: true,  description: "YYYY_MM that supplied ntee_most_recent."}
+    - {name: ntee_most_recent_source,    type: string, nullable: true,  description: "current | legacy — pipeline that supplied ntee_most_recent."}
+    - {name: ntee_modal,                 type: string, nullable: true,  description: "Most-observed cleaned code across vintages (ties broken by recency)."}
+    - {name: ntee_modal_subsector,       type: string, nullable: true,  description: "NTEEv2 subsector for the modal code."}
+    - {name: ntee_modal_nteev2,          type: string, nullable: true,  description: "Full NTEEv2 code for the modal code."}
+    - {name: ntee_modal_n,               type: int,    nullable: true,  description: "Vintage-observations supporting the modal code."}
+    - {name: ntee_code_distribution,     type: string, nullable: true,  description: "JSON keyed on cleaned NTEE-CC: {code:{n,first,last}} — full history."}
+    - {name: n_distinct_codes,           type: int,    nullable: true,  description: "Count of distinct cleaned codes ever observed for the EIN."}
+    - {name: n_vintages_with_ntee,       type: int,    nullable: true,  description: "Total vintage-observations carrying an NTEE."}
+    - {name: ntee_agreement,             type: string, nullable: false, description: "single (one obs) | unanimous (all agree) | mixed."}
+
+consumers: []  # none pinned yet. Candidates: UrbanInstitute/nccsdata (bundle as lookup), the BMF data catalog (download links), sector-in-brief (universities filter). Register on first pin.
+
+drift_detection:
+  trigger: event
+  schedule: ""
+  event: "publish-crosswalks"  # republished alongside the monthly BMF / master rebuild
+
+deprecation_window_days: 90
+
+notes: |
+  Authored against the live artifact and producer code on 2026-06-24 per
+  [[0034-ntee-resolved-crosswalk]]. Published by nccs-data-bmf; the master
+  ([[bmf-master]] / [[bmf-master-geocoded]]) is NOT modified — NTEE fields are a
+  consumer-composed join on `ein` (ADR 0016), not master columns.
+
+  ## Why this artifact exists
+  [[0032-ntee-cleaner-university-code-loss]] fixed the cleaner, but a second,
+  distinct failure remained: orgs whose IRS NTEE_CD is NULL at source (CMU
+  25-0969449 — empty in current, B43 in legacy). No cleaner recovers a null;
+  only a cross-vintage lookup does. Built from RAW codes (vintage-invariant),
+  so it needs no legacy reprocess and for NTEE purposes supersedes one.
+
+  ## Guarantees
+  - Codes are STRINGS (NTEE-CC); never cast numeric.
+  - ntee_current may be NULL by design (it IS the IRS's current answer).
+  - "Expose all, no opinionated pick" (ADR 0016): consumer chooses
+    current / most_recent / modal / distribution.
+  - Universities = *_subsector == 'UNI' (not a substring guess).
+
+  ## Not contracted
+  No audit sidecar. The contracted truth is the parquet/CSV + manifest.
