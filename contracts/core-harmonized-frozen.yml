@@ -219,10 +219,11 @@ notes: |
      Bucket-policy Deny on s3:DeleteObject + s3:DeleteObjectVersion for
      `harmonized/core/*` (Sid ProtectFrozenHarmonizedCore-ADR0035),
      verified live. See `retention.enforcement` and the runbook
-     `notes/adr-0035-s3-enforcement.md`. Full immutability (also denying
-     s3:PutObject) was DEFERRED by decision 2026-06-26 — delete-protection
-     deemed sufficient; overwrite guarded by operator discipline. Re-open
-     only if a hard no-overwrite guarantee is later wanted.
+     `notes/adr-0035-s3-enforcement.md`. Full immutability (also denying the
+     `s3:PutObject` action, to block overwrites) was DEFERRED by decision
+     2026-06-26 — delete-protection deemed sufficient; overwrite guarded by
+     operator discipline. Re-open only if a hard no-overwrite guarantee is
+     later wanted.
   3. **`_manifest.json` — DONE (applied 2026-06-26).** `harmonized/core/_manifest.json`
      (ADR 0035 Follow-up 2 / [[0014-standardize-manifest-shape]]): 232 file entries,
      `integrity_basis` etag+size (sha256 deferred — see `manifest:` + the manifest's
