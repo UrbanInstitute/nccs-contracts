@@ -128,9 +128,11 @@ override does not apply (a frozen artifact prolongs no harm).
    statements preserved); verified live — `get-bucket-policy` shows the Sid and an
    `AccessDenied` delete dry-run confirmed the explicit deny. This is what actually
    *ensures* the files are not deleted. Runbook + policy:
-   `notes/adr-0035-s3-enforcement.md`. **Next:** full immutability (add `s3:PutObject`
-   to the Deny) is now unblocked — Follow-up 2's manifest landed 2026-06-26 — apply when
-   ready.
+   `notes/adr-0035-s3-enforcement.md`. **Full immutability (also denying `s3:PutObject`
+   to block overwrites) was considered and DEFERRED by decision 2026-06-26** —
+   delete-protection deemed sufficient; overwrite guarded by operator discipline (the
+   maintainer will not overwrite the frozen keys). The keys stay technically
+   overwritable; re-apply only if a hard no-overwrite guarantee is later wanted.
 2. **✅ APPLIED 2026-06-26 — One-time `_manifest.json`** for the frozen surface at
    `harmonized/core/_manifest.json` (63,339 B; 232 file entries; ADR 0014 shape adapted
    for a frozen surface — top-level vintage `"frozen"`, git_sha `9cbdb5d` (the 2024 build
@@ -150,5 +152,15 @@ override does not apply (a frozen artifact prolongs no harm).
    ABSENT, marts-only; dd is the irregular `DD-PF-HRMN-V0.csv`, no CLASS token); the
    other four subsectors are V1 across all families. Also corrected the `s3:`
    realized-layout comment + `schema.source` (the pf dictionary exception).
-4. **Register external consumers** as they surface, so "advance notice" has an
-   addressable list.
+4. **Known consumers registered 2026-06-26 (living list).** `core-harmonized-frozen.yml`
+   `consumers:` now records, evidence-based (grep of local repos + org code search):
+   (a) the **NCCS public data-catalog website** (`UrbanInstitute/nccs`) — a CONFIRMED
+   Urban-owned consumer that publishes download links to the surface and already labels
+   it "deprecated, for reproducibility only"; advance-notice → DST / catalog maintainer.
+   (b) the **external NODC / `irs990efile`-lineage** research consumers (not in any Urban
+   repo, as expected for external) — advance-notice contacts confirmed 2026-06-26: the
+   research advisory affiliates **Jesse Lecy, Lewis Faulk, Mirae Kim** ("for now").
+   Inactive/stale refs noted but not
+   gated (`nccs-dataexplorer-data` commented-out sync, superseded by sib-data per ADR
+   0010; a stale `sector-in-brief-data` scaffold ref). Remains a living list — register
+   more as they surface.
