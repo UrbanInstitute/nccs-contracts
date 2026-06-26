@@ -128,11 +128,19 @@ override does not apply (a frozen artifact prolongs no harm).
    statements preserved); verified live — `get-bucket-policy` shows the Sid and an
    `AccessDenied` delete dry-run confirmed the explicit deny. This is what actually
    *ensures* the files are not deleted. Runbook + policy:
-   `notes/adr-0035-s3-enforcement.md`. **Still pending:** full immutability (add
-   `s3:PutObject` to the Deny) — deferred until after Follow-up 2's manifest write.
-2. **One-time `_manifest.json`** for the frozen surface ([[0014]] shape) so integrity —
-   not just presence — is verifiable. Low urgency (frozen), high value for the
-   reproducibility story.
+   `notes/adr-0035-s3-enforcement.md`. **Next:** full immutability (add `s3:PutObject`
+   to the Deny) is now unblocked — Follow-up 2's manifest landed 2026-06-26 — apply when
+   ready.
+2. **✅ APPLIED 2026-06-26 — One-time `_manifest.json`** for the frozen surface at
+   `harmonized/core/_manifest.json` (63,339 B; 232 file entries; ADR 0014 shape adapted
+   for a frozen surface — top-level vintage `"frozen"`, git_sha `9cbdb5d` (the 2024 build
+   commit), `frozen_since` 2025-04-21, `object_count` 232, `total_bytes` 29,925,863,035,
+   `inputs` []). Written producer-side (nccs-data-core), verified by round-trip.
+   **Deviation:** `integrity_basis` is **etag+size, not sha256** — full sha256 would
+   require reading the entire ~30 GB of an already delete-protected frozen surface, and
+   219/233 objects use multipart ETags (ETag ≠ MD5). ETag+size detects
+   overwrite/disappearance; per-file sha256 (and `row_count`/`columns`) can be backfilled
+   later without reshaping (recorded in the manifest's `deviations[]`).
 3. **Enumerate exact inventory** (subsector × vintage × file-family, and the V0/V1
    mart-version split) in `core-harmonized-frozen.yml` so drift detection checks
    coverage completeness, not just prefix presence.

@@ -76,9 +76,10 @@ retention:
     confirmed the explicit deny). Applied on the nccs-data-core side via
     read-merge; the two pre-existing public statements (PublicRead,
     PublicListPublishedTiers) were preserved byte-for-byte. s3:PutObject
-    is intentionally NOT yet denied, so the one-time _manifest.json write
-    (Follow-up 2) can still proceed; full immutability (adding
-    s3:PutObject) is a later step after the manifest lands. Runbook:
+    is intentionally NOT yet denied. The one-time _manifest.json write
+    (Follow-up 2) LANDED 2026-06-26 (harmonized/core/_manifest.json), so
+    the full-immutability upgrade (adding s3:PutObject to the Deny) is now
+    unblocked and is the next enforcement step. Runbook:
     notes/adr-0035-s3-enforcement.md.
 
 cadence:
@@ -86,8 +87,17 @@ cadence:
   notes: "Frozen — never rebuilt. Retained as-is."
 
 manifest:
-  path: null  # none today. ADR 0035 Follow-up 2: add a one-time _manifest.json so integrity (not just presence) is verifiable.
+  path: harmonized/core/_manifest.json  # ADR 0035 Follow-up 2 — APPLIED 2026-06-26 (63,339 B; 232 file entries)
   schema_version: 1
+  # integrity_basis: etag+size (NOT sha256). Deliberate deferral: full sha256 would
+  # require reading the entire ~30 GB of a frozen, already delete-protected surface, and
+  # 219/233 objects use multipart ETags (ETag != MD5, i.e. a hash-of-part-hashes).
+  # ETag+size detects any overwrite or disappearance; per-file sha256 (and row_count/
+  # columns) can be backfilled later without reshaping. See the manifest's deviations[].
+  # Shape: ADR 0014 adapted for a frozen surface — top-level vintage "frozen",
+  # git_sha 9cbdb5d (2024 build), frozen_since 2025-04-21, object_count 232,
+  # total_bytes 29,925,863,035, inputs []. Per-file entries {file, bytes, etag,
+  # last_modified}, keyed by path relative to harmonized/core/.
 
 schema:
   source: "harmonized/core/{subsector}/dd/DD-CORE-{CLASS}-HRMN-V1.csv"  # per-subsector dictionary; top-level CORE-HRMN_dd.csv also present
@@ -111,6 +121,9 @@ drift_detection:
   event: ""
   # For a frozen surface, "drift" = an object disappeared or was
   # modified after frozen_since. Either is a guarantee breach to alert on.
+  # Integrity check against the manifest is etag+size, not per-file sha256
+  # (deferred — see manifest.integrity_basis + deviations[]): a changed ETag or
+  # byte-size, or a missing/added path vs the 232 manifest entries, is the signal.
 
 deprecation_window_days: 90
 
@@ -135,4 +148,8 @@ notes: |
      verified live. See `retention.enforcement` and the runbook
      `notes/adr-0035-s3-enforcement.md`. Full immutability (+s3:PutObject)
      still pending — deferred until after the Follow-up 2 manifest write.
-  3. **No `_manifest.json`** — ADR 0035 Follow-up 2 / [[0014-standardize-manifest-shape]].
+  3. **`_manifest.json` — DONE (applied 2026-06-26).** `harmonized/core/_manifest.json`
+     (ADR 0035 Follow-up 2 / [[0014-standardize-manifest-shape]]): 232 file entries,
+     `integrity_basis` etag+size (sha256 deferred — see `manifest:` + the manifest's
+     deviations[]). With the manifest in place, the full-immutability upgrade
+     (add s3:PutObject to the Deny) noted in item #2 is now unblocked.
