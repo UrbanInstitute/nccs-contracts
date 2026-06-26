@@ -77,7 +77,21 @@ schema:
     - {name: n_vintages_with_ntee,       type: int,    nullable: true,  description: "Total vintage-observations carrying an NTEE."}
     - {name: ntee_agreement,             type: string, nullable: false, description: "single (one obs) | unanimous (all agree) | mixed."}
 
-consumers: []  # none pinned yet. Candidates: UrbanInstitute/nccsdata (bundle as lookup), the BMF data catalog (download links), sector-in-brief (universities filter). Register on first pin.
+consumers:
+  - repo: UrbanInstitute/nccs
+    pin: "flat-prefix"          # pins crosswalks/ntee-resolved/ (flat); vintage tracked via _manifest.json, not the path
+    surface: catalogs/catalog-bmf.qmd
+    usage: "download links + column docs"
+    notes: >
+      NCCS public data-catalog website (BMF page). The "NTEE-Resolved Crosswalk"
+      section (UrbanInstitute/nccs PR #88, merged 2026-06-26, live on GitHub
+      Pages) links the canonical S3 copies directly — parquet + csv +
+      _manifest.json under s3://nccsdata/crosswalks/ntee-resolved/, no local
+      mirror — documents the full 18-column schema (transcribed from this
+      contract), the four resolution views, join-by-ein guidance, and renders
+      provenance from _manifest.json. First pin of this contract.
+  # Other candidates not yet pinned: UrbanInstitute/nccsdata (bundle as lookup /
+  # the §4.3 optional-merge, gated on Jesse); sector-in-brief (universities filter).
 
 drift_detection:
   trigger: event
