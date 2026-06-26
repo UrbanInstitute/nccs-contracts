@@ -147,14 +147,39 @@ schema:
   # conventions/ein-format.md for EIN2 <-> ein reconciliation.
 
 consumers:
+  # Registered concrete consumers (ADR 0035 Follow-up 4, evidence-based 2026-06-26).
+  # "Advance notice" before any move/removal goes to the contacts noted below.
+  # This is a LIVING list — add consumers as they surface.
+  - repo: UrbanInstitute/nccs   # the NCCS public data-catalog website
+    pin: "frozen"
+    notes: >
+      CONFIRMED consumer (Urban-owned). The catalog publishes public download
+      links to harmonized/core/ files: catalogs/catalog-core.qmd lists the
+      dictionaries + marts; catalogs/R/core_helpers.R globs
+      ^harmonized/core/{product}/marts/ to build the listing;
+      catalogs/AWS-NCCSDATA.csv snapshots the 233-object prefix. The catalog
+      already labels these "Deprecated / legacy — for reproducibility only,"
+      matching this contract's frozen disposition. Deleting the surface would
+      404 the catalog's legacy section. Advance-notice contact: DST / catalog
+      maintainer (internal).
   - repo: external/NODC-irs990efile-lineage
     pin: "frozen"
     notes: >
-      Research packages associated with the advisory affiliate read
-      harmonized/core/ paths directly and join on EIN2. Not an
-      Urban-controlled repo; the reason the non-deletion guarantee
-      exists. Register concrete consumers here as they are confirmed
-      (ADR 0035 Follow-up 4).
+      External research packages (NODC / irs990efile lineage) read
+      harmonized/core/ paths directly and join on EIN2. Not Urban-controlled and
+      not discoverable in any Urban repo (external, as expected) — the primary
+      reason the non-deletion guarantee exists. Advance-notice channel: the
+      research advisory affiliates (the established consultation channel; see the
+      governance proposal). PROPOSED — confirm the exact contact.
+  # Historical / inactive — NOT active consumers, do NOT gate on these:
+  #   - nccs-dataexplorer-data/R/00_setup.R: only a COMMENTED-OUT `aws s3 sync
+  #     s3://nccsdata/harmonized/core ...`; repo superseded by sector-in-brief-data
+  #     (ADR 0010). Inactive.
+  #   - sector-in-brief-data/NEW_REPO_BOOTSTRAP.md lists `core_harmonized:` in a
+  #     scaffold doc, but sib-data actually consumes processed_legacy/core/
+  #     ([[core-legacy]]). Treat as stale scaffold until verified active.
+  #   - nccs-decision-records + this repo's notes reference the paths as
+  #     documentation examples, not consumption.
 
 drift_detection:
   trigger: cron

@@ -150,5 +150,14 @@ override does not apply (a frozen artifact prolongs no harm).
    ABSENT, marts-only; dd is the irregular `DD-PF-HRMN-V0.csv`, no CLASS token); the
    other four subsectors are V1 across all families. Also corrected the `s3:`
    realized-layout comment + `schema.source` (the pf dictionary exception).
-4. **Register external consumers** as they surface, so "advance notice" has an
-   addressable list.
+4. **Known consumers registered 2026-06-26 (living list).** `core-harmonized-frozen.yml`
+   `consumers:` now records, evidence-based (grep of local repos + org code search):
+   (a) the **NCCS public data-catalog website** (`UrbanInstitute/nccs`) — a CONFIRMED
+   Urban-owned consumer that publishes download links to the surface and already labels
+   it "deprecated, for reproducibility only"; advance-notice → DST / catalog maintainer.
+   (b) the **external NODC / `irs990efile`-lineage** research consumers (not in any Urban
+   repo, as expected for external) — advance-notice channel → the research advisory
+   affiliates (proposed; exact contact to confirm). Inactive/stale refs noted but not
+   gated (`nccs-dataexplorer-data` commented-out sync, superseded by sib-data per ADR
+   0010; a stale `sector-in-brief-data` scaffold ref). Remains a living list — register
+   more as they surface.
