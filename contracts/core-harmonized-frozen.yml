@@ -117,11 +117,14 @@ retention:
     confirmed the explicit deny). Applied on the nccs-data-core side via
     read-merge; the two pre-existing public statements (PublicRead,
     PublicListPublishedTiers) were preserved byte-for-byte. s3:PutObject
-    is intentionally NOT yet denied. The one-time _manifest.json write
-    (Follow-up 2) LANDED 2026-06-26 (harmonized/core/_manifest.json), so
-    the full-immutability upgrade (adding s3:PutObject to the Deny) is now
-    unblocked and is the next enforcement step. Runbook:
-    notes/adr-0035-s3-enforcement.md.
+    is intentionally NOT denied — the one-time _manifest.json write
+    (Follow-up 2) LANDED 2026-06-26, and the full-immutability upgrade
+    (also denying s3:PutObject to block overwrites) was CONSIDERED and
+    DEFERRED by decision 2026-06-26: delete-protection is deemed sufficient
+    and overwrite is guarded by operator discipline (the maintainer will not
+    overwrite the frozen keys). The keys remain technically overwritable;
+    re-apply the PutObject deny later only if a hard no-overwrite guarantee
+    is wanted. Runbook: notes/adr-0035-s3-enforcement.md.
 
 cadence:
   type: on-change
@@ -168,9 +171,9 @@ consumers:
       External research packages (NODC / irs990efile lineage) read
       harmonized/core/ paths directly and join on EIN2. Not Urban-controlled and
       not discoverable in any Urban repo (external, as expected) — the primary
-      reason the non-deletion guarantee exists. Advance-notice channel: the
-      research advisory affiliates (the established consultation channel; see the
-      governance proposal). PROPOSED — confirm the exact contact.
+      reason the non-deletion guarantee exists. Advance-notice contacts
+      (confirmed 2026-06-26): the research advisory affiliates — Jesse Lecy,
+      Lewis Faulk, Mirae Kim ("for now"; update as the affiliate roster changes).
   # Historical / inactive — NOT active consumers, do NOT gate on these:
   #   - nccs-dataexplorer-data/R/00_setup.R: only a COMMENTED-OUT `aws s3 sync
   #     s3://nccsdata/harmonized/core ...`; repo superseded by sector-in-brief-data
@@ -216,10 +219,12 @@ notes: |
      Bucket-policy Deny on s3:DeleteObject + s3:DeleteObjectVersion for
      `harmonized/core/*` (Sid ProtectFrozenHarmonizedCore-ADR0035),
      verified live. See `retention.enforcement` and the runbook
-     `notes/adr-0035-s3-enforcement.md`. Full immutability (+s3:PutObject)
-     still pending — deferred until after the Follow-up 2 manifest write.
+     `notes/adr-0035-s3-enforcement.md`. Full immutability (also denying
+     s3:PutObject) was DEFERRED by decision 2026-06-26 — delete-protection
+     deemed sufficient; overwrite guarded by operator discipline. Re-open
+     only if a hard no-overwrite guarantee is later wanted.
   3. **`_manifest.json` — DONE (applied 2026-06-26).** `harmonized/core/_manifest.json`
      (ADR 0035 Follow-up 2 / [[0014-standardize-manifest-shape]]): 232 file entries,
      `integrity_basis` etag+size (sha256 deferred — see `manifest:` + the manifest's
-     deviations[]). With the manifest in place, the full-immutability upgrade
-     (add s3:PutObject to the Deny) noted in item #2 is now unblocked.
+     deviations[]). (The manifest unblocked the optional full-immutability
+     upgrade in item #2, which was then deferred by decision — see item #2.)
