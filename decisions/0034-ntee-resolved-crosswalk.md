@@ -120,3 +120,11 @@ The 640 MB CSV is gitignored in the producer repo; both files distribute via
 S3 only. The published `_manifest.json` records the two input prefixes and the
 sha256 of `transform_ntee_code.R` + the legacy 5-char lookup, so a change to
 the cleaner or that lookup is visible in published provenance.
+
+**First consumer registered 2026-06-26:** the NCCS public data-catalog website
+(`UrbanInstitute/nccs`, PR #88) added an "NTEE-Resolved Crosswalk" section to
+`catalogs/catalog-bmf.qmd` — linking the canonical S3 copies + the full
+18-column schema and rendering provenance from `_manifest.json`. Registered in
+`contracts/ntee-resolved-crosswalk.yml` `consumers:`. Per ADR 0022, nccs#88
+carried an `ADR 0034` breadcrumb and changed no `catalogs/AWS-*.csv`, so the
+contracts-guard did not fire — the registration is this reconcile.
