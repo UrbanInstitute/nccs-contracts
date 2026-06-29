@@ -8,7 +8,42 @@ Maintenance: update at the **reconcile** step of each task (the three-phase loop
 `CONTRIBUTING.md`), ideally in the same PR as the work. `[where]` tags the repo a task
 executes in. Keep the order = priority order.
 
-_Last updated: 2026-06-26._
+_Last updated: 2026-06-29._
+
+---
+
+## EIN format + Unified BMF — decided 2026-06-29 (record: `notes/ein-format-unified-bmf-decisions-2026-06-29.md`)
+
+**Committed → execute downstream (ADRs drafted; reference them in the Jesse reply):**
+
+| # | Task | Where | Status / notes |
+|---|------|-------|----------------|
+| E1 | Emit additive `ein_prefixed` (`ein-XX-XXXXXXX`) + `EIN2` (`EIN-XX-XXXXXXX`) columns; keep dashed `ein` **unchanged** | `nccs-data-bmf` (Unified BMF + ntee-resolved crosswalk) + `nccs-data-core` (CORE tiers) | **ADR 0036.** Purely additive. Update data dictionaries + `conventions/ein-format.md` (add `ein_prefixed` 6th rendering) + **amend `contracts/ntee-resolved-crosswalk.yml:61`** (amends ADR 0034). Producer emission is net-new; consumer bridge already exists. |
+| E2 | Rename master → **Unified BMF**; non-silent supersession (both live 90 days → prior to retained reachable archive); per-build manifest | `nccs-data-bmf` + contracts | **ADR 0037.** Reconcile `contracts/bmf-master.yml`→`unified-bmf.yml` + `ARCHITECTURE.md`; notify consumers (ADR 0022). Path layout follows the in-flight versioning/`/latest` work. |
+
+**July governance (do NOT decide/draft as settled):**
+
+| # | Task | Notes |
+|---|------|-------|
+| ~~J1~~ | Canonical-format convergence — **DECIDED 2026-06-29: not pursued** | Permanent multi-rendering (ADR 0036). No convergence, no migration, dashed `ein` retained. The `qmd:56` dashed rationale stands (no longer needs superseding). July EIN deferral dropped. |
+| J2 | "Represent all join IDs the same way across files" convention | **Optional** future group topic — NOT a committed item; nothing waits on it. Jesse's broader ID point. |
+| J3 | Giving Tuesday EIN format — **CONFIRM** GT renders bare-9 `XXXXXXXXX` (zero-padded? always 9? prefix?) | Decision 5. Ingestion-normalization (consume + normalize on intake), not output-compat. A *4th* external rendering → evidence for "canonical key + deterministic bridges." **Keep OUT of the Jesse reply.** |
+
+**Flags (governance hygiene, not Jesse-facing now):**
+
+| # | Task | Notes |
+|---|------|-------|
+| F1 | Promote `conventions/ein-format.md` to an ADR-gated / CI-governed surface | Currently outside `adr-required` scope; a format change should be mechanically gated. |
+| F1a | Reconcile the `ein_raw` description + decide its true format | **Inconsistency:** `ein-format.md §1/§4` classify `ein_raw` as the **lossy bare-integer surface** (leading zeros dropped — test vector shows Master BMF `ein_raw = 4` for EIN `000000004`; "never join on it"), but the Master BMF **data dictionary** labels it "Original 9-digit EIN value." Decide: relabel the DD to match the lossy reality, **or** fix `ein_raw` to a character-typed padded-9 so it actually is the 9-digit source (the read-time numeric coercion that drops leading zeros is itself the failure mode Jesse flagged). Surfaced 2026-06-29 while vetting the Jesse reply. |
+| F2 | sector-in-brief-api: adding `ein_prefixed`/`EIN2` response columns is an API-schema version bump | Coordinate ADR 0013/0022/0031. |
+
+**Noted / background:**
+
+| # | Task | Notes |
+|---|------|-------|
+| N1 | Consolidate the two duplicate `transform_ein` formatters (BMF + CORE) | Drift risk. |
+| N2 | nccsdata cache is mtime-only (30-day) — won't see an upstream rename/reformat | Needs manifest/sha or version-tagged path busting. |
+| N3 | nccs-data-efile producer `ein` is padded-9 (already divergent) | Any change = S3 producer-output contract change; must move in lockstep with the API normalizer. |
 
 ---
 
@@ -41,7 +76,7 @@ _Last updated: 2026-06-26._
 
 | # | Task | Notes |
 |---|------|-------|
-| 12 | Draft ADRs as the first July quarterly agenda | The 5 ADR-NEEDED items: master BMF versioning + `/latest`; NTEE backfill into master; modular `_nccs` metadata datasets (ratifies #7/#8); nccsdata optional-merge; quarterly governance cadence + decision-split taxonomy + auto-gen decision doc. |
+| 12 | Draft ADRs as the first July quarterly agenda | The 5 ADR-NEEDED items: master BMF versioning + `/latest`; NTEE backfill into master; modular `_nccs` metadata datasets (ratifies #7/#8); nccsdata optional-merge; quarterly governance cadence + decision-split taxonomy + auto-gen decision doc. **+ EIN cluster: J2 (all-join-IDs, optional) + J3 (Giving Tuesday format confirm); J1 convergence is decided (not pursued).** |
 | 13 | Schedule the July check-in once Jesse responds; bring the decision-split taxonomy draft | — |
 
 ## Background / noted (not urgent)
