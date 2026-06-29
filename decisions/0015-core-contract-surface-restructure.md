@@ -3,7 +3,22 @@
 - **Status:** Accepted (planning; not yet executed)
 - **Date:** 2026-05-21
 - **Deciders:** sole maintainer
-- **Related:** [[0001-s3-as-contract-surface]], [[0005-bmf-unified-superseded-by-master]], [[0010-sector-in-brief-data-replaces-dataexplorer-data]], [[0013-versioned-producer-outputs]], [[0014-standardize-manifest-shape]], [[0016-no-canonical-cross-dataset-merge]]
+- **Related:** [[0001-s3-as-contract-surface]], [[0005-bmf-unified-superseded-by-master]], [[0010-sector-in-brief-data-replaces-dataexplorer-data]], [[0013-versioned-producer-outputs]], [[0014-standardize-manifest-shape]], [[0016-no-canonical-cross-dataset-merge]], [[0035-retain-harmonized-core-frozen-surface]] (corrected by)
+
+> **Correction (2026-06-26, via [[0035-retain-harmonized-core-frozen-surface]]).** This ADR
+> conflated two distinct surfaces. Its retirement of the *intermediate* build tier
+> (`intermediate/core/harmonized/`, written by `R/03_harmonize.R` and promoted to
+> `processed/core/`) is **correct and stands**. But its claims about the *published*
+> `harmonized/core/{subsector}/marts/CORE-…-HRMN-V{N}.csv` surface — that the producer
+> "doesn't write" it (Context §1), that "no analyst, API, dashboard, or sibling repo is
+> supposed to read it" (Decision §1), that it is "a phantom contract no consumer would
+> have honored" (Consequences), and that "no deprecation window applies" (Deprecation
+> window) — are **factually wrong**. That surface is real and populated (2012–2023
+> vintages, written by the 2024 producer `9cbdb5d`), frozen since 2025, and read by
+> external research packages on the `EIN2` key. It is retained and protected as a frozen
+> artifact by [[0035-retain-harmonized-core-frozen-surface]]
+> (`contracts/core-harmonized-frozen.yml`). The original text below is preserved for
+> history; read it through this correction.
 
 ## Context
 
