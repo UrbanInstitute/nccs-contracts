@@ -82,7 +82,7 @@ notes: |
   lives in nccs-data-bmf `R/manifest.R` (`write_manifest()`); this
   producer was the first migrated to it (PR #14, 2026-06-03), emitting
   the ADR 0014 shape with idempotent re-uploads. The other BMF
-  producers ([[bmf-master]], [[bmf-master-geocoded]]) and the core
+  producers ([[unified-bmf]], [[bmf-master-geocoded]]) and the core
   producers are still to be converged onto `R/manifest.R`.
 
   ## Open items
