@@ -1,0 +1,18 @@
+# Overview {.unnumbered}
+
+This is the documentation site for **[`nccs-contracts`](https://github.com/UrbanInstitute/nccs-contracts)** — the contract surface for the NCCS data system at the Urban Institute.
+
+The NCCS data system is a multi-repo system held together by a single shared surface: artifacts published to S3, and the contracts and decisions that describe them. **Producers** (`nccs-data-bmf`, `nccs-data-core`, `nccs-data-efile`) publish parquet/CSV to S3; **consumers** (the `nccsdata` R package, an API, a dashboard, the sector-in-brief data pipeline) read those artifacts and compose joins per their own use cases. There is no canonical cross-dataset merge — consumers own their joins (ADR 0016). Code dependencies between sibling repos are intentionally avoided; **S3 is the only inter-repo contract surface** (ADR 0001).
+
+This repo describes that contract surface — it has no runtime of its own. It is the spine: the place where the shape of every published artifact, the conventions producers and consumers agree on, and the *why* behind every load-bearing call are written down.
+
+## How this site is organized
+
+- **[Architecture](architecture.qmd)** — the current-state system: the producer/consumer pattern, the S3 spine, the derived and service tiers, cadence and versioning, and the agentic-operations roadmap. Start here.
+- **[The Reporting Cycle](protocol.qmd)** — the cross-repo coordination protocol (ADR 0038): how a decision made here is executed downstream and reconciled back, the ADR Status state machine, the escalation gate, and the sitrep up-channel.
+- **[Designing for Agents](agents.qmd)** — the system's old → current → complete arc as a worked example of building legibility (contracts + decision records) before autonomy.
+- **[Decision Records](decisions.qmd)** — the full, always-current index of ADRs.
+
+## Source of truth
+
+This site is **generated from the repo** — every page is rendered from the same Markdown that lives in `nccs-contracts` (`ARCHITECTURE.md`, the ADRs in `decisions/`, and the design essay in `docs/`). It is a view onto the contract surface, not a second copy of it. To change what it says, change the source and the site re-renders.
