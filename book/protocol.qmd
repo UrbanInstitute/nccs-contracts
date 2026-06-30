@@ -1,0 +1,5 @@
+{{< include ../decisions/0038-cross-repo-coordination-protocol.md >}}
+
+---
+
+*The procedure that operationalizes this protocol — the three-phase loop, ADR breadcrumbs, the reconcile checklist, and when to amend vs. write a new ADR — lives in [`CONTRIBUTING.md`](https://github.com/UrbanInstitute/nccs-contracts/blob/main/CONTRIBUTING.md).*

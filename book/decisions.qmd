@@ -1,0 +1,9 @@
+# Decision Records {.unnumbered}
+
+Every load-bearing call in the NCCS data system is recorded as an Architecture Decision Record (ADR) in [`decisions/`](https://github.com/UrbanInstitute/nccs-contracts/tree/main/decisions). The architecture description captures the *current state*; the ADRs preserve the *why* — including the alternatives that were rejected and, after execution, how reality diverged from the plan.
+
+The **Status** column reflects the coordination protocol's state machine (see [The Reporting Cycle](protocol.qmd)): `Accepted` and `Executing` are open loops; `Reconciled` means the downstream work landed and the contracts caught up.
+
+The table below is regenerated from the ADR files on every build, so it is always current.
+
+{{< include _adr-index.md >}}
