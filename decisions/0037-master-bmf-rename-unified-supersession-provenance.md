@@ -1,6 +1,6 @@
 # 0037 — Master BMF → Unified BMF: Rename, Non-Silent Supersession, Per-Build Provenance
 
-- **Status:** Accepted (committed) — implementation pending in nccs-data-bmf; reconcile contracts + ARCHITECTURE on execution
+- **Status:** Accepted (open loop; BACKLOG E2) — implementation pending in nccs-data-bmf; reconcile contracts + ARCHITECTURE on execution
 - **Date:** 2026-06-29
 - **Deciders:** sole maintainer (DST), with advisory input from Jesse Lecy
 - **Related:** [[0005-bmf-unified-superseded-by-master]] (the rename-to-master this **partially reverses**, and the silent-move pattern this corrects), [[0033-deprecation-window-policy-and-critical-bug-override]] (the 90-day window), [[0013-versioned-producer-outputs]] + [[0014-standardize-manifest-shape]] (the manifest/retention this executes), [[0036-ein-coercion-safety-additive-columns]] (the additive EIN columns the renamed artifact carries), [[0016-no-canonical-cross-dataset-merge]] (`ein` is the consumer-composed join key), [[0001-s3-as-contract-surface]], [[0022-cross-repo-contract-change-guard]] (the producer reconcile)

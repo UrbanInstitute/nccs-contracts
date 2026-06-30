@@ -250,6 +250,28 @@ amended — the org-wide property-keyed ruleset was abandoned as it needs
 org-owner rights; `scripts/apply-contract-surface-ruleset.sh`). Repos the
 maintainer doesn't admin keep the guard advisory until admin is obtained.
 
+### The reporting cycle — Loop 3's human layer (ADR 0038)
+
+The agent loops above are the *future* automated floor. The loop that runs
+**today**, in Claude sessions, is the human/session reconcile cycle that
+[[0038-cross-repo-coordination-protocol]] formalizes — and reconcile lag in it is
+the system's main coordination pain. Three roles:
+
+- **Commander** — a `nccs-contracts` session: owns the ADR/contract surface,
+  decides, drafts ADRs, reviews escalations, runs reconcile.
+- **Executor** — a sibling-repo session under the maintainer's steering:
+  implements an `Accepted` ADR, leaves breadcrumbs, opens a PR, reports up.
+- **Courier** — the maintainer: carries the go-signal down and escalations up.
+
+The mechanics: ADRs carry a **Status state machine** (`Proposed` → `Accepted` →
+`Executing` → `Reconciled`, plus `Amended`/`Superseded`) whose two middle states
+are open loops; an **escalation gate** sends any contract-shape decision back here
+before it lands (flagged `needs-ADR-review` in the PR sitrep); and the **sitrep**
+(a fixed PR-description shape, read via `gh`) is the up-channel. The
+`/reconcile-status` command sweeps open-loop ADRs against downstream PRs to make
+lag visible. Procedure lives in `CONTRIBUTING.md`. A downstream escalation hook
+and a Status-validating CI check are the deferred Tier-2 machinery (ADR 0038 §5).
+
 ### What the agents read
 
 - `contracts/*.yml` — source of truth for schemas, paths, cadence,

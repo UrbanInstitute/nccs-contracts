@@ -8,18 +8,25 @@ Maintenance: update at the **reconcile** step of each task (the three-phase loop
 `CONTRIBUTING.md`), ideally in the same PR as the work. `[where]` tags the repo a task
 executes in. Keep the order = priority order.
 
-_Last updated: 2026-06-29._
+This file is the **command board** of the reporting cycle (ADR 0038): every
+open-loop ADR (`Accepted`/`Executing`) should map to a row here. Run
+`/reconcile-status` at boot to cross-check the board against downstream PRs and
+catch reconcile lag.
+
+_Last updated: 2026-06-30._
 
 ---
 
 ## EIN format + Unified BMF — decided 2026-06-29 (record: `notes/ein-format-unified-bmf-decisions-2026-06-29.md`)
 
-**Committed → execute downstream (ADRs drafted; reference them in the Jesse reply):**
+**Committed → execute downstream — GREEN-LIT: Jesse confirmed 2026-06-30** (consumer
+sign-off on both calls — `EIN2` prefix "saves me a lot of headache" + "in favor of
+retaining the Unified BMF name"; ADR 0022 consumer-notification obligation satisfied):**
 
 | # | Task | Where | Status / notes |
 |---|------|-------|----------------|
-| E1 | Emit additive `ein_prefixed` (`ein-XX-XXXXXXX`) + `EIN2` (`EIN-XX-XXXXXXX`) columns; keep dashed `ein` **unchanged** | `nccs-data-bmf` (Unified BMF + ntee-resolved crosswalk) + `nccs-data-core` (CORE tiers) | **ADR 0036.** Purely additive. Update data dictionaries + `conventions/ein-format.md` (add `ein_prefixed` 6th rendering) + **amend `contracts/ntee-resolved-crosswalk.yml:61`** (amends ADR 0034). Producer emission is net-new; consumer bridge already exists. |
-| E2 | Rename master → **Unified BMF**; non-silent supersession (both live 90 days → prior to retained reachable archive); per-build manifest | `nccs-data-bmf` + contracts | **ADR 0037.** Reconcile `contracts/bmf-master.yml`→`unified-bmf.yml` + `ARCHITECTURE.md`; notify consumers (ADR 0022). Path layout follows the in-flight versioning/`/latest` work. |
+| E1 | Emit additive `ein_prefixed` (`ein-XX-XXXXXXX`) + `EIN2` (`EIN-XX-XXXXXXX`) columns; keep dashed `ein` **unchanged** | `nccs-data-bmf` (Unified BMF + ntee-resolved crosswalk) + `nccs-data-core` (CORE tiers) | **ADR 0036** (`Accepted`, open loop). Purely additive. Update data dictionaries + `conventions/ein-format.md` (add `ein_prefixed` 6th rendering) + **amend `contracts/ntee-resolved-crosswalk.yml:61`** (amends ADR 0034). Producer emission is net-new; consumer bridge already exists. Execute in a `nccs-data-bmf` session; report back via sitrep (ADR 0038). |
+| E2 | Rename master → **Unified BMF**; non-silent supersession (both live 90 days → prior to retained reachable archive); per-build manifest | `nccs-data-bmf` + contracts | **ADR 0037** (`Accepted`, open loop). Reconcile `contracts/bmf-master.yml`→`unified-bmf.yml` + `ARCHITECTURE.md`; notify consumers (ADR 0022). Path layout follows the in-flight versioning/`/latest` work. |
 
 **July governance (do NOT decide/draft as settled):**
 
@@ -48,6 +55,8 @@ _Last updated: 2026-06-29._
 ---
 
 ## ✅ Recently shipped (so we don't redo)
+
+- **Cross-repo coordination protocol (the reporting cycle)** — **ADR 0038** + `CONTRIBUTING.md` (Status state machine, escalation gate, sitrep up-channel), `.github/PULL_REQUEST_TEMPLATE.md`, `/reconcile-status` lag-sweep command, README/ARCHITECTURE/CLAUDE wiring. Tier 0 + Tier 1. (Tier 2 — downstream escalation hook + Status-validating CI — deferred, conditional.)
 
 - **EIN ↔ EIN2 bridge** — `nccsdata::nccs_ein_to_ein2()` / `nccs_ein2_to_ein()` (nccsdata PR #22) + spec `conventions/ein-format.md` (nccs-contracts PR #40). Both merged.
 - **Harmonized CORE retained-frozen artifact** — ADR 0035 + `contracts/core-harmonized-frozen.yml` (PR #41); FU1 S3 delete-protection applied, FU2 `_manifest.json`, FU3 inventory, FU4 consumers (Jesse Lecy / Lewis Faulk / Mirae Kim as external notice contacts) (PR #42). Full-immutability `s3:PutObject` deny **deferred by decision**. All merged.
