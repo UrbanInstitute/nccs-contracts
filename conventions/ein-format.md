@@ -24,12 +24,13 @@ conversions between them, validation rules, and shared test vectors.
 
 ## 1. The formats in the wild (all verified against live S3, 2026-06-26)
 
-A US EIN is exactly **9 digits**. The same EIN appears in five surface renderings:
+A US EIN is exactly **9 digits**. The same EIN appears in six surface renderings:
 
 | Name | Pattern | Example | Where it appears |
 |---|---|---|---|
 | **`ein`** (canonical clean) | `^\d{2}-\d{7}$` | `04-2104327` | new Master BMF, new CORE, ntee-resolved crosswalk, geocoded master |
-| **`EIN2`** (legacy/NODC key) | `^EIN-\d{2}-\d{7}$` | `EIN-04-2104327` | harmonized CORE marts, Unified BMF, NODC `efile_v2_1` (website e-file) |
+| **`ein_prefixed`** (legible coercion-safe key) | `^ein-\d{2}-\d{7}$` | `ein-04-2104327` | additive on the Unified BMF + new CORE + ntee-resolved crosswalk (ADR 0036); lowercase `ein-` prefix is provably-text |
+| **`EIN2`** (legacy/NODC key) | `^EIN-\d{2}-\d{7}$` | `EIN-04-2104327` | harmonized CORE marts, Unified BMF, NODC `efile_v2_1` (website e-file); additive on the new products too (ADR 0036) |
 | **padded-9** | `^\d{9}$` | `042104327` | raw legacy CORE/BMF, Phase-0 e-file `ein`, NODC `ORG_EIN` |
 | **bare integer** (lossy surface) | `^\d{1,9}$` | `42104327` | Unified BMF col-2 `EIN`, Master BMF `ein_raw` — leading zeros dropped |
 | **9-digit core** (internal) | `^\d{9}$` | `042104327` | not published; the normalization target below |
@@ -71,8 +72,14 @@ Let `c = core(x)`, with `aa = c[1:2]`, `bbbbbbb = c[3:9]`.
 | Function | Output | Rule |
 |---|---|---|
 | → `ein` | `aa-bbbbbbb` | `paste0(aa, "-", bbbbbbb)` |
-| → `EIN2` | `EIN-aa-bbbbbbb` | `paste0("EIN-", aa, "-", bbbbbbb)` |
+| → `ein_prefixed` | `ein-aa-bbbbbbb` | `paste0("ein-", ein)` (i.e. `paste0("ein-", aa, "-", bbbbbbb)`) |
+| → `EIN2` | `EIN-aa-bbbbbbb` | `paste0("EIN-", ein)` (i.e. `paste0("EIN-", aa, "-", bbbbbbb)`) |
 | → padded-9 | `aabbbbbbb` | `c` |
+
+Both `ein_prefixed` and `EIN2` are formed by prepending a literal text prefix to the
+**already-dashed** canonical `ein` — they carry two dashes total
+(`ein-04-2104327`, `EIN-04-2104327`). Producer reference helpers:
+`nccs-data-bmf/R/ein.R::ein_to_prefixed()` / `ein_to_ein2()` (§6).
 
 The two headline helpers `nccsdata` ships (`nccsdata/R/nccs_ein_bridge.R`, PR #22 —
 both route through one internal `.ein_core()` implementing §2 exactly):
@@ -125,12 +132,12 @@ Both implementations (producer `transform_ein`, consumer `nccs_ein_*`) MUST sati
 these. Examples are drawn from live data so they double as provenance. Includes a
 leading-zero case (the one that breaks naive joins).
 
-| 9-digit core | `ein` | `EIN2` | padded-9 | bare integer | source seen |
-|---|---|---|---|---|---|
-| `042104327` | `04-2104327` | `EIN-04-2104327` | `042104327` | `42104327` | Unified BMF |
-| `363686904` | `36-3686904` | `EIN-36-3686904` | `363686904` | `363686904` | NODC `efile_v2_1` HEADER |
-| `382787387` | `38-2787387` | `EIN-38-2787387` | `382787387` | `382787387` | harmonized CORE mart |
-| `000000004` | `00-0000004` | `EIN-00-0000004` | `000000004` | `4` | Master BMF `ein_raw` |
+| 9-digit core | `ein` | `ein_prefixed` | `EIN2` | padded-9 | bare integer | source seen |
+|---|---|---|---|---|---|---|
+| `042104327` | `04-2104327` | `ein-04-2104327` | `EIN-04-2104327` | `042104327` | `42104327` | Unified BMF |
+| `363686904` | `36-3686904` | `ein-36-3686904` | `EIN-36-3686904` | `363686904` | `363686904` | NODC `efile_v2_1` HEADER |
+| `382787387` | `38-2787387` | `ein-38-2787387` | `EIN-38-2787387` | `382787387` | `382787387` | harmonized CORE mart |
+| `000000004` | `00-0000004` | `ein-00-0000004` | `EIN-00-0000004` | `000000004` | `4` | Master BMF `ein_raw` |
 
 Round-trip assertions:
 - `nccs_ein_to_ein2("04-2104327") == "EIN-04-2104327"`
@@ -154,7 +161,18 @@ should be checked against the same rows).
 
 - **Producer (definition of `ein`):** `nccs-data-bmf/R/ein.R::transform_ein`
   (strip non-digits → zfill 9 → dash after position 2). The canonical `ein` published by
-  every new product is produced here.
+  every new product is produced here. `transform_ein` itself emits only `ein` and
+  `ein_raw` — it is **not** modified by ADR 0036.
+- **Producer (`ein_prefixed` / `EIN2` emission, ADR 0036):** these are emitted **at the
+  aggregate/derive layer**, not in `transform_ein` (which would push them onto the monthly
+  `processed/bmf/` artifact, out of ADR 0036 scope). On the Unified BMF they are added in
+  the `master_bmf_builder.R` final SELECT as a SQL mirror of the helpers
+  (`'ein-' || ein`, `'EIN-' || ein`); on the ntee-resolved crosswalk via
+  `scripts/build_ntee_resolved_crosswalk.R` calling the helpers directly. The reference
+  formatters are `nccs-data-bmf/R/ein.R::ein_to_prefixed()` / `ein_to_ein2()` — both
+  prepend a literal prefix to the unchanged dashed `ein` and are NA-preserving. The
+  `nccs-data-core` twin MUST emit byte-identical strings (ADR 0036 N1); the SQL build
+  carries a cross-reference comment to keep the two from drifting.
 - **Consumer (shipped 2026-06-26):** `nccsdata/R/nccs_ein_bridge.R` exports
   `nccs_ein_to_ein2()` / `nccs_ein2_to_ein()`, both routing through one internal
   `.ein_core()` that implements §2 exactly (strip non-digits → reject >9 → left-zero-pad
@@ -169,16 +187,27 @@ should be checked against the same rows).
 
 ## 7. Why this is bridged by reformat, not a crosswalk
 
-`EIN2` ≡ `"EIN-" + ein` and padded-9 ≡ `gsub("-","",ein)` — all five surfaces are
-bijective renderings of the same 9-digit integer. So the legacy (`EIN2`) and new (`ein`)
-ecosystems reconcile by **deterministic string reformat**; no published lookup/crosswalk
-is needed or exists. This is the protection a research consumer wants: the two ID
+`ein_prefixed` ≡ `"ein-" + ein`, `EIN2` ≡ `"EIN-" + ein`, and padded-9 ≡
+`gsub("-","",ein)` — all six surfaces are bijective renderings of the same 9-digit
+integer. So the legacy (`EIN2`) and new (`ein` / `ein_prefixed`) ecosystems reconcile by
+**deterministic string reformat**; no published lookup/crosswalk is needed or exists. This is the protection a research consumer wants: the two ID
 conventions are formally, losslessly reconcilable, and now documented as such.
 
 ---
 
 ## Changelog
 
+- **2026-06-30 — `ein_prefixed` added as the sixth rendering (ADR 0036, E1).** Producer
+  side shipped in `nccs-data-bmf` PR #28 (commit `fd0b366`): the Unified BMF and the
+  ntee-resolved crosswalk now emit the additive `ein_prefixed` (`ein-XX-XXXXXXX`) +
+  `EIN2` (`EIN-XX-XXXXXXX`) columns, derived from the **unchanged** canonical `ein` at the
+  derive layer (`master_bmf_builder.R` SELECT + `build_ntee_resolved_crosswalk.R`); the
+  reference helpers `ein_to_prefixed()` / `ein_to_ein2()` live in `R/ein.R`. `transform_ein`
+  is unchanged. The `ein_raw` bare-integer surface is **unchanged** — ADR 0036's F1a was
+  resolved by **relabel** (DD now describes the lossy reality), not retype, so the
+  contracted shape of `ein_raw` (§1, §5) holds. The CORE-tier twin is **also
+  shipped** (nccs-data-core PR #11, `f94d21e`, OPEN) with byte-identical helpers
+  (verified). §1/§3/§5/§6/§7 updated.
 - **2026-06-26 — spec'd → implemented.** Spec authored; consumer impl shipped
   (`nccsdata/R/nccs_ein_bridge.R`, lenient mode, [PR #22](https://github.com/UrbanInstitute/nccsdata/pull/22))
   and the §5 vectors encoded as `nccsdata` tests. Producer impl (`transform_ein`)

@@ -166,7 +166,7 @@ notes: |
   [[bmf-master-geocoded]] `geo_*` fields). This is the canonical
   definition for "how many active nonprofits in place X, year Y."
 
-  It will NOT match a count taken straight from [[bmf-master]] /
+  It will NOT match a count taken straight from [[unified-bmf]] /
   [[bmf-master-geocoded]] that filters on `last_year_in_bmf` (the last
   *vintage* an EIN was observed) and/or the `state_marts` partition key
   `org_addr_state` (the *mailing* state). Both gaps are by design, not

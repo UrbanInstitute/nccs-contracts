@@ -18,7 +18,9 @@ description: >
   (motivating case: Carnegie Mellon 25-0969449 — NULL in current, B43 in
   legacy). Published as parquet (machine contract) + CSV mirror + ADR 0014
   _manifest.json. Consumers join by ein and pick the resolution rule.
-  See [[0034-ntee-resolved-crosswalk]].
+  Carries the additive coercion-safe EIN renderings ein_prefixed + EIN2
+  alongside the canonical ein (ADR 0036, amends ADR 0034 — purely additive).
+  See [[0034-ntee-resolved-crosswalk]] and [[0036-ein-coercion-safety-additive-columns]].
 
 producer:
   repo: UrbanInstitute/nccs-data-bmf
@@ -56,9 +58,12 @@ manifest:
 schema:
   source: inline
   # One row per EIN (universe = any EIN carrying an NTEE in >=1 vintage).
-  # ~3,613,958 rows. Columns match build_ntee_resolved_crosswalk.R setcolorder().
+  # ~3,613,958 rows × 20 columns. Columns match build_ntee_resolved_crosswalk.R
+  # setcolorder(): ein, ein_prefixed, EIN2 are the first three (ADR 0036).
   columns:
-    - {name: ein,                        type: string, nullable: false, description: "Formatted EIN (XX-XXXXXXX) — join key."}
+    - {name: ein,                        type: string, nullable: false, description: "Formatted EIN (XX-XXXXXXX) — canonical join key, unchanged."}
+    - {name: ein_prefixed,               type: string, nullable: false, description: "Additive coercion-safe key: 'ein-' + ein (ein-XX-XXXXXXX), lowercase-prefixed. ADR 0036; emitted via R/ein.R::ein_to_prefixed()."}
+    - {name: EIN2,                        type: string, nullable: false, description: "Additive legacy-compatibility alias: 'EIN-' + ein (EIN-XX-XXXXXXX), legacy/NODC format. ADR 0036; emitted via R/ein.R::ein_to_ein2()."}
     - {name: ntee_current,               type: string, nullable: true,  description: "Cleaned NTEE-CC from the latest current vintage; NA if never in current or IRS-NULLed."}
     - {name: ntee_current_subsector,     type: string, nullable: true,  description: "NTEEv2 subsector (e.g. UNI/HOS/EDU) for the current code."}
     - {name: ntee_current_nteev2,        type: string, nullable: true,  description: "Full NTEEv2 code for the current code."}
@@ -87,9 +92,13 @@ consumers:
       section (UrbanInstitute/nccs PR #88, merged 2026-06-26, live on GitHub
       Pages) links the canonical S3 copies directly — parquet + csv +
       _manifest.json under s3://nccsdata/crosswalks/ntee-resolved/, no local
-      mirror — documents the full 18-column schema (transcribed from this
-      contract), the four resolution views, join-by-ein guidance, and renders
-      provenance from _manifest.json. First pin of this contract.
+      mirror — documents the schema (transcribed from this contract), the four
+      resolution views, join-by-ein guidance, and renders provenance from
+      _manifest.json. First pin of this contract.
+      RECONCILE 2026-06-30 (ADR 0036): the artifact was republished live with two
+      additive columns (ein_prefixed, EIN2) — now 20, was 18. Purely additive, so
+      no break, but the website section still documents 18 columns; advance notice
+      owed so it adds the two EIN renderings. Tracked in the ADR 0036 consumer notice.
   # Other candidates not yet pinned: UrbanInstitute/nccsdata (bundle as lookup /
   # the §4.3 optional-merge, gated on Jesse); sector-in-brief (universities filter).
 
@@ -101,9 +110,17 @@ drift_detection:
 deprecation_window_days: 90
 
 notes: |
+  AMENDED 2026-06-30 (ADR 0036, amends ADR 0034): gained two additive columns,
+  ein_prefixed + EIN2 (positions 2-3), derived from the unchanged canonical ein.
+  Republished live in nccs-data-bmf PR #28 (commit fd0b366): 3,613,958 rows × 20
+  cols, ein byte-identical; CMU 25-0969449 -> ein-25-0969449 / EIN-25-0969449 with
+  NTEE data preserved. Path unchanged, so fully reconciled (no path ratification
+  needed — contrast the Unified BMF rename in ADR 0037). The ein-format inline pin
+  this contract carries (the ein column) is the one ADR 0036 amends.
+
   Authored against the live artifact and producer code on 2026-06-24 per
   [[0034-ntee-resolved-crosswalk]]. Published by nccs-data-bmf; the master
-  ([[bmf-master]] / [[bmf-master-geocoded]]) is NOT modified — NTEE fields are a
+  ([[unified-bmf]] / [[bmf-master-geocoded]]) is NOT modified — NTEE fields are a
   consumer-composed join on `ein` (ADR 0016), not master columns.
 
   ## Why this artifact exists
