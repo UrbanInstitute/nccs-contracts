@@ -1,6 +1,6 @@
 # 0034 — NTEE-Resolved Crosswalk (per-EIN, cross-vintage)
 
-- **Status:** Accepted — built & first-published 2026-06-24 (nccs-data-bmf `50c4d08` build/publish, `1e1290d` docs+contract)
+- **Status:** Accepted — built & first-published 2026-06-24 (nccs-data-bmf `50c4d08` build/publish, `1e1290d` docs+contract). **Amended by [[0036-ein-coercion-safety-additive-columns]] (2026-06-30):** the crosswalk gained two additive columns (`ein_prefixed`, `EIN2`) and was republished live (now 20 cols); the inline `ein`-format pin this ADR carries is what 0036 amends. Shipped in nccs-data-bmf PR #28 (`fd0b366`, OPEN) — advances to fully `Reconciled` on that merge.
 - **Date:** 2026-06-17
 - **Deciders:** sole maintainer
 - **Related:** [[0032-ntee-cleaner-university-code-loss]] (the fix this completes), [[0016-no-canonical-cross-dataset-merge]] (consumer-composes; why a separate artifact, not a master column), [[0014-standardize-manifest-shape]] (manifest), [[0001-s3-as-contract-surface]] (S3 path is the contract), [[0022-cross-repo-contract-change-guard]] (this new surface runs through the guard)

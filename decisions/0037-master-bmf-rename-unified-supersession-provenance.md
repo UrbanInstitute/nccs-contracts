@@ -1,6 +1,6 @@
 # 0037 — Master BMF → Unified BMF: Rename, Non-Silent Supersession, Per-Build Provenance
 
-- **Status:** Accepted (open loop; BACKLOG E2) — implementation pending in nccs-data-bmf; reconcile contracts + ARCHITECTURE on execution
+- **Status:** Reconciled (partial, 2026-06-30) — see Outcome; Executing (Unified BMF S3 publish pending). Amended 2026-06-30 (§5 path layout pinned: `unified/bmf/` + `bmf_unified`, INTERIM flat). Code + contracts/ARCHITECTURE reconciled against nccs-data-bmf PR #28 (commit fd0b366); the public publish is gated on the producer adopting the ratified prefix.
 - **Date:** 2026-06-29
 - **Deciders:** sole maintainer (DST), with advisory input from Jesse Lecy
 - **Related:** [[0005-bmf-unified-superseded-by-master]] (the rename-to-master this **partially reverses**, and the silent-move pattern this corrects), [[0033-deprecation-window-policy-and-critical-bug-override]] (the 90-day window), [[0013-versioned-producer-outputs]] + [[0014-standardize-manifest-shape]] (the manifest/retention this executes), [[0036-ein-coercion-safety-additive-columns]] (the additive EIN columns the renamed artifact carries), [[0016-no-canonical-cross-dataset-merge]] (`ein` is the consumer-composed join key), [[0001-s3-as-contract-surface]], [[0022-cross-repo-contract-change-guard]] (the producer reconcile)
@@ -47,7 +47,35 @@ columns** per [[0036-ein-coercion-safety-additive-columns]].
 row counts); prior builds are retained, so every version stays **citable and
 reproducible**. This executes [[0013-versioned-producer-outputs]] /
 [[0014-standardize-manifest-shape]] and is consistent with the in-flight
-versioning + `/latest` direction (the exact path layout follows that work).
+versioning + `/latest` direction.
+
+**Amended 2026-06-30 — path layout pinned** (this §5 originally deferred the
+exact layout). Ratified at reconcile, against the producer's staged defaults in
+nccs-data-bmf PR #28:
+
+- **Prefix:** `unified/bmf/` (bucket `nccsdata`). A clean top-segment swap of the
+  retiring `master/bmf/` — same structure, so consumers re-pin by changing only
+  `master` → `unified`. This **differs from the producer's staged
+  `UNIFIED_S3_PREFIX="unified/"`**; the producer must set it to `unified/bmf/`
+  before the first publish. (Rationale: preserve the `/bmf/` segment, parallel to
+  `master/bmf/` and to the `bmf_master`/`bmf_unified` stems, and leave namespace
+  room for a future `unified/` sibling.)
+- **Filename stem:** `bmf_unified` (snake_case, product-first, parallel to
+  `bmf_master`). Matches the staged `UNIFIED_STEM` — no producer change. The
+  historical uppercase/versioned `UNIFIED_BMF_V1.2` form is **not** adopted; the
+  community "Unified BMF" name lives in the docs/description, not the filename.
+- **Versioning:** **INTERIM flat-now** — publish flat at
+  `unified/bmf/bmf_unified.{parquet,csv}` (+ dictionary, quality report,
+  `_manifest.json`). The versioned `{vintage}/` subdir + `latest/` mirror is
+  deferred to the in-flight [[0013-versioned-producer-outputs]] work, which
+  migrates this and [[bmf-master-geocoded]] in lockstep; vintage is carried in the
+  manifest meanwhile.
+
+**Scope:** the rename targets the **un-geocoded** community Unified BMF
+(`master/bmf/` → `unified/bmf/`). The geocoded extension (`geocoding/bmf-master/`,
+contract `bmf-master-geocoded`) is **not** renamed by this ADR; its only coupling
+is that its producer reads this artifact as input, a cutover detail it switches
+from `master/bmf/` to `unified/bmf/` during the dual-live window.
 
 ## Consequences
 
@@ -73,7 +101,45 @@ to consumers.
 
 ## Outcome
 
-_Pending implementation in nccs-data-bmf: rename/supersede with both paths live
-for 90 days, attach the per-build manifest, carry the ADR 0036 columns, then
-reconcile `contracts/` + `ARCHITECTURE.md` and notify consumers. Update with the
-build/publish commit and the live `unified` layout when executed._
+Reconciled **partial, 2026-06-30** against nccs-data-bmf PR #28 (commit
+`fd0b366`, branch `feat/ntee-resolved-crosswalk`).
+
+**Shipped (code).**
+- `run_master_pipeline.R` publishes under `UNIFIED_S3_PREFIX` / `UNIFIED_STEM`
+  (staged `unified/` + `bmf_unified`) and orchestrates the non-silent
+  supersession: `MASTER_LEGACY_S3_PREFIX="master/bmf/"` stays reachable until
+  `MASTER_DEPRECATION_CUTOVER="2026-09-28"` (90 days from 2026-06-30), then
+  archives — not deleted. The pending-ratification gate was flagged correctly in
+  the sitrep (`needs-ADR-review`) and the constants carry inline flags.
+- `write_master_outputs()` now emits a per-build ADR 0014 `_manifest.json` via
+  `R/manifest.R` (commit, input hashes/ETags, row counts, columns). **This closes
+  the long-standing `unified-bmf` manifest gap (former `bmf-master` Open item #1).**
+- N2 (nccsdata mtime-only cache): the producer chose the **manifest sha256** as
+  the cache-bust signal; consumers re-pin on manifest change / version-tagged path.
+
+**Shipped (contracts, this reconcile).**
+- §5 amended to pin the layout: ratified **`unified/bmf/` + `bmf_unified`, INTERIM
+  flat** (see Decision). The ratified prefix **differs from the staged
+  `unified/`** — flagged back to the Executor.
+- `contracts/bmf-master.yml` renamed → `contracts/unified-bmf.yml` (`name:
+  unified-bmf`), repointed to `unified/bmf/`, manifest path set, EIN columns +
+  non-silent supersession recorded. Live `[[bmf-master]]` cross-references in
+  `sector-in-brief.yml` / `bmf-legacy.yml` / `core-990.yml` updated to
+  `[[unified-bmf]]` (and their manifest-gap notes corrected — the Unified BMF is
+  no longer a manifest-less peer).
+- `ARCHITECTURE.md` system map names the Unified BMF + the supersession.
+
+**Diverged or pending.**
+- **Unified BMF S3 publish is NOT done.** The producer staged the build but did
+  not publish to public S3 (gated on this ratification). Next: the Executor sets
+  `UNIFIED_S3_PREFIX="unified/bmf/"` and runs `R/run_master_pipeline.R` on a
+  capable host (`--profile thiya`), which dual-writes the new path + retains
+  `master/bmf/`. **ADR stays `Executing` until that publish lands.**
+- **90-day archive key not yet pinned.** The exact post-cutover archive location
+  under `s3://nccs-data-archive/superseded/` is not set in producer code; pin it
+  in `unified-bmf.yml` at the 2026-09-28 cutover reconcile.
+- **Geocoded master + state marts** (`bmf-master-geocoded`) not renamed (out of
+  scope); the EIN columns flow when those rebuild from the renamed Unified master.
+- **Consumer notice** for the path move (nccsdata, website join instructions / BMF
+  catalog, sector-in-brief API) drafted at this reconcile — owed before the
+  publish (ADR 0037 §3, architecture §1).

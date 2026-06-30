@@ -1,6 +1,6 @@
 # 0036 — EIN Coercion-Safety via Additive Columns (`ein_prefixed` + `EIN2`; canonical `ein` unchanged)
 
-- **Status:** Accepted (open loop; BACKLOG E1) — implementation pending in nccs-data-bmf + nccs-data-core. Convergence to a single canonical key / retirement of the dashed `ein` is **not pursued**; the four-rendering design below is the standing approach (updated 2026-06-29 — the earlier July deferral of the convergence question was dropped).
+- **Status:** Reconciled (partial, 2026-06-30) — see Outcome; Executing (BMF Unified publish + CORE/BMF PR merges pending). BMF scope shipped in nccs-data-bmf PR #28 (commit fd0b366): the ntee-resolved crosswalk is republished live with the columns; the Unified BMF carries them but its publish is staged (gated on the ADR 0037 path ratification). The nccs-data-core twin is **also shipped** — nccs-data-core PR #11 (`f94d21e`, OPEN), helpers verified byte-identical; CORE-tier contract reconcile follows on that merge. Convergence to a single canonical key / retirement of the dashed `ein` is **not pursued**; the four-rendering design below is the standing approach (updated 2026-06-29 — the earlier July deferral of the convergence question was dropped).
 - **Date:** 2026-06-29
 - **Deciders:** sole maintainer (DST), with advisory input from Jesse Lecy (taxonomy/research affiliate)
 - **Related:** [[0034-ntee-resolved-crosswalk]] (**amended** — the crosswalk gains the two columns; its inline `ein` format pin is touched), [[0016-no-canonical-cross-dataset-merge]] (consumers compose joins on `ein`; these are courtesy columns, not a merge), [[0033-deprecation-window-policy-and-critical-bug-override]] (the 90-day window owed to any *future* `ein` format change), [[0007-efile-urban-owned-producer]] (the legacy/NODC `EIN2` ecosystem), [[0028-efile-wholesale-relational-extraction]] (the Urban e-file padded-9 `ein`), [[0035-retain-harmonized-core-frozen-surface]] (frozen harmonized CORE keyed on `EIN2`), [[0001-s3-as-contract-surface]], [[0022-cross-repo-contract-change-guard]] (producer reconcile), `conventions/ein-format.md` (the spec this ADR extends)
@@ -129,8 +129,59 @@ waits on it.)
 
 ## Outcome
 
-_Pending implementation in nccs-data-bmf (Unified BMF + ntee-resolved crosswalk)
-and nccs-data-core (CORE tiers): emit `ein_prefixed` + `EIN2`, extend the data
-dictionaries, update `conventions/ein-format.md`, amend
-`contracts/ntee-resolved-crosswalk.yml`, and reconcile per ADR 0022. Update with
-build/publish commits and the live schemas when executed._
+Reconciled **partial, 2026-06-30** against nccs-data-bmf PR #28 (commit
+`fd0b366`).
+
+**Shipped (BMF scope, E1).**
+- `ein_prefixed` (`ein-XX-XXXXXXX`) + `EIN2` (`EIN-XX-XXXXXXX`) are emitted at the
+  **derive layer**, both from the **unchanged** canonical dashed `ein`:
+  - **ntee-resolved crosswalk — LIVE.** Republished to
+    `s3://nccsdata/crosswalks/ntee-resolved/`: 3,613,958 rows × **20 cols**, `ein`
+    byte-identical, the two columns at positions 2–3. CMU `25-0969449` →
+    `ein-25-0969449` / `EIN-25-0969449`. Path unchanged → fully reconciled.
+  - **Unified BMF** — columns added in the `master_bmf_builder.R` final SELECT
+    (`'ein-' || ein`, `'EIN-' || ein`, the latter quoted to preserve the uppercase
+    identifier); **staged, publish pending** the ADR 0037 path ratification.
+- **Reference formatter (N1):** `R/ein.R::ein_to_prefixed()` / `ein_to_ein2()`;
+  the DuckDB SQL mirrors the exact strings with a cross-reference comment so the
+  two cannot drift. `transform_ein` was **deliberately not modified** — emitting
+  there would push the columns onto the monthly `processed/bmf/` artifact, out of
+  scope; this is a tactical refinement, not a divergence from the Decision.
+- **F1a resolved by RELABEL, not retype.** `ein_raw` stays the lossy bare-integer
+  surface; its data-dictionary/docs text now describes that reality. Retyping to
+  padded-9 would have changed the contracted shape (`conventions/ein-format.md` §1
+  bare-integer surface, §5 `000000004 → 4` vector) → that was the escalation path;
+  relabel is the in-scope, convention-consistent fix, so **no escalation fired**.
+
+**Shipped (contracts, this reconcile).**
+- `conventions/ein-format.md`: `ein_prefixed` added as the **sixth** rendering
+  (§1 table, §3 conversion, §5 test vectors, §6 emission-layer note, §7 bijection
+  preserved); changelog entry.
+- `contracts/ntee-resolved-crosswalk.yml`: the two columns added (20 cols),
+  amendment to ADR 0034 recorded. (No `manifest.schema_version` bump — that field
+  is the ADR 0014 *manifest-shape* version, unchanged; the data-column addition is
+  recorded structurally instead.)
+- `contracts/unified-bmf.yml`: the additive columns documented in the schema block.
+
+**Shipped (CORE scope — discovered at this reconcile).**
+- The nccs-data-core twin is **executed**: PR #11 (`f94d21e`, branch
+  `feat/adr-0036-ein-additive-columns`, **OPEN**). `R/transforms/ein.R` defines
+  `ein_to_prefixed()` / `ein_to_ein2()` **byte-identical** to the BMF reference
+  (`paste0("ein-", ein)` / `paste0("EIN-", ein)`, NA-preserving — N1 parity met,
+  verified), adds the columns at the derive layer (`R/04_derive_combined.R`), and
+  documents them in `R/06_dictionary.R`. It inherits the shared
+  `conventions/ein-format.md` addition that landed with this BMF reconcile (no
+  duplicate edit).
+
+**Diverged or pending.**
+- **CORE-tier contract reconcile pending PR #11 merge.** When nccs-data-core PR
+  #11 settles, reconcile the CORE-tier contract YAML(s) (`core-990` / `core-panel`
+  / etc. — confirm which tier carries the columns from `R/04_derive_combined.R`)
+  the same way the crosswalk was. Separate reconcile; this BMF order does not edit
+  the CORE contracts.
+- **Unified BMF publish** pending the ADR 0037 ratification (see that ADR).
+- **Consumer-side col docs:** the website BMF catalog still documents the
+  crosswalk at 18 columns; additive, so non-breaking, but the two EIN renderings
+  should be added — folded into the ADR 0036/0037 consumer notice.
+- **Sector-in-brief API** response-schema bump to expose `ein_prefixed`/`EIN2`
+  remains a separate coordinated change (ADR 0013/0022/0031) — not done here.
