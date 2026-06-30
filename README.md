@@ -31,6 +31,10 @@ decisions behind that shape.
 - `.claude/commands/reconcile-status.md` — `/reconcile-status`, the
   lag-sweep run at session boot: lists open-loop ADRs and cross-checks
   downstream PRs so reconcile lag stays visible.
+- `book/` — a Quarto book that renders this repo (architecture, the
+  reporting cycle, the design essay, and an always-current ADR index)
+  into a navigable site, published to GitHub Pages by the
+  `quarto-pages` workflow. It is a *view* onto the source, not a copy.
 - `docs/agentic-systems-design.md` — the system's old → current →
   complete arc as a worked example of designing for agents:
   legibility (contracts + ADRs) before autonomy.

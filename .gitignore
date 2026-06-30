@@ -54,3 +54,9 @@ drafts/
 
 # Claude Code: per-user local settings (the shared commands/ dir IS tracked)
 .claude/settings.local.json
+
+# Quarto book: rendered output + cache (the site is built & deployed by CI).
+# Source (book/*.qmd, _quarto.yml) and the generated _adr-index.md ARE tracked.
+book/_book/
+book/.quarto/
+.quarto/

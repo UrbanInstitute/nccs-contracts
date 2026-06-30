@@ -1,0 +1,28 @@
+project:
+  type: book
+  output-dir: _book
+
+book:
+  title: "NCCS Data System"
+  subtitle: "The contract surface — architecture, decisions, and the coordination protocol"
+  search: true
+  repo-url: https://github.com/UrbanInstitute/nccs-contracts
+  repo-branch: main
+  repo-actions: [source, issue]
+  page-footer:
+    left: "NCCS / Urban Institute"
+    right: "Built from the `nccs-contracts` repo with Quarto."
+  sidebar:
+    style: docked
+  chapters:
+    - index.qmd
+    - architecture.qmd
+    - protocol.qmd
+    - agents.qmd
+    - decisions.qmd
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
