@@ -23,9 +23,14 @@ decisions behind that shape.
 - `decisions/` — Architecture Decision Records (ADRs) capturing the
   *why* behind major calls. The architecture doc describes
   current state; ADRs preserve history.
-- `CONTRIBUTING.md` — how to make changes here: the plan/execute/
-  reconcile loop with downstream repos, when to write a new ADR
-  vs. amend, and the contract YAML conventions.
+- `CONTRIBUTING.md` — how to make changes here: the **reporting cycle**
+  (commander / executor / courier roles, the ADR Status state machine,
+  the escalation gate, and the sitrep up-channel — ADR 0038), the
+  plan/execute/reconcile loop with downstream repos, when to write a
+  new ADR vs. amend, and the contract YAML conventions.
+- `.claude/commands/reconcile-status.md` — `/reconcile-status`, the
+  lag-sweep run at session boot: lists open-loop ADRs and cross-checks
+  downstream PRs so reconcile lag stays visible.
 - `docs/agentic-systems-design.md` — the system's old → current →
   complete arc as a worked example of designing for agents:
   legibility (contracts + ADRs) before autonomy.
@@ -42,9 +47,11 @@ decisions behind that shape.
 
 ## Status
 
-Contract surface populated (11 contracts) with 17 ADRs. E-file Phase 0
-is live; the first Copilot coding-agent pilot has run on
-`nccs-data-bmf`. The deterministic drift-detection loops described in
+Contract surface populated with 38 ADRs. E-file Phase 0 is live; the
+first Copilot coding-agent pilot has run on `nccs-data-bmf`. The
+cross-repo **reporting cycle** (ADR 0038) is the coordination protocol
+that runs today in Claude sessions, with `/reconcile-status` surfacing
+reconcile lag. The deterministic drift-detection loops described in
 `ARCHITECTURE.md` §9 are not yet wired — see that section's "Not yet
 built" list and `docs/agentic-systems-design.md` for where the system
 sits on the curve.

@@ -12,6 +12,20 @@ everything else: modifying an existing module, executing an ADR that
 was already accepted, reconciling downstream work back into the
 contracts, and writing or revising ADRs mid-flight.
 
+## The reporting cycle (roles)
+
+The three-phase loop below runs across repo *and* session boundaries, so
+[[0038-cross-repo-coordination-protocol]] names three roles. Read it once; the
+short version:
+
+- **Commander** — a `nccs-contracts` session. Owns the ADR/contract surface:
+  decides, drafts ADRs, reviews escalations, runs reconcile. Issues orders; does
+  not edit downstream producer code as its way of work.
+- **Executor** — a sibling-repo session under your steering. Implements an
+  `Accepted` ADR, leaves breadcrumbs, opens a PR, reports up via the sitrep.
+- **Courier** — you. Carry the go-signal down (authorize `Proposed` →
+  `Accepted`), steer execution, carry escalations back up.
+
 ## The three-phase loop
 
 Most non-trivial work follows the same shape.
@@ -22,7 +36,9 @@ Open or revise an ADR in `decisions/` that captures the decision and
 the alternatives. The ADR's Decision section is the spec you will
 execute against later.
 
-- Status starts as `Accepted (planning; not yet executed)`.
+- Status starts as `Proposed` (drafted, not yet authorized) or `Accepted`
+  (authorized — execution may begin downstream). See the Status state machine
+  under "ADR conventions" below.
 - Link related ADRs with `[[adr-slug]]`.
 - If a contract YAML in `contracts/` will change shape, note that in
   the Follow-up section so reconcile-time you remember which file to
@@ -54,6 +70,28 @@ reconcile step in phase 3 is a full repo scan; with it, a
 `git log --grep "ADR 0010"` produces the exact list of decisions you
 acted on.
 
+**The escalation gate.** While executing, if you hit a choice that would
+**change the contract's shape, a producer/consumer pattern, or contradict the
+ADR's Decision — stop. Do not decide it locally.** Flag it `needs-ADR-review` in
+the sitrep and bring it back to a `nccs-contracts` session. The commander
+assesses it and either amends the ADR (→ `Amended`, re-authorize) or holds.
+Implementation-detail choices that don't touch the contract surface, just make —
+record them as a breadcrumb and reconcile silently. The gate fires on the same
+threshold as "What requires an ADR" below.
+
+**The sitrep (up-channel).** When you open the downstream PR, its description
+**is** the report back. Use the repo's `.github/PULL_REQUEST_TEMPLATE.md` shape:
+
+    ## Sitrep — ADR NNNN
+    - Implements: ADR NNNN (<backlog item / step>)
+    - Diverged from ADR: none | <what + why>
+    - Needs ADR review: none | needs-ADR-review: <the contract-shape decision forced>
+    - Contract surfaces touched: <contracts/*.yml, conventions/*, ARCHITECTURE.md, or none>
+
+The commander reads it with `gh pr view --repo UrbanInstitute/<repo>` (and
+`/reconcile-status` sweeps for it). *Needs ADR review* triggers escalation;
+*Contract surfaces touched* is the reconcile work-list.
+
 ### 3. Reconcile here
 
 Once the downstream work has settled, return to a `nccs-contracts`
@@ -61,11 +99,13 @@ session. All NCCS repos are peers under `/root/NCCS/*`, so a
 session opened in this repo can read the sibling repos directly
 without changing directories. Then:
 
-1. **Flip the ADR Status** to one of:
-   - `Accepted (executed YYYY-MM-DD)` — everything in the Decision
-     section shipped as written.
-   - `Accepted (partially executed YYYY-MM-DD) — see Outcome` —
-     some shipped, some pending or diverged.
+1. **Flip the ADR Status** to:
+   - `Reconciled (YYYY-MM-DD)` — downstream shipped **and** the contract
+     YAMLs / `ARCHITECTURE.md` now match it. The loop is closed.
+   - `Reconciled (partial, YYYY-MM-DD) — see Outcome` — some shipped, some
+     pending or diverged. The ADR stays an open loop for the pending part;
+     keep it visible to `/reconcile-status` by leaving a trailing
+     `Executing` note, or split the pending part into its own backlog item.
 2. **Add an Outcome section** to the ADR. Two subsections:
    *Shipped* (what landed), *Diverged or pending* (what didn't, and
    why). The Outcome is what makes the ADR honest after the fact —
@@ -141,6 +181,22 @@ be *surprised* by what's in the code, you owed the ADR an update.
   to four digits and monotonically increasing.
 - **Frontmatter fields:** Status, Date, Deciders, optional Supersedes
   / Superseded-by / Related.
+- **Status state machine** (per [[0038-cross-repo-coordination-protocol]]). The
+  `Status:` line **begins** with one canonical token, optionally followed by a
+  parenthetical/date/PR reference. The two middle states are open loops that
+  `/reconcile-status` surfaces:
+  - `Proposed` — drafted; decision made but not yet authorized for execution.
+  - `Accepted` — authorized; downstream execution may begin. **Open loop.**
+  - `Executing` — downstream implementation in flight (name the repo/PR).
+    **Open loop.**
+  - `Reconciled (YYYY-MM-DD)` — downstream landed and contracts/`ARCHITECTURE.md`
+    updated to match. Terminal success.
+  - `Amended (YYYY-MM-DD)` — substance changed after feedback; says what changed.
+  - `Superseded by [[adr-slug]]` — replaced; old ADR retained.
+
+  Historical ADRs reading `Accepted (executed …)` mean `Reconciled` and are
+  grandfathered — not mass-rewritten. The leading token is what makes the lag
+  sweep parseable; keep it first.
 - **Sections in order:** Context, Decision, (Migration plan if
   multi-step), Outcome (added at reconcile time), Consequences,
   Deprecation window, Follow-up.
@@ -190,7 +246,8 @@ say so explicitly.
 
 When closing the loop on an executed ADR, walk this:
 
-- [ ] ADR Status flipped (executed / partially executed / superseded)
+- [ ] ADR Status flipped to a canonical token (`Reconciled` / `Reconciled
+      (partial)` / `Amended` / `Superseded`)
 - [ ] Outcome section added (Shipped / Diverged or pending)
 - [ ] Decision section amended if intentional divergence
 - [ ] Contract YAMLs in `contracts/` updated against real state

@@ -51,3 +51,6 @@ rsconnect/
 
 # Local working drafts (blog posts, scratch) — not part of the contract surface
 drafts/
+
+# Claude Code: per-user local settings (the shared commands/ dir IS tracked)
+.claude/settings.local.json
