@@ -106,13 +106,41 @@ consumers:
   - repo: UrbanInstitute/nccs-data-bmf
     pin: "n/a"
     notes: "Internal: feeds the geocoding workflow (unified-bmf-geocoded, ADR 0039)."
+  - repo: UrbanInstitute/nccs  # RECONCILED 2026-07-01 — closes Open item #4 (website notify-list)
+    pin: "flat-prefix"          # pins unified/bmf/ (flat); no vintage subdir yet, per this contract's INTERIM layout
+    surface: catalogs/catalog-bmf.qmd
+    usage: "public BMF data catalog — download links, schema/column docs, row counts"
+    notes: >
+      Executed the ADR 0036/0037 consumer notice on the website. "Master BMF"
+      section renamed to "Unified BMF" throughout (prose, heading, comparison
+      table); new primary path (this contract's key_prefix) added; the prior
+      path stayed listed with an explicit non-silent-supersession callout
+      (live/reachable through 2026-09-28, then archived, never deleted) —
+      correctly mirrors this contract's deprecation_window_days.
+      Row counts added (3,687,435 unique EINs, 118 source files, 114 vintages,
+      1989-2026), matching this contract's Outcome exactly. `ein_prefixed`/
+      `EIN2` documented on the Unified BMF section. `catalogs/R/bmf_helpers.R`
+      + `catalogs/get-aws-files.R` updated to track the new `unified/bmf/`
+      prefix (source tag `unified`, dictionary pattern
+      `bmf_unified_data_dictionary.csv`) while still crawling the superseded
+      `master/bmf/` path — the automation, not just the prose, now understands
+      both paths. Independently verified live against S3 (`--profile thiya`):
+      `unified/bmf/bmf_unified.parquet` = 486,314,706 bytes,
+      `.csv` = 2,973,363,906 bytes (byte-exact match to this contract's Outcome
+      figures) and `master/bmf/bmf_master.{csv,parquet}` still live, confirming
+      the dual-live window independently from the consumer side. Geocoded
+      Master BMF + per-state marts deliberately left unrenamed here, per ADR
+      0037 scope (now superseded by ADR 0039 — see [[unified-bmf-geocoded]];
+      the website will need a second, separate update once that publish
+      lands).
   - repo: TODO
     pin: "TODO"
     notes: >
-      Identify direct consumers of the un-geocoded Unified BMF. Known parties
-      owed the ADR 0037 rename notice (path move master/bmf/ -> unified/bmf/):
-      nccsdata, the public website join instructions / BMF catalog, and the
-      sector-in-brief API. See the ADR 0036/0037 consumer notice.
+      Remaining known consumer owed the ADR 0036/0037 rename notice:
+      nccsdata (R/nccs_read.R reads the geocoded artifact, not this one
+      directly, but nccsdata's own docs/vignettes may reference master/bmf/ —
+      confirm) and the sector-in-brief API. See the ADR 0036/0037 consumer
+      notice and BACKLOG G2/G3.
 
 drift_detection:
   trigger: cron
@@ -160,14 +188,19 @@ notes: |
      done in lockstep with unified-bmf-geocoded. ADR 0037 §5 deferred the unified
      layout to exactly this work; flat-now is the interim. Vintage carried in the
      manifest meanwhile.
-  3. **External consumers TBD.** The `consumers` list names only the internal
-     geocoding workflow plus the known notify-list (nccsdata, website/BMF catalog,
+  3. **External consumers TBD.** The `consumers` list names the internal
+     geocoding workflow, the website BMF catalog (**RECONCILED 2026-07-01**,
+     see below), and the remaining known notify-list (nccsdata,
      sector-in-brief API). Confirm and pin direct readers of the Unified BMF
      parquet/CSV (likely nccsdata and research notebooks).
-  4. **Consumer notice now due.** The advance notice drafted 2026-06-30
-     (`notes/adr-0036-0037-consumer-notice-2026-06-30.md`) was gated on this
-     publish; it has landed, so the notice should go out to nccsdata, the
-     website BMF catalog maintainers, and the sector-in-brief API team.
+  4. **Consumer notice — website leg CLOSED 2026-07-01.** The `nccs` website
+     BMF catalog (`catalogs/catalog-bmf.qmd`) executed the rename notice —
+     see the `consumers:` entry above for the full detail (row counts,
+     `ein_prefixed`/`EIN2` documentation, automation updates, independent S3
+     verification). **Still outstanding:** nccsdata and the sector-in-brief
+     API team (see BACKLOG G2/G3, folded in with the ADR 0039 geocoded
+     rename since both repos read the geocoded artifact, not this one,
+     directly).
   5. **Producer docs stale.** `nccs-data-bmf/docs/11-master-bmf.qmd` (as of this
      reconcile) still shows the old `master/bmf/` output paths and a "pending
      nccs-contracts ratification" callout — flag back to the Executor to refresh

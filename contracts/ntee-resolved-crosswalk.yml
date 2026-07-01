@@ -96,9 +96,11 @@ consumers:
       resolution views, join-by-ein guidance, and renders provenance from
       _manifest.json. First pin of this contract.
       RECONCILE 2026-06-30 (ADR 0036): the artifact was republished live with two
-      additive columns (ein_prefixed, EIN2) — now 20, was 18. Purely additive, so
-      no break, but the website section still documents 18 columns; advance notice
-      owed so it adds the two EIN renderings. Tracked in the ADR 0036 consumer notice.
+      additive columns (ein_prefixed, EIN2) — now 20, was 18.
+      CLOSED 2026-07-01: the website added both columns to the crosswalk's
+      dictionary table (independent confirmation from the consumer side that
+      the 20-column schema below is live and correctly documented downstream —
+      no drift between this contract and what's published on the site).
   # Other candidates not yet pinned: UrbanInstitute/nccsdata (bundle as lookup /
   # the §4.3 optional-merge, gated on Jesse); sector-in-brief (universities filter).
 
