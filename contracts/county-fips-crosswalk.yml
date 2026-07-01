@@ -151,7 +151,7 @@ deprecation_window_days: 90
 notes: |
   Reconciled against the live artifact and producer code on 2026-06-04
   per [[0021-canonical-county-identity-via-fips-crosswalk]]. Published by
-  nccs-data-bmf; the master ([[bmf-master-geocoded]]) is NOT modified —
+  nccs-data-bmf; the master ([[unified-bmf-geocoded]]) is NOT modified —
   consumers compose the join (ADR 0016).
 
   ## The join chain

@@ -1,19 +1,28 @@
 # Populated 2026-05-21 from nccs-data-bmf code (R/run_master_geocoding.R,
-# R/master_geocoding.R, R/master_state_marts.R, R/config.R). One open
-# item: the un-geocoded master's "no manifest" gap applies here too —
-# see Open items.
+# R/master_geocoding.R, R/master_state_marts.R, R/config.R). Renamed
+# bmf-master-geocoded -> unified-bmf-geocoded and reconciled 2026-07-01 per
+# ADR 0039 (extends the ADR 0037 rename to the geocoded extension + state
+# marts, folded into the ADR 0032 legacy-reprocess rebuild). Former slug:
+# bmf-master-geocoded (file was bmf-master-geocoded.yml). RATIFIED here (see
+# s3:); the new path is staged in the executor task (BACKLOG L1 -> G1) but
+# NOT yet published — both this contract's s3: block and the state-marts
+# path below describe the ratified target, dual-published alongside the old
+# path once the executor runs.
 
-name: bmf-master-geocoded
+name: unified-bmf-geocoded
 description: >
-  Geocoded extension of bmf-master. Produced by sending master/bmf/ to
-  the Urban Institute geocoder and merging lat/lon + match-quality
-  columns back in. Canonical surface for nccsdata::nccs_read() and any
-  consumer needing geographic coordinates. State-sharded slices of this
-  geocoded master are also published as a sub-artifact (see below).
+  Geocoded extension of the Unified BMF (formerly bmf-master-geocoded;
+  renamed by ADR 0039, mirroring the un-geocoded ADR 0037 rename). Produced
+  by sending unified/bmf/ to the Urban Institute geocoder and merging
+  lat/lon + match-quality columns back in. Canonical surface for
+  nccsdata::nccs_read() and any consumer needing geographic coordinates.
+  State-sharded slices of this geocoded master are also published as a
+  sub-artifact (see below). See [[0039-unified-bmf-geocoded-extension-rename]]
+  and [[0037-master-bmf-rename-unified-supersession-provenance]].
 
 producer:
   repo: UrbanInstitute/nccs-data-bmf
-  publish_path: R/run_master_geocoding.R  # two-phase manual workflow: MODE="export" pushes input batches to S3; external geocoder processes them; MODE="merge" pulls geocoded output and merges back onto bmf-master
+  publish_path: R/run_master_geocoding.R  # two-phase manual workflow: MODE="export" pushes input batches to S3; external geocoder processes them; MODE="merge" pulls geocoded output and merges back onto the Unified BMF
   state_marts_publish_path: R/run_master_state_marts.R  # builds state shards from this artifact
 
 format: parquet  # CSV mirror also published; parquet is canonical
@@ -22,43 +31,60 @@ partitioned: false  # main artifact; state_marts/parquet/ IS Hive-partitioned by
 
 s3:
   bucket: nccsdata
-  key_prefix: geocoding/bmf-master/merged/
+  # RATIFIED 2026-07-01 (ADR 0039). Clean top-segment swap of the retiring
+  # geocoding/bmf-master/ -> geocoding/unified-bmf/, mirroring ADR 0037's
+  # master/bmf/ -> unified/bmf/ swap. Stem swaps bmf_master_geocoded ->
+  # bmf_unified_geocoded.
+  key_prefix: geocoding/unified-bmf/merged/
   versioned_template: null  # unversioned — producer overwrites latest in place; see Open items
-  latest_template: geocoding/bmf-master/merged/bmf_master_geocoded.parquet
+  latest_template: geocoding/unified-bmf/merged/bmf_unified_geocoded.parquet
   # Co-located sub-artifacts at the same prefix (written by
-  # master_geocoding.R:319-351 upload_to_s3 calls):
-  #   geocoding/bmf-master/merged/bmf_master_geocoded.parquet         — canonical artifact
-  #   geocoding/bmf-master/merged/bmf_master_geocoded.csv             — CSV mirror
-  #   geocoding/bmf-master/merged/bmf_master_geocoded_data_dictionary.csv  — column metadata
-  #   geocoding/bmf-master/merged/bmf_master_geocoded_quality_report.json  — match-rate metrics
+  # master_geocoding.R upload_to_s3 calls):
+  #   geocoding/unified-bmf/merged/bmf_unified_geocoded.parquet             — canonical artifact
+  #   geocoding/unified-bmf/merged/bmf_unified_geocoded.csv                 — CSV mirror
+  #   geocoding/unified-bmf/merged/bmf_unified_geocoded_data_dictionary.csv — column metadata
+  #   geocoding/unified-bmf/merged/bmf_unified_geocoded_quality_report.json — match-rate metrics
+  #   geocoding/unified-bmf/merged/_manifest.json                          — ADR 0014 manifest (NEW; closes Open item #1, per ADR 0039 §5)
   # Sibling prefix for in-flight batches:
-  #   geocoding/bmf-master/input/                                     — address-batch CSVs pushed for the external geocoder to process
+  #   geocoding/unified-bmf/input/                                    — address-batch CSVs pushed for the external geocoder to process
   #
-  # State marts — derived from this geocoded master but written
-  # under master/bmf/ (see notes for rationale):
-  #   s3://nccsdata/master/bmf/state_marts/parquet/state={ST}/part-0.parquet  — Hive-partitioned
-  #   s3://nccsdata/master/bmf/state_marts/csv/bmf_master_{ST}.csv           — one CSV per state
+  # State marts — derived from this geocoded master, RENAMED per ADR 0039
+  # (was master/bmf/state_marts/; ADR 0037 left this out of scope, an
+  # oversight corrected here since master/bmf/ itself is retiring):
+  #   s3://nccsdata/unified/bmf/state_marts/parquet/state={ST}/part-0.parquet  — Hive-partitioned
+  #   s3://nccsdata/unified/bmf/state_marts/csv/bmf_unified_{ST}.csv           — one CSV per state
+  #
+  # NON-SILENT SUPERSESSION (ADR 0039 §3): both this new prefix and the old
+  # geocoding/bmf-master/ (+ old state marts under master/bmf/state_marts/)
+  # stay live for 90 days from the publish date, then the old paths move to
+  # the retained, reachable archive — never deleted, never a silent move.
 
 cadence:
   type: on-change
   notes: >
-    Rebuilt manually after each bmf-master build by running
-    R/run_geocoding.R. Lags bmf-master by hours-to-days depending on
-    operator availability.
+    Rebuilt manually after each Unified BMF build by running
+    R/run_master_geocoding.R. Lags the Unified BMF by hours-to-days
+    depending on operator availability.
 
 manifest:
-  path: null  # producer does NOT emit a contract-standard _manifest.json; only a quality report (see Open items)
-  schema_version: 1
+  path: geocoding/unified-bmf/merged/_manifest.json  # RATIFIED (ADR 0039 §5): to be emitted via R/manifest.R once the executor folds this in, closing the long-standing "no manifest" Open item #1
+  schema_version: 2  # 2 = ADR 0014 standard shape, once emitted; currently still 1 (quality-report-only) until the executor publish lands — see Open items
 
 schema:
-  source: geocoding/bmf-master/merged/bmf_master_geocoded_data_dictionary.csv  # co-located dictionary regenerated each run (master_geocoding.R:322)
+  source: geocoding/unified-bmf/merged/bmf_unified_geocoded_data_dictionary.csv  # co-located dictionary regenerated each run (master_geocoding.R)
 
 consumers:
   - repo: UrbanInstitute/nccsdata
     pin: "latest"  # no vintage subdirectories yet; consumer reads the unversioned `latest` path. Re-pin to a vintage tag once Open item #2 (vintage migration) lands.
-    notes: "nccs_read() reads bmf_master_geocoded.parquet (R/nccs_read.R:401)."
+    notes: >
+      nccs_read() currently reads bmf_master_geocoded.parquet at the OLD path
+      (R/nccs_read.R:401, :407 HTTPS mirror) — a separate follow-up PR is owed
+      in nccsdata to repoint to geocoding/unified-bmf/merged/bmf_unified_geocoded.parquet
+      once the executor confirms the new path is live (ADR 0039 §4). Until
+      that PR lands, nccs_read() keeps working unchanged: the old path stays
+      live and fresh through the 90-day dual-live window.
   - repo: UrbanInstitute/sector-in-brief-api  # LIVE in staging (slices 1-5.1, 2026-06-09); ADR 0008/0016/0026.
-    pin: "latest"  # reads bmf_master_geocoded.parquet via DuckDB at query time
+    pin: "latest"  # reads bmf_master_geocoded.parquet via DuckDB at query time; separate follow-up PR owed to repoint per ADR 0039 §4 (same as nccsdata)
     notes: >
       The modernized data-download API opens DuckDB over this parquet and joins
       it to the requested CORE tiers on lowercase `ein` at query time (ADR 0016,
@@ -93,26 +119,28 @@ drift_detection:
 deprecation_window_days: 90
 
 notes: |
-  Depends on [[unified-bmf]] (the un-geocoded Unified BMF, formerly the
-  `bmf-master` slug; renamed by ADR 0037). If the Unified BMF's columns
-  change, this contract's schema changes too. Coordinate with unified-bmf
-  on any breaking change. NOTE: this geocoded extension is NOT itself
-  renamed by ADR 0037; its producer input switches master/bmf/ ->
-  unified/bmf/ at the supersession cutover (dual-live until 2026-09-28).
+  Renamed bmf-master-geocoded -> unified-bmf-geocoded and reconciled
+  2026-07-01 per [[0039-unified-bmf-geocoded-extension-rename]], extending
+  the ADR 0037 rename one layer deeper. Depends on [[unified-bmf]] (the
+  un-geocoded Unified BMF). If the Unified BMF's columns change, this
+  contract's schema changes too. Coordinate with unified-bmf on any
+  breaking change. Folded into the same executor batch as the ADR 0032
+  legacy-reprocess rebuild (BACKLOG L1 -> G1) so the expensive geocoder
+  round-trip is paid for once, not twice.
 
-  ## Why state marts live under master/bmf/, not geocoding/
+  ## Why state marts live under unified/bmf/, not geocoding/
 
-  State marts read `bmf_master_geocoded.parquet` as input
-  (R/master_state_marts.R:31) and write to
-  `s3://nccsdata/master/bmf/state_marts/` (R/master_state_marts.R:96).
-  They sit under `master/bmf/` — not `geocoding/` — because state
-  marts are not a *geocoding* step. They're partitions of an
-  already-geocoded artifact, so by purpose-of-output they belong
-  with the master products. The prefix reflects what the artifact
-  *is* (state-sharded master rows), not what process *produced* it.
-  Future migration to `geocoding/bmf-master/state_marts/` is
-  possible but would be a breaking change for current consumers
-  and is not currently planned.
+  State marts read `bmf_unified_geocoded.parquet` as input
+  (R/master_state_marts.R) and write to
+  `s3://nccsdata/unified/bmf/state_marts/` (renamed from `master/bmf/`
+  per ADR 0039 — the ADR 0037 rename left state marts out of scope, which
+  would have orphaned them with no successor path once `master/bmf/`
+  archives at its 90-day cutover). They sit under the un-geocoded product's
+  prefix — not `geocoding/` — because state marts are not a *geocoding*
+  step. They're partitions of an already-geocoded artifact, so by
+  purpose-of-output they belong with the master products. The prefix
+  reflects what the artifact *is* (state-sharded rows), not what process
+  *produced* it.
 
   ## Counting active orgs — defer to sector-in-brief
 
@@ -192,8 +220,10 @@ notes: |
 
   - `UNI` 603 → **4,189** (was 100% junk; now genuine `B40–B43,B50`);
     `HOS` 525 → **7,199**.
-  - `nteev2_code == Z99` **69.4% → 58.2%** — reduced but still elevated; expected
-    to fall further once the deferred legacy reprocess lands.
+  - `nteev2_code == Z99` **69.4% → 58.2%** — reduced but still elevated; the
+    full legacy reprocess (BACKLOG L1, folded into the same executor batch as
+    this contract's rename, ADR 0039) is what brings it toward the ~30.7%
+    full-fix target — reconcile that figure here once L1 lands.
   - INVALID/UNDEFINED `ntee_code_clean` (33,463 + 634,886 rows) now fold to
     `nteev2_subsector = UNU` (700,405 total) rather than inheriting a subsector
     from the raw first letter.
@@ -209,19 +239,19 @@ notes: |
 
   ## Open items
 
-  1. **No `_manifest.json`.** Still manifest-less — [[unified-bmf]]
-     closed its gap 2026-06-30 (ADR 0037, via `R/manifest.R`), but this
-     geocoded extension has not. `master_geocoding.R` writes a quality
-     report but not a contract-standard ADR 0014 manifest with sha256
-     sums. Address by replicating the same `R/manifest.R` helper
-     ([[0014-standardize-manifest-shape]]).
+  1. **No `_manifest.json` — RATIFIED fix pending publish (ADR 0039 §5).**
+     Still manifest-less as of this reconcile — [[unified-bmf]] closed its
+     gap 2026-06-30 (ADR 0037, via `R/manifest.R`), and this geocoded
+     extension is asked to do the same as part of the same executor batch
+     (BACKLOG L1 -> G1). Not a hard requirement, but strongly recommended
+     since the code is already open for the rename.
   2. **No vintage subdirectories.** Producer overwrites
-     `geocoding/bmf-master/merged/bmf_master_geocoded.parquet` on
-     each run. Migrate to `geocoding/bmf-master/merged/YYYY_MM/...`
+     `geocoding/unified-bmf/merged/bmf_unified_geocoded.parquet` on
+     each run. Migrate to `geocoding/unified-bmf/merged/YYYY_MM/...`
      + a `latest/` mirror in lockstep with the [[unified-bmf]]
      vintage migration so consumer pins stay coherent across
      both contracts.
-  3. **Schema delta not locked.** This contract extends bmf-master
+  3. **Schema delta not locked.** This contract extends the Unified BMF
      with geocoder-added columns (lat, lon, match_quality, geo_*
      taxonomy). The exact column list isn't recorded here — it's
      implicit in the data dictionary referenced by `schema.source`.
@@ -232,3 +262,10 @@ notes: |
      `"export"` and `"merge"` with an external-geocoder turnaround
      in between. Cadence will stay "on-change with operator lag"
      until that loop is closed.
+  5. **Rename not yet published (this reconcile).** This contract records
+     the ADR 0039-ratified path; the actual S3 publish under
+     `geocoding/unified-bmf/` + `unified/bmf/state_marts/` is pending the
+     `nccs-data-bmf` executor batch (BACKLOG L1 -> G1). Old paths
+     (`geocoding/bmf-master/`, `master/bmf/state_marts/`) remain the live,
+     current reality until that publish lands. Reconcile this Open item +
+     the ADR 0039 Outcome together once it does.

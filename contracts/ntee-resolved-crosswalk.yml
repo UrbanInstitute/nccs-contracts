@@ -120,7 +120,7 @@ notes: |
 
   Authored against the live artifact and producer code on 2026-06-24 per
   [[0034-ntee-resolved-crosswalk]]. Published by nccs-data-bmf; the master
-  ([[unified-bmf]] / [[bmf-master-geocoded]]) is NOT modified — NTEE fields are a
+  ([[unified-bmf]] / [[unified-bmf-geocoded]]) is NOT modified — NTEE fields are a
   consumer-composed join on `ein` (ADR 0016), not master columns.
 
   ## Why this artifact exists
