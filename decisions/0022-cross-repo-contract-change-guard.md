@@ -1,6 +1,6 @@
 # 0022 — Cross-Repo Contract-Change Awareness (the contracts-guard + breadcrumb enforcement)
 
-- **Status:** Accepted (planning; not yet executed) — see Migration plan
+- **Status:** Accepted (mostly executed — guard live on every in-scope repo except `sector-in-brief-api`, deferred mid-rewrite; per-repo ruleset application still pending, BACKLOG #10) — see Migration plan and Outcome
 - **Date:** 2026-06-04
 - **Deciders:** sole maintainer
 - **Related:** [[0001-s3-as-contract-surface]], [[0004-cadence-aware-drift-detection]], [[ARCHITECTURE.md]] §9 (Loop 3), `CONTRIBUTING.md` (three-phase loop)

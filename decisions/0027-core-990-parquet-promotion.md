@@ -1,6 +1,6 @@
 # 0027 — Promote core-990 to Parquet-Canonical (Service Tier), with Documented Cross-Vintage Type Drift
 
-- **Status:** Accepted
+- **Status:** Accepted (executed — parquet promoted to service-tier-canonical; route A code-complete, not yet applied to the published artifact — see Outcome)
 - **Date:** 2026-06-09
 - **Deciders:** sole maintainer
 - **Related:** [[0003-retire-athena-for-duckdb]], [[0008-modernize-dataexplorer-api]], [[0016-no-canonical-cross-dataset-merge]], [[0015-core-contract-surface-restructure]], [[0001-s3-as-contract-surface]], [[0013-versioned-producer-outputs]], [[0014-standardize-manifest-shape]]
@@ -113,3 +113,34 @@ the CSV consumers confirm migration to parquet.
    and the `core-panel` build to parquet within the window.
 3. **`core-990.yml`** flipped to parquet-canonical in this change; ADR 0008
    Outcome's core-parquet pending item reconciled to resolved.
+
+## Outcome
+
+Reconciled 2026-07-01 (a reconcile-lag sweep under ADR 0038 found this ADR
+had no Outcome section despite visible downstream progress).
+
+- **The promotion itself (this ADR's core decision) is fully executed.**
+  `contracts/core-990.yml` already reflects it: parquet is
+  service-tier-canonical, dual-published with the CSV mirror on the
+  90-day window.
+- **Follow-up #1 (route A) is code-complete but not yet live.**
+  `nccs-data-core` PR #9 ("pin cross-vintage column types," merged
+  2026-06-09) pins one stable arrow schema per `(form)` family across all
+  vintages at write time — widening types (`logical < int32 < int64 <
+  double`), string-widening genuine conflicts, and self-healing any
+  parquet whose type no longer matches the pinned schema on the next
+  run. Verified via the PR's own test suite (26 checks) reproducing and
+  fixing the exact `gross_income_other` INT32-truncation failure.
+  **However**, verified directly against S3 2026-07-01: every
+  `processed/core/**/*.parquet` file is still dated 2026-05-20 — before
+  the fix merged. Self-healing requires a run to actually happen, and
+  none has since. **`contracts/core-990.yml`'s `union_by_name=True`
+  caveat (Open item #3) is therefore still accurate today, not stale** —
+  it will self-resolve the next time the producer reruns (cadence:
+  annual, on the next SOI release), with no manual contract change
+  needed when it does. Not urgent enough to force an off-cycle rebuild
+  solely for this; noted here so the next reconcile knows what to check.
+- Follow-up #2 (consumer migration to parquet) not independently verified
+  at this pass — worth confirming `sector-in-brief-data`'s
+  `inputs.core_modern` and the `core-panel` build read parquet before the
+  90-day CSV-mirror window closes.

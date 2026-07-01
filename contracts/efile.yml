@@ -8,28 +8,59 @@
 # v2026.05 (SHA a9c32e5, 2026-05-29; rebuilt that day to fix the
 # TY2022/2023 version-key bug). This contract is populated from the
 # published artifact (manifest, dictionaries, quality JSON), not from the
-# plan. Phases 1-3 below remain planned future state per ADR 0007 as
-# amended by ADR 0017.
+# plan.
+#
+# RECONCILED 2026-07-01 (ADR 0028): the ADR 0007 Phase 1-3 curated-
+# extraction roadmap described below is SUPERSEDED — replaced by ADR 0028's
+# wholesale-relational strategy (producer architecture: nccs-data-efile
+# decisions/0004). Verified against nccs-data-efile 2026-07-01: the
+# extractor + publish path + EC2 runbook are BUILT and merged (PRs #13,
+# #15, #16, through commit 87eb274, 2026-06-12), but the relational tier
+# has NOT been run/published — s3://nccsdata/processed/efile/ has no
+# `relational/` prefix as of this check (only concordance/, diagnostics/,
+# phase0/, schemas/). This is a producer-side execution gap (built,
+# awaiting an operator run on a capable host — same shape as the BMF
+# geocoding gap), not a contract change; tracked in BACKLOG.
 
 name: efile
 description: >
   Form 990 e-file data published as form-agnostic parquet under
   Urban Institute ownership. Parses raw IRS XML into normalized
   columnar artifacts with semantic (not form-version-anchored) column
-  names. See ADR 0007 (original framing) and ADR 0017 (Phase 0
-  vertical slice, vendored-NODC concordance posture, and the
-  transition to an NCCS-owned XSD-driven concordance).
+  names. See ADR 0007 (original framing), ADR 0017 (Phase 0 vertical
+  slice, vendored-NODC concordance posture, and the transition to an
+  NCCS-owned XSD-driven concordance), and ADR 0028 (supersedes 0007's
+  Phase 1-3 curated-extraction roadmap with wholesale extraction to a
+  normalized relational tier — see below).
 
   Phase 0 (LIVE as of v2026.05): two filing-grain metric tables —
   `government_grants` (Form 990 Part VIII line 1e) and
   `program_related_investments_total` (Form 990-PF Part IX-B
   aggregate) — scoped to unblock the deferred sector-in-brief
-  dashboard panels. 990 and 990-PF, tax years 2020-2024.
+  dashboard panels. 990 and 990-PF, tax years 2020-2024. Grandfathered
+  under ADR 0028 as the first "curated view" (see below) — unchanged.
 
-  Phase 1 (MVP, planned): Form 990 only, tax years 2020+, headline
-  fields (revenue, expenses, assets, executive compensation,
-  top-level narratives). Phase 2 adds detailed schedules + 990EZ +
-  backfill to 2009. Phase 3 adds full 990PF.
+  Phase 1/2/3 as originally planned under ADR 0007 (Form 990 headline
+  fields → schedules/990EZ/backfill → full 990PF, each gated behind
+  hand-curation) are SUPERSEDED by ADR 0028. The producer now extracts
+  the full non-repeating scalar field universe wholesale (mechanically
+  driven by the Layer 1 XSD inventory, not by curation), landing in a
+  normalized relational destination — a header/scalar table plus
+  per-repeating-group child tables. Two tiers, two contract statuses:
+
+  - **Raw wholesale relational tier — NOT contracted here, by design**
+    (ADR 0028 §4, Follow-up #2). Published best-effort under
+    `s3://nccsdata/processed/efile/relational/{table}/` once it lands
+    (not yet — see the reconcile note above), XSD-faithful so it moves
+    with IRS form revisions, no deprecation-window or path-stability
+    guarantee. Researchers may read it at their own risk but must not
+    pin it as stable. This is the NCCS-owned "researcher catalog" that
+    ADR 0007 originally assigned to NODC.
+  - **Curated Layer 2 views — the contracted, guaranteed surface**
+    (unchanged in kind from Phase 0: form-agnostic `snake_case`,
+    versioned, manifest-shipping per ADR 0014, deprecation policy per
+    ADR 0013). New curated views get added to this contract as they
+    land, same as the existing Phase 0 pair.
 
 # --- Upstream sources (not part of this contract; consumed, not published) ---
 # Primary upstream (per ADR 0017 §4):
@@ -233,9 +264,29 @@ deprecation_window_days: 90
 
 notes: |
   Coexists with the NODC pipeline (catalog-efile.html). See ADR 0007
-  for the dual-catalog presentation (general-user catalog = this
-  artifact; researcher catalog = NODC's CSV outputs). The NODC
-  pipeline is not under nccs-contracts governance.
+  for the original dual-catalog presentation (general-user catalog =
+  this artifact; researcher catalog = NODC's CSV outputs) — ADR 0028
+  now assigns the researcher-catalog role to NCCS's own uncontracted
+  wholesale relational tier instead (see description above); NODC
+  stays an informational comparison artifact, not load-bearing. The
+  NODC pipeline itself is not under nccs-contracts governance.
+
+  ## ADR 0028 reconcile (2026-07-01)
+
+  Reconciled this contract's description against ADR 0028 (wholesale
+  relational extraction, superseding ADR 0007's Phase 1-3 curated
+  roadmap). Verified against nccs-data-efile: producer architecture ADR
+  (`decisions/0004-wholesale-relational-extraction.md`) is written
+  (Status: "Accepted (planning; implementation pending)" — accurate,
+  matches the below); the extractor + scale-build/publish path + EC2
+  runbook are built and merged (PRs #13, #15, #16, through commit
+  `87eb274`, 2026-06-12). **Not yet executed**: listing the bucket's
+  `processed/efile/` prefix shows no `relational/` subfolder as of
+  this reconcile — the actual EC2 run + first publish hasn't happened.
+  No contract-shape change needed until it does (the raw tier is
+  explicitly uncontracted by ADR 0028 §4/Follow-up #2); this note exists
+  so a future reconcile knows what "not yet published" means concretely.
+  Tracked as a BACKLOG item (run + publish, `nccs-data-efile`).
 
   ## Realized-vintage notes (v2026.05)
 

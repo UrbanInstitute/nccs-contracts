@@ -1,6 +1,6 @@
 # 0024 — Ad-hoc Data Requests as a Thin Consumer Repo
 
-- **Status:** Accepted (2026-06-05) — repo standup pending
+- **Status:** Reconciled (2026-07-01) — repo stood up 2026-06-05, first request shipped same day (Milwaukee MSA, CBSA 33340). See Outcome.
 - **Date:** 2026-06-05
 - **Deciders:** sole maintainer
 - **Related:** [[0016-no-canonical-cross-dataset-merge]], [[0002-canonical-merged-artifact]] (superseded by 0016), [[0021-canonical-county-identity-via-fips-crosswalk]], [[0023-ct-planning-region-coordinate-resolution]], [[0008-modernize-dataexplorer-api]], [[county-fips-crosswalk]], [[cbsa-crosswalk]], [[ct-planning-region-crosswalk]]
@@ -143,3 +143,20 @@ surface instead of ossifying as private code.
 3. **Watch for the second request of any join** — the first promotion to a
    crosswalk or an API query gets its own ADR, closing the loop this ADR
    opens.
+
+## Outcome
+
+Reconciled 2026-07-01 (a reconcile-lag sweep under ADR 0038 found the
+Status line stale — the repo had been live for nearly a month).
+
+- Follow-up #1: `nccs-data-requests` stood up 2026-06-05 (`README`,
+  `_private.md` confidentiality convention added same day as house rule 0).
+- Follow-up #2: first real request shipped 2026-06-05 — Milwaukee MSA
+  (CBSA 33340, four counties), counts + focus area 1989-2026 from the
+  geocoded BMF master, revenue by source/focus 1989-2023 from CORE
+  990/990-EZ/990-PF, nominal and real, rendered to gfm + a public GitHub
+  Pages guide. Exercised the geography join end to end as intended.
+- Follow-up #3 (second-request ADR trigger) — not yet applicable; only
+  one request has landed so far.
+- See [[0025-requests-graduate-to-data-stories]] for the separate,
+  still-open question of promoting this request to a public data story.
