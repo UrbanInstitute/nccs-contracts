@@ -67,7 +67,7 @@ consumers:
     pin: "latest"  # reads the canonical core parquet (per ADR 0027) via DuckDB at query time
     notes: >
       The data-download API reads the contracted CORE parquet (canonical per
-      [[0027-core-990-parquet-promotion]]) and joins it to [[bmf-master-geocoded]]
+      [[0027-core-990-parquet-promotion]]) and joins it to [[unified-bmf-geocoded]]
       on lowercase `ein` at query time (ADR 0016). Reads multiple tax_year/form
       partitions with `union_by_name=true` (the documented cross-vintage
       type-drift workaround; producer type-stabilization is the route-A
@@ -100,7 +100,7 @@ notes: |
 
   ## Open items
 
-  1. **No `_manifest.json`.** Same gap as [[bmf-master-geocoded]] et al.
+  1. **No `_manifest.json`.** Same gap as [[unified-bmf-geocoded]] et al.
      ([[unified-bmf]] closed it 2026-06-30 per ADR 0037); address per
      [[0014-standardize-manifest-shape]].
   2. **No vintage subdirectories.** Producer overwrites

@@ -148,7 +148,7 @@ notes: |
   [[0021-canonical-county-identity-via-fips-crosswalk]]. DERIVED from
   [[county-fips-crosswalk]] (its resolved county GEOIDs are this table's
   universe) plus the OMB delineation. Published by nccs-data-bmf; the
-  master ([[bmf-master-geocoded]]) is NOT modified — consumers compose
+  master ([[unified-bmf-geocoded]]) is NOT modified — consumers compose
   the join (ADR 0016).
 
   ## How to use
