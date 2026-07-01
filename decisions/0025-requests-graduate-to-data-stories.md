@@ -1,6 +1,6 @@
 # 0025 — Ad-hoc Requests Graduate to Public Data Stories
 
-- **Status:** Accepted (2026-06-05) — scaffold done, first promotion still pending (all three gates cleared, not yet moved into `nccs/_stories/`) — see Outcome
+- **Status:** Reconciled (2026-07-01) — scaffold + first promotion both executed (`nccs` PR #89), which also exercised and closed Follow-up #2 (see Outcome for the reproducibility clarification it surfaced)
 - **Date:** 2026-06-05
 - **Deciders:** sole maintainer
 - **Related:** [[0024-adhoc-data-requests-consumer-repo]] (refines it), [[0016-no-canonical-cross-dataset-merge]], [[0021-canonical-county-identity-via-fips-crosswalk]], [[0023-ct-planning-region-coordinate-resolution]]
@@ -84,9 +84,20 @@ none of them and stays a private deliverable:
   positively).
 - **Pinned-vintage citation is required** on any promoted `.qmd`; a story
   without a contract-version citation does not ship.
-- **The story re-runs from the request's pins.** The promoted `.qmd` reads
-  the same pinned artifacts the private deliverable did — no separate,
-  divergent re-query in the website repo.
+- **The story re-runs from the request's pins — in `nccs-data-requests`,
+  not necessarily in place inside `nccs`.** The promoted `.qmd` reads the
+  same pinned artifacts the private deliverable did — no separate,
+  divergent re-query — but `nccs`'s Jekyll build never executes `.qmd`
+  (it ships the pre-rendered `.md` + figures only), and the `.qmd`'s
+  `source()` of `nccs-data-requests`-local read helpers is expected to
+  only resolve from that repo. **The rendered `.md` is the portable,
+  citable artifact; the `.qmd` is included for transparency and
+  re-render-from-origin, not as a standalone-executable copy inside
+  `nccs`.** This clarification was surfaced, not violated, by the
+  Milwaukee promotion (see Outcome) — read-logic stays single-sourced in
+  `nccs-data-requests` rather than duplicated or packaged into the
+  content repo, keeping ADR 0025 §3's non-producer/no-coupling framing
+  intact.
 
 ## Rejected alternatives
 
@@ -150,5 +161,18 @@ Status line stale relative to the actual checklist state).
   checklist's own remaining unchecked items. This is genuinely the next
   concrete step, not blocked on anything.
 - Follow-up #2 (wire promotion to the website — document the `.qmd` →
-  `_stories/` move mechanically) is still open; the first promotion
-  above will exercise and validate it.
+  `_stories/` move mechanically) — **exercised 2026-07-01** by the first
+  promotion (`nccs` PR #89, `nccs-data-requests/requests/2026-06-milwaukee-msa/request.qmd`
+  → `nccs/_stories/milwaukee-metro-nonprofits.qmd`). It surfaced exactly
+  the gap this Follow-up existed to find: the promoted `.qmd`'s
+  `source(here::here("R", "request_read.R"))` call is
+  `nccs-data-requests`-local and won't resolve if the `.qmd` is
+  re-rendered from inside `nccs`. Correctly not fixed unilaterally by the
+  promoting session (out of the "move the file" scope) — surfaced back
+  here instead. **Decided:** the Invariants section above is amended to
+  clarify the rendered `.md` (not the `.qmd`) is the portable, standalone
+  artifact; the `.qmd` re-renders from its origin repo, where the pins
+  and helper actually live. No code changes to `nccs-data-requests` or
+  `nccs` — this is a documentation clarification of what the invariant
+  already effectively meant, not a new requirement. Follow-up #2 is now
+  closed: the mechanics are proven out and documented.
