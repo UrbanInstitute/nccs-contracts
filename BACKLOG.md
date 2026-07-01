@@ -13,7 +13,7 @@ open-loop ADR (`Accepted`/`Executing`) should map to a row here. Run
 `/reconcile-status` at boot to cross-check the board against downstream PRs and
 catch reconcile lag.
 
-_Last updated: 2026-06-30._
+_Last updated: 2026-07-01._
 
 ---
 
@@ -25,8 +25,8 @@ retaining the Unified BMF name"; ADR 0022 consumer-notification obligation satis
 
 | # | Task | Where | Status / notes |
 |---|------|-------|----------------|
-| E1 | Emit additive `ein_prefixed` (`ein-XX-XXXXXXX`) + `EIN2` (`EIN-XX-XXXXXXX`) columns; keep dashed `ein` **unchanged** | `nccs-data-bmf` (Unified BMF + ntee-resolved crosswalk) + `nccs-data-core` (CORE tiers) | **ADR 0036 — Reconciled (partial) 2026-06-30.** SHIPPED: BMF PR #28 (`fd0b366`) — ntee crosswalk **live** (20 cols); Unified BMF cols staged. CORE PR #11 (`f94d21e`, **OPEN**) — twin helpers byte-identical (verified). Contracts done: `conventions/ein-format.md` (6th rendering), `contracts/ntee-resolved-crosswalk.yml` (20 cols, amends 0034). PENDING: Unified BMF publish (gated on E2 path), BMF #28 + CORE #11 merges, CORE-tier contract reconcile, API schema bump. |
-| E2 | Rename master → **Unified BMF**; non-silent supersession (both live 90 days → prior to retained reachable archive); per-build manifest | `nccs-data-bmf` + contracts | **ADR 0037 — Amended (path pinned) + Reconciled (partial) 2026-06-30.** SHIPPED (code, BMF PR #28 `fd0b366`): publish-under-`unified/` + 90-day non-silent supersession (`master/bmf/` reachable → archive 2026-09-28) + ADR 0014 `_manifest.json` (closes the old `bmf-master` manifest gap). Contracts done: `bmf-master.yml`→`unified-bmf.yml`, `ARCHITECTURE.md`. **RATIFIED path `unified/bmf/` + `bmf_unified` (INTERIM flat)** — DELTA: producer staged `unified/` (no `/bmf/`); must set `UNIFIED_S3_PREFIX="unified/bmf/"` before publish. PENDING: that publish, consumer notice, archive-key pin at cutover. Geocoded master NOT renamed (out of scope). |
+| E1 | Emit additive `ein_prefixed` (`ein-XX-XXXXXXX`) + `EIN2` (`EIN-XX-XXXXXXX`) columns; keep dashed `ein` **unchanged** | `nccs-data-bmf` (Unified BMF + ntee-resolved crosswalk) + `nccs-data-core` (CORE tiers) | **ADR 0036 — Reconciled (partial) 2026-07-01.** SHIPPED: ntee crosswalk **live** since 2026-06-30 (20 cols); Unified BMF cols **live 2026-07-01** (commit `11380a2`) alongside the E2 publish. CORE PR #11 (`f94d21e`) still **OPEN** — twin helpers byte-identical (verified). Contracts done: `conventions/ein-format.md` (6th rendering), `contracts/ntee-resolved-crosswalk.yml` (20 cols, amends 0034). PENDING: CORE PR #11 merge, CORE-tier contract reconcile, API schema bump, consumer notice send. |
+| E2 | Rename master → **Unified BMF**; non-silent supersession (both live 90 days → prior to retained reachable archive); per-build manifest | `nccs-data-bmf` + contracts | **ADR 0037 — Reconciled 2026-07-01.** **PUBLISHED** to `s3://nccsdata/unified/bmf/` (commit `11380a2`): 3,687,435 unique EINs from 118 source files/114 vintages, verified directly against the manifest + quality report + bucket listing. `master/bmf/` confirmed still live (dual-live holds). Contracts done: `bmf-master.yml`→`unified-bmf.yml`, `ARCHITECTURE.md`. Path `unified/bmf/` + `bmf_unified` (INTERIM flat) ratified 2026-06-30, producer applied the delta (`UNIFIED_S3_PREFIX`) in commit `11380a2`. PENDING: consumer notice send (drafted, gated on this publish — now due), archive-key pin at the 2026-09-28 cutover. Geocoded master NOT renamed (out of scope). |
 
 **July governance (do NOT decide/draft as settled):**
 
@@ -71,6 +71,7 @@ retaining the Unified BMF name"; ADR 0022 consumer-notification obligation satis
 |---|------|-------|----------------|
 | 1 | Email Jesse: EIN conversion function is ready | *you* | **Artifact READY** — point him to `nccsdata::nccs_ein_to_ein2/ein2_to_ein` + `conventions/ein-format.md`. Just send. |
 | 2 | Email Jesse: harmonized retained-artifact contract is in place | *you* | **DONE & live** — ADR 0035 merged, contract committed, S3 delete-protection applied. Just send. |
+| E3 | Send the ADR 0036/0037 consumer notice (drafted 2026-06-30, gated on the Unified BMF publish) | *you* → nccsdata, website BMF catalog maintainers, sector-in-brief API team | **Now due** — the Unified BMF published 2026-07-01 (E1/E2), the gate this notice was waiting on. Draft: `notes/adr-0036-0037-consumer-notice-2026-06-30.md`. |
 | 3 | Make harmonized CORE datasets more visible on the NCCS website | `nccs` | Not started. Batch with #4–#6 (all `nccs`). |
 | 4 | Link/mention the bmf + core crosswalks on the website's BMF & CORE pages | `nccs` | BMF page: geography crosswalks (`county-fips`/`cbsa`/`ct-planning-region`) + `ntee-resolved`. CORE page: the legacy→harmonized crosswalks (live in the producer repos). |
 | 5 | CORE page copy: parallel datasets use different column names (beginner accessibility); harmonized CORE remains available on site | `nccs` | Copy task. |

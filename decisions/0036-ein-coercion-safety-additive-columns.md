@@ -1,6 +1,6 @@
 # 0036 — EIN Coercion-Safety via Additive Columns (`ein_prefixed` + `EIN2`; canonical `ein` unchanged)
 
-- **Status:** Reconciled (partial, 2026-06-30) — see Outcome; Executing (BMF Unified publish + CORE/BMF PR merges pending). BMF scope shipped in nccs-data-bmf PR #28 (commit fd0b366): the ntee-resolved crosswalk is republished live with the columns; the Unified BMF carries them but its publish is staged (gated on the ADR 0037 path ratification). The nccs-data-core twin is **also shipped** — nccs-data-core PR #11 (`f94d21e`, OPEN), helpers verified byte-identical; CORE-tier contract reconcile follows on that merge. Convergence to a single canonical key / retirement of the dashed `ein` is **not pursued**; the four-rendering design below is the standing approach (updated 2026-06-29 — the earlier July deferral of the convergence question was dropped).
+- **Status:** Reconciled (partial, 2026-07-01) — see Outcome; Executing (nccs-data-core PR #11 merge + CORE-tier contract reconcile pending). BMF scope is now **fully live**: the ntee-resolved crosswalk was republished 2026-06-30 (20 cols) and the Unified BMF publish landed 2026-07-01 (`ein_prefixed`/`EIN2` confirmed present in the published schema). The nccs-data-core twin is **shipped but not yet merged** — nccs-data-core PR #11 (`f94d21e`, still OPEN as of 2026-07-01), helpers verified byte-identical; CORE-tier contract reconcile follows on that merge. Convergence to a single canonical key / retirement of the dashed `ein` is **not pursued**; the four-rendering design below is the standing approach (updated 2026-06-29 — the earlier July deferral of the convergence question was dropped).
 - **Date:** 2026-06-29
 - **Deciders:** sole maintainer (DST), with advisory input from Jesse Lecy (taxonomy/research affiliate)
 - **Related:** [[0034-ntee-resolved-crosswalk]] (**amended** — the crosswalk gains the two columns; its inline `ein` format pin is touched), [[0016-no-canonical-cross-dataset-merge]] (consumers compose joins on `ein`; these are courtesy columns, not a merge), [[0033-deprecation-window-policy-and-critical-bug-override]] (the 90-day window owed to any *future* `ein` format change), [[0007-efile-urban-owned-producer]] (the legacy/NODC `EIN2` ecosystem), [[0028-efile-wholesale-relational-extraction]] (the Urban e-file padded-9 `ein`), [[0035-retain-harmonized-core-frozen-surface]] (frozen harmonized CORE keyed on `EIN2`), [[0001-s3-as-contract-surface]], [[0022-cross-repo-contract-change-guard]] (producer reconcile), `conventions/ein-format.md` (the spec this ADR extends)
@@ -139,9 +139,11 @@ Reconciled **partial, 2026-06-30** against nccs-data-bmf PR #28 (commit
     `s3://nccsdata/crosswalks/ntee-resolved/`: 3,613,958 rows × **20 cols**, `ein`
     byte-identical, the two columns at positions 2–3. CMU `25-0969449` →
     `ein-25-0969449` / `EIN-25-0969449`. Path unchanged → fully reconciled.
-  - **Unified BMF** — columns added in the `master_bmf_builder.R` final SELECT
-    (`'ein-' || ein`, `'EIN-' || ein`, the latter quoted to preserve the uppercase
-    identifier); **staged, publish pending** the ADR 0037 path ratification.
+  - **Unified BMF — LIVE 2026-07-01.** Columns added in the `master_bmf_builder.R`
+    final SELECT (`'ein-' || ein`, `'EIN-' || ein`, the latter quoted to preserve
+    the uppercase identifier); published to `s3://nccsdata/unified/bmf/` alongside
+    the ADR 0037 rename (commit `11380a2`) — see that ADR's Outcome for the
+    publish details (3,687,435 rows).
 - **Reference formatter (N1):** `R/ein.R::ein_to_prefixed()` / `ein_to_ein2()`;
   the DuckDB SQL mirrors the exact strings with a cross-reference comment so the
   two cannot drift. `transform_ein` was **deliberately not modified** — emitting
@@ -179,7 +181,6 @@ Reconciled **partial, 2026-06-30** against nccs-data-bmf PR #28 (commit
   / etc. — confirm which tier carries the columns from `R/04_derive_combined.R`)
   the same way the crosswalk was. Separate reconcile; this BMF order does not edit
   the CORE contracts.
-- **Unified BMF publish** pending the ADR 0037 ratification (see that ADR).
 - **Consumer-side col docs:** the website BMF catalog still documents the
   crosswalk at 18 columns; additive, so non-breaking, but the two EIN renderings
   should be added — folded into the ADR 0036/0037 consumer notice.
