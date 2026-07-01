@@ -1,6 +1,6 @@
 # 0028 — E-file: Wholesale Extraction to a Normalized Relational Tier
 
-- **Status:** Accepted
+- **Status:** Accepted (architecture ADR + extractor/publish path built, not yet executed — see Outcome)
 - **Date:** 2026-06-09
 - **Deciders:** sole maintainer
 - **Amends:** [[0007-efile-urban-owned-producer]] (replaces the curated Phase 1/2/3 "extract the fields a consumer asks for" phasing with wholesale extraction; reassigns 0007's *researcher catalog* from NODC to an NCCS-owned raw tier), [[0017-efile-phase-0-vertical-slice]] (inverts §3's end-state: Layer 1 now **drives extraction**, not just verification; Layer 2 becomes curated views on top).
@@ -191,3 +191,34 @@ a producer-repo detail, not a break.
    own contract) at that point.
 3. Update `ARCHITECTURE.md` if/when the relational tier publishes, to
    reflect the two-tier e-file surface.
+
+## Outcome
+
+Reconciled 2026-07-01 (a reconcile-lag sweep under ADR 0038 found this
+Status line stale relative to real progress in `nccs-data-efile`).
+
+**Shipped.**
+- Follow-up #1: producer architecture ADR landed —
+  `nccs-data-efile/decisions/0004-wholesale-relational-extraction.md`,
+  owning the scalar-leaf test (leaf + non-repeating per the Layer 1
+  inventory's `is_leaf`/`max_occurs`/`parent_path`), the header +
+  per-repeating-group child table shape, and build mechanics.
+- The extractor, the scale-build/publish path, and an EC2 runbook are
+  built and merged: `nccs-data-efile` PRs #13 (docs), #15 (scalar
+  extractor + per-form header tables), #16 (scale build + publish path +
+  EC2 runbook), through commit `87eb274` (2026-06-12).
+
+**Diverged or pending.**
+- **Not yet executed.** Verified 2026-07-01: `s3://nccsdata/processed/efile/`
+  has no `relational/` prefix (only `concordance/`, `diagnostics/`,
+  `phase0/`, `schemas/`) — the built pipeline has not been run on the
+  EC2 host, so nothing has published under the raw wholesale relational
+  tier yet. Same shape as the BMF geocoding gap: architecture decided and
+  code built, awaiting an operator run. Tracked in BACKLOG.
+- Follow-up #2 (contract the curated-views surface) and #3 (update
+  ARCHITECTURE.md) are correctly **not yet due** — both are explicitly
+  gated on the relational tier actually publishing, which hasn't
+  happened. `contracts/efile.yml` was reconciled at this same pass to at
+  least describe the ADR 0028 direction accurately (Phase 1-3 marked
+  superseded, the two-tier contract-status split documented) even though
+  there's no new artifact to contract yet.

@@ -1,6 +1,6 @@
 # 0025 — Ad-hoc Requests Graduate to Public Data Stories
 
-- **Status:** Accepted (2026-06-05) — scaffold + first promotion pending
+- **Status:** Accepted (2026-06-05) — scaffold done, first promotion still pending (all three gates cleared, not yet moved into `nccs/_stories/`) — see Outcome
 - **Date:** 2026-06-05
 - **Deciders:** sole maintainer
 - **Related:** [[0024-adhoc-data-requests-consumer-repo]] (refines it), [[0016-no-canonical-cross-dataset-merge]], [[0021-canonical-county-identity-via-fips-crosswalk]], [[0023-ct-planning-region-coordinate-resolution]]
@@ -131,3 +131,24 @@ none of them and stays a private deliverable:
    whether promotion is a manual PR or an assisted copy.
 3. **First real request** exercises the full path end to end and, if it
    clears the three gates, becomes the worked-example story.
+
+## Outcome
+
+Reconciled 2026-07-01 (a reconcile-lag sweep under ADR 0038 found the
+Status line stale relative to the actual checklist state).
+
+- Follow-up #1 (Quarto-first scaffold) — done: `requests/<slug>/` with
+  `request.qmd`, `checklist.md`, `_pins.csv`, `_private.md` convention.
+- Follow-up #3 (first real request) — the Milwaukee MSA request
+  (`requests/2026-06-milwaukee-msa/checklist.md`) has cleared **all
+  three promotion gates**: generalizable (yes), public-safe (yes),
+  worth reading (yes), and its revenue completeness gate (1989-2023,
+  Form 990/990-EZ/990-PF) is also checked off. **Not yet done**: add
+  charts before promotion, pin the front-matter `citation:` from
+  `_pins.csv`, remove `draft: true`, and actually move
+  `request.qmd` (+ assets) into `nccs/_stories/` and open the PR — the
+  checklist's own remaining unchecked items. This is genuinely the next
+  concrete step, not blocked on anything.
+- Follow-up #2 (wire promotion to the website — document the `.qmd` →
+  `_stories/` move mechanically) is still open; the first promotion
+  above will exercise and validate it.

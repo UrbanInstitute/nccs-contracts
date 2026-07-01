@@ -1,6 +1,6 @@
 # 0018 — Standardize the sector-in-brief e-file panel names to the efile producer's names
 
-- **Status:** Accepted (pre-publish; rename must land before first publish of the two panels)
+- **Status:** Accepted (executed 2026-06-03) — see Outcome
 - **Date:** 2026-05-30
 - **Deciders:** sole maintainer
 - **Related:** [[0010-sector-in-brief-data-replaces-dataexplorer-data]], [[0016-no-canonical-cross-dataset-merge]], [[0017-efile-phase-0-vertical-slice]]
