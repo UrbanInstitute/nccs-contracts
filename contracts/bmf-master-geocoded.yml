@@ -93,9 +93,12 @@ drift_detection:
 deprecation_window_days: 90
 
 notes: |
-  Depends on [[bmf-master]]. If the master's columns change, this
-  contract's schema changes too. Coordinate with bmf-master on any
-  breaking change.
+  Depends on [[unified-bmf]] (the un-geocoded Unified BMF, formerly the
+  `bmf-master` slug; renamed by ADR 0037). If the Unified BMF's columns
+  change, this contract's schema changes too. Coordinate with unified-bmf
+  on any breaking change. NOTE: this geocoded extension is NOT itself
+  renamed by ADR 0037; its producer input switches master/bmf/ ->
+  unified/bmf/ at the supersession cutover (dual-live until 2026-09-28).
 
   ## Why state marts live under master/bmf/, not geocoding/
 
@@ -206,15 +209,16 @@ notes: |
 
   ## Open items
 
-  1. **No `_manifest.json`.** Same gap as [[bmf-master]] —
-     `master_geocoding.R` writes a quality report but not a
-     contract-standard manifest with sha256 sums. Address as part
-     of the cross-cutting "Standardize manifest shape across
-     producers" ADR proposed in [[bmf-master]].
+  1. **No `_manifest.json`.** Still manifest-less — [[unified-bmf]]
+     closed its gap 2026-06-30 (ADR 0037, via `R/manifest.R`), but this
+     geocoded extension has not. `master_geocoding.R` writes a quality
+     report but not a contract-standard ADR 0014 manifest with sha256
+     sums. Address by replicating the same `R/manifest.R` helper
+     ([[0014-standardize-manifest-shape]]).
   2. **No vintage subdirectories.** Producer overwrites
      `geocoding/bmf-master/merged/bmf_master_geocoded.parquet` on
      each run. Migrate to `geocoding/bmf-master/merged/YYYY_MM/...`
-     + a `latest/` mirror in lockstep with the [[bmf-master]]
+     + a `latest/` mirror in lockstep with the [[unified-bmf]]
      vintage migration so consumer pins stay coherent across
      both contracts.
   3. **Schema delta not locked.** This contract extends bmf-master

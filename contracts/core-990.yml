@@ -100,8 +100,9 @@ notes: |
 
   ## Open items
 
-  1. **No `_manifest.json`.** Same gap as [[bmf-master]] et al.;
-     address per [[0014-standardize-manifest-shape]].
+  1. **No `_manifest.json`.** Same gap as [[bmf-master-geocoded]] et al.
+     ([[unified-bmf]] closed it 2026-06-30 per ADR 0037); address per
+     [[0014-standardize-manifest-shape]].
   2. **No vintage subdirectories.** Producer overwrites
      `processed/core/{tax_year}/{form}/...` on each run. Migrate
      per [[0013-versioned-producer-outputs]].

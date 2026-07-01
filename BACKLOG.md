@@ -13,7 +13,7 @@ open-loop ADR (`Accepted`/`Executing`) should map to a row here. Run
 `/reconcile-status` at boot to cross-check the board against downstream PRs and
 catch reconcile lag.
 
-_Last updated: 2026-06-30._
+_Last updated: 2026-07-01._
 
 ---
 
@@ -25,8 +25,8 @@ retaining the Unified BMF name"; ADR 0022 consumer-notification obligation satis
 
 | # | Task | Where | Status / notes |
 |---|------|-------|----------------|
-| E1 | Emit additive `ein_prefixed` (`ein-XX-XXXXXXX`) + `EIN2` (`EIN-XX-XXXXXXX`) columns; keep dashed `ein` **unchanged** | `nccs-data-bmf` (Unified BMF + ntee-resolved crosswalk) + `nccs-data-core` (CORE tiers) | **ADR 0036** (`Accepted`, open loop). Purely additive. Update data dictionaries + `conventions/ein-format.md` (add `ein_prefixed` 6th rendering) + **amend `contracts/ntee-resolved-crosswalk.yml:61`** (amends ADR 0034). Producer emission is net-new; consumer bridge already exists. Execute in a `nccs-data-bmf` session; report back via sitrep (ADR 0038). |
-| E2 | Rename master → **Unified BMF**; non-silent supersession (both live 90 days → prior to retained reachable archive); per-build manifest | `nccs-data-bmf` + contracts | **ADR 0037** (`Accepted`, open loop). Reconcile `contracts/bmf-master.yml`→`unified-bmf.yml` + `ARCHITECTURE.md`; notify consumers (ADR 0022). Path layout follows the in-flight versioning/`/latest` work. |
+| E1 | Emit additive `ein_prefixed` (`ein-XX-XXXXXXX`) + `EIN2` (`EIN-XX-XXXXXXX`) columns; keep dashed `ein` **unchanged** | `nccs-data-bmf` (Unified BMF + ntee-resolved crosswalk) + `nccs-data-core` (CORE tiers) | **ADR 0036 — Reconciled (partial) 2026-07-01.** SHIPPED: ntee crosswalk **live** since 2026-06-30 (20 cols); Unified BMF cols **live 2026-07-01** (commit `11380a2`) alongside the E2 publish. CORE PR #11 (`f94d21e`) still **OPEN** — twin helpers byte-identical (verified). Contracts done: `conventions/ein-format.md` (6th rendering), `contracts/ntee-resolved-crosswalk.yml` (20 cols, amends 0034). PENDING: CORE PR #11 merge, CORE-tier contract reconcile, API schema bump, consumer notice send. |
+| E2 | Rename master → **Unified BMF**; non-silent supersession (both live 90 days → prior to retained reachable archive); per-build manifest | `nccs-data-bmf` + contracts | **ADR 0037 — Reconciled 2026-07-01.** **PUBLISHED** to `s3://nccsdata/unified/bmf/` (commit `11380a2`): 3,687,435 unique EINs from 118 source files/114 vintages, verified directly against the manifest + quality report + bucket listing. `master/bmf/` confirmed still live (dual-live holds). Contracts done: `bmf-master.yml`→`unified-bmf.yml`, `ARCHITECTURE.md`. Path `unified/bmf/` + `bmf_unified` (INTERIM flat) ratified 2026-06-30, producer applied the delta (`UNIFIED_S3_PREFIX`) in commit `11380a2`. PENDING: consumer notice send (drafted, gated on this publish — now due), archive-key pin at the 2026-09-28 cutover. Geocoded master NOT renamed (out of scope). |
 
 **July governance (do NOT decide/draft as settled):**
 
@@ -41,14 +41,14 @@ retaining the Unified BMF name"; ADR 0022 consumer-notification obligation satis
 | # | Task | Notes |
 |---|------|-------|
 | F1 | Promote `conventions/ein-format.md` to an ADR-gated / CI-governed surface | Currently outside `adr-required` scope; a format change should be mechanically gated. |
-| F1a | Reconcile the `ein_raw` description + decide its true format | **Inconsistency:** `ein-format.md §1/§4` classify `ein_raw` as the **lossy bare-integer surface** (leading zeros dropped — test vector shows Master BMF `ein_raw = 4` for EIN `000000004`; "never join on it"), but the Master BMF **data dictionary** labels it "Original 9-digit EIN value." Decide: relabel the DD to match the lossy reality, **or** fix `ein_raw` to a character-typed padded-9 so it actually is the 9-digit source (the read-time numeric coercion that drops leading zeros is itself the failure mode Jesse flagged). Surfaced 2026-06-29 while vetting the Jesse reply. |
+| F1a | Reconcile the `ein_raw` description + decide its true format | **RESOLVED 2026-06-30 by RELABEL (ADR 0036, BMF PR #28):** the DD/docs now describe `ein_raw` as the lossy bare-integer surface (matching `ein-format.md §1/§5`), rather than retyping to padded-9. Retype would have changed the contracted shape → that was the escalation path; relabel is convention-consistent, so no escalation fired. Original inconsistency below. **Inconsistency:** `ein-format.md §1/§4` classify `ein_raw` as the **lossy bare-integer surface** (leading zeros dropped — test vector shows Master BMF `ein_raw = 4` for EIN `000000004`; "never join on it"), but the Master BMF **data dictionary** labels it "Original 9-digit EIN value." Decide: relabel the DD to match the lossy reality, **or** fix `ein_raw` to a character-typed padded-9 so it actually is the 9-digit source (the read-time numeric coercion that drops leading zeros is itself the failure mode Jesse flagged). Surfaced 2026-06-29 while vetting the Jesse reply. |
 | F2 | sector-in-brief-api: adding `ein_prefixed`/`EIN2` response columns is an API-schema version bump | Coordinate ADR 0013/0022/0031. |
 
 **Noted / background:**
 
 | # | Task | Notes |
 |---|------|-------|
-| N1 | Consolidate the two duplicate `transform_ein` formatters (BMF + CORE) | Drift risk. |
+| N1 | Consolidate the two duplicate `transform_ein` formatters (BMF + CORE) | Drift risk. **Parity verified 2026-06-30:** BMF `R/ein.R::ein_to_prefixed/ein_to_ein2` and CORE `R/transforms/ein.R` twins are byte-identical (`paste0("ein-"/"EIN-", ein)`, NA-preserving); CORE carries a cross-ref comment. No drift today, but still two copies kept in sync by convention + comment, not machinery — consolidation (or a shared contract test on the §5 vectors) remains the durable fix. |
 | N2 | nccsdata cache is mtime-only (30-day) — won't see an upstream rename/reformat | Needs manifest/sha or version-tagged path busting. |
 | N3 | nccs-data-efile producer `ein` is padded-9 (already divergent) | Any change = S3 producer-output contract change; must move in lockstep with the API normalizer. |
 
@@ -71,6 +71,7 @@ retaining the Unified BMF name"; ADR 0022 consumer-notification obligation satis
 |---|------|-------|----------------|
 | 1 | Email Jesse: EIN conversion function is ready | *you* | **Artifact READY** — point him to `nccsdata::nccs_ein_to_ein2/ein2_to_ein` + `conventions/ein-format.md`. Just send. |
 | 2 | Email Jesse: harmonized retained-artifact contract is in place | *you* | **DONE & live** — ADR 0035 merged, contract committed, S3 delete-protection applied. Just send. |
+| E3 | Send the ADR 0036/0037 consumer notice (drafted 2026-06-30, gated on the Unified BMF publish) | *you* → nccsdata, website BMF catalog maintainers, sector-in-brief API team | **Now due** — the Unified BMF published 2026-07-01 (E1/E2), the gate this notice was waiting on. Draft: `notes/adr-0036-0037-consumer-notice-2026-06-30.md`. |
 | 3 | Make harmonized CORE datasets more visible on the NCCS website | `nccs` | Not started. Batch with #4–#6 (all `nccs`). |
 | 4 | Link/mention the bmf + core crosswalks on the website's BMF & CORE pages | `nccs` | BMF page: geography crosswalks (`county-fips`/`cbsa`/`ct-planning-region`) + `ntee-resolved`. CORE page: the legacy→harmonized crosswalks (live in the producer repos). |
 | 5 | CORE page copy: parallel datasets use different column names (beginner accessibility); harmonized CORE remains available on site | `nccs` | Copy task. |
