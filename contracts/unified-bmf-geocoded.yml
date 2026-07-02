@@ -1,13 +1,12 @@
 # Populated 2026-05-21 from nccs-data-bmf code (R/run_master_geocoding.R,
 # R/master_geocoding.R, R/master_state_marts.R, R/config.R). Renamed
-# bmf-master-geocoded -> unified-bmf-geocoded and reconciled 2026-07-01 per
-# ADR 0039 (extends the ADR 0037 rename to the geocoded extension + state
-# marts, folded into the ADR 0032 legacy-reprocess rebuild). Former slug:
-# bmf-master-geocoded (file was bmf-master-geocoded.yml). RATIFIED here (see
-# s3:); the new path is staged in the executor task (BACKLOG L1 -> G1) but
-# NOT yet published — both this contract's s3: block and the state-marts
-# path below describe the ratified target, dual-published alongside the old
-# path once the executor runs.
+# bmf-master-geocoded -> unified-bmf-geocoded per ADR 0039 (extends the
+# ADR 0037 rename to the geocoded extension + state marts, folded into the
+# ADR 0032 legacy-reprocess rebuild). Former slug: bmf-master-geocoded (file
+# was bmf-master-geocoded.yml). PUBLISHED 2026-07-02 (nccs-data-bmf PR #28,
+# commit 3695028) — live on both the new path and the old (dual-write,
+# 90-day window); verified directly against the bucket + manifest at this
+# reconcile.
 
 name: unified-bmf-geocoded
 description: >
@@ -44,7 +43,7 @@ s3:
   #   geocoding/unified-bmf/merged/bmf_unified_geocoded.csv                 — CSV mirror
   #   geocoding/unified-bmf/merged/bmf_unified_geocoded_data_dictionary.csv — column metadata
   #   geocoding/unified-bmf/merged/bmf_unified_geocoded_quality_report.json — match-rate metrics
-  #   geocoding/unified-bmf/merged/_manifest.json                          — ADR 0014 manifest (NEW; closes Open item #1, per ADR 0039 §5)
+  #   geocoding/unified-bmf/merged/_manifest.json                          — ADR 0014 manifest (LIVE 2026-07-02; closes Open item #1)
   # Sibling prefix for in-flight batches:
   #   geocoding/unified-bmf/input/                                    — address-batch CSVs pushed for the external geocoder to process
   #
@@ -67,8 +66,8 @@ cadence:
     depending on operator availability.
 
 manifest:
-  path: geocoding/unified-bmf/merged/_manifest.json  # RATIFIED (ADR 0039 §5): to be emitted via R/manifest.R once the executor folds this in, closing the long-standing "no manifest" Open item #1
-  schema_version: 2  # 2 = ADR 0014 standard shape, once emitted; currently still 1 (quality-report-only) until the executor publish lands — see Open items
+  path: geocoding/unified-bmf/merged/_manifest.json  # LIVE 2026-07-02 (ADR 0039 §5): closes the long-standing "no manifest" Open item #1; verified (vintage 2026_07, git_sha 11380a2, per-file sha256 + row_count)
+  schema_version: 2  # 2 = ADR 0014 standard shape
 
 schema:
   source: geocoding/unified-bmf/merged/bmf_unified_geocoded_data_dictionary.csv  # co-located dictionary regenerated each run (master_geocoding.R)
@@ -78,13 +77,13 @@ consumers:
     pin: "latest"  # no vintage subdirectories yet; consumer reads the unversioned `latest` path. Re-pin to a vintage tag once Open item #2 (vintage migration) lands.
     notes: >
       nccs_read() currently reads bmf_master_geocoded.parquet at the OLD path
-      (R/nccs_read.R:401, :407 HTTPS mirror) — a separate follow-up PR is owed
-      in nccsdata to repoint to geocoding/unified-bmf/merged/bmf_unified_geocoded.parquet
-      once the executor confirms the new path is live (ADR 0039 §4). Until
-      that PR lands, nccs_read() keeps working unchanged: the old path stays
-      live and fresh through the 90-day dual-live window.
+      (R/nccs_read.R:401, :407 HTTPS mirror). The new path is LIVE as of
+      2026-07-02 (verified) — a follow-up PR (BACKLOG G2) is owed in nccsdata
+      to repoint to geocoding/unified-bmf/merged/bmf_unified_geocoded.parquet.
+      Not urgent: the old path stays live and fresh through the 90-day
+      dual-live window, so this can land whenever convenient.
   - repo: UrbanInstitute/sector-in-brief-api  # LIVE in staging (slices 1-5.1, 2026-06-09); ADR 0008/0016/0026.
-    pin: "latest"  # reads bmf_master_geocoded.parquet via DuckDB at query time; separate follow-up PR owed to repoint per ADR 0039 §4 (same as nccsdata)
+    pin: "latest"  # reads bmf_master_geocoded.parquet via DuckDB at query time; follow-up PR owed to repoint (BACKLOG G3), new path LIVE 2026-07-02 (same as nccsdata)
     notes: >
       The modernized data-download API opens DuckDB over this parquet and joins
       it to the requested CORE tiers on lowercase `ein` at query time (ADR 0016,
@@ -119,14 +118,18 @@ drift_detection:
 deprecation_window_days: 90
 
 notes: |
-  Renamed bmf-master-geocoded -> unified-bmf-geocoded and reconciled
-  2026-07-01 per [[0039-unified-bmf-geocoded-extension-rename]], extending
-  the ADR 0037 rename one layer deeper. Depends on [[unified-bmf]] (the
-  un-geocoded Unified BMF). If the Unified BMF's columns change, this
-  contract's schema changes too. Coordinate with unified-bmf on any
-  breaking change. Folded into the same executor batch as the ADR 0032
-  legacy-reprocess rebuild (BACKLOG L1 -> G1) so the expensive geocoder
-  round-trip is paid for once, not twice.
+  Renamed bmf-master-geocoded -> unified-bmf-geocoded per
+  [[0039-unified-bmf-geocoded-extension-rename]], extending the ADR 0037
+  rename one layer deeper. PUBLISHED 2026-07-02 (nccs-data-bmf PR #28,
+  commit 3695028) -- verified live at geocoding/unified-bmf/merged/
+  (dual-written alongside the old geocoding/bmf-master/ path) and
+  unified/bmf/state_marts/ (63 matching partitions verified against the
+  old master/bmf/state_marts/ path, per the executor's report). Depends
+  on [[unified-bmf]] (the un-geocoded Unified BMF). If the Unified BMF's
+  columns change, this contract's schema changes too. Coordinate with
+  unified-bmf on any breaking change. Folded into the same executor batch
+  as the ADR 0032 legacy-reprocess rebuild (BACKLOG L1 -> G1) so the
+  expensive geocoder round-trip was paid for once, not twice.
 
   ## Why state marts live under unified/bmf/, not geocoding/
 
@@ -203,30 +206,27 @@ notes: |
   rows, all distinct EINs — an inner join onto this artifact does not
   fan out the other side, so the query-time join needs no dedup step.
 
-  ## NTEE subsector classification corrected (ADR 0032, 2026-06-16)
+  ## NTEE subsector classification corrected (ADR 0032, full legacy reprocess DONE 2026-07-02)
 
-  `nteev2_subsector` / `nteev2_code` / `nteev2` carry **corrected** values as of
-  the 2026-06-17 master republish. The producer's `transform_ntee_code.R` was
-  discarding valid 4-char NTEE codes (`B430 → B00 → INVALID`) and deriving the
-  subsector from a parallel formula that could never emit the university codes,
-  so `UNI` held no real universities. The fix (see
-  [[0032-ntee-cleaner-university-code-loss]]) cleans `Bxy0` codes to their valid
+  `nteev2_subsector` / `nteev2_code` / `nteev2` carry **corrected** values,
+  now across the **full historical archive** (current + all 85 in-scope
+  legacy vintages reprocessed — see [[0032-ntee-cleaner-university-code-loss]]
+  Outcome). The producer's `transform_ntee_code.R` was discarding valid
+  4-char NTEE codes (`B430 → B00 → INVALID`) and deriving the subsector from
+  a parallel formula that could never emit the university codes, so `UNI`
+  held no real universities. The fix cleans `Bxy0` codes to their valid
   3-char form, keys the subsector off the lookup-validated cleaned code, and
-  folds INVALID/UNDEFINED rows into `UNU`. Measured in the published parquet
-  (3,687,435 rows; sha256 `82aec127…`; published 2026-06-17) — note this is the
-  **current-vintage reprocess only**, with the legacy 1989–2022 batch deferred
-  (see [[0032-ntee-cleaner-university-code-loss]] Outcome), so the Z99 share is
-  only partway to target:
+  folds INVALID/UNDEFINED rows into `UNU`.
 
-  - `UNI` 603 → **4,189** (was 100% junk; now genuine `B40–B43,B50`);
-    `HOS` 525 → **7,199**.
-  - `nteev2_code == Z99` **69.4% → 58.2%** — reduced but still elevated; the
-    full legacy reprocess (BACKLOG L1, folded into the same executor batch as
-    this contract's rename, ADR 0039) is what brings it toward the ~30.7%
-    full-fix target — reconcile that figure here once L1 lands.
-  - INVALID/UNDEFINED `ntee_code_clean` (33,463 + 634,886 rows) now fold to
-    `nteev2_subsector = UNU` (700,405 total) rather than inheriting a subsector
-    from the raw first letter.
+  - `UNI` 603 → **4,189** (current-vintage fix, 2026-06-17); `HOS` 525 →
+    **7,199**.
+  - `nteev2_code == Z99` **69.4% → 58.2% (current-vintage-only fix,
+    2026-06-17) → 23.79% (877,129 / 3,687,435 EINs, full legacy reprocess,
+    2026-07-02)** — better than the ~30.7% full-fix projection ADR 0032
+    recorded at measurement time. This is the final figure; `Z99` will not
+    fall further without a new, separately-diagnosed defect.
+  - INVALID/UNDEFINED `ntee_code_clean` now folds to `nteev2_subsector = UNU`
+    rather than inheriting a subsector from the raw first letter.
 
   **Value change on a published column, immediate cutover** (no 90-day window) —
   the old values were a bug, not a contract, per the ADR 0033 critical-bug
@@ -239,12 +239,9 @@ notes: |
 
   ## Open items
 
-  1. **No `_manifest.json` — RATIFIED fix pending publish (ADR 0039 §5).**
-     Still manifest-less as of this reconcile — [[unified-bmf]] closed its
-     gap 2026-06-30 (ADR 0037, via `R/manifest.R`), and this geocoded
-     extension is asked to do the same as part of the same executor batch
-     (BACKLOG L1 -> G1). Not a hard requirement, but strongly recommended
-     since the code is already open for the rename.
+  1. **No `_manifest.json` — RESOLVED 2026-07-02.** [[unified-bmf]] closed
+     its gap 2026-06-30 (ADR 0037, via `R/manifest.R`); this geocoded
+     extension now emits the same ADR 0014 shape (verified live).
   2. **No vintage subdirectories.** Producer overwrites
      `geocoding/unified-bmf/merged/bmf_unified_geocoded.parquet` on
      each run. Migrate to `geocoding/unified-bmf/merged/YYYY_MM/...`
@@ -262,10 +259,17 @@ notes: |
      `"export"` and `"merge"` with an external-geocoder turnaround
      in between. Cadence will stay "on-change with operator lag"
      until that loop is closed.
-  5. **Rename not yet published (this reconcile).** This contract records
-     the ADR 0039-ratified path; the actual S3 publish under
-     `geocoding/unified-bmf/` + `unified/bmf/state_marts/` is pending the
-     `nccs-data-bmf` executor batch (BACKLOG L1 -> G1). Old paths
-     (`geocoding/bmf-master/`, `master/bmf/state_marts/`) remain the live,
-     current reality until that publish lands. Reconcile this Open item +
-     the ADR 0039 Outcome together once it does.
+  5. **Rename — RESOLVED, published 2026-07-02.** Live at
+     `geocoding/unified-bmf/` and `unified/bmf/state_marts/`, dual-written
+     alongside the old paths (`geocoding/bmf-master/`,
+     `master/bmf/state_marts/`) for the 90-day window from this date.
+     Verified directly against S3 at this reconcile (matching byte sizes on
+     both prefixes). Archive-key pin for both old paths still owed at their
+     respective cutovers.
+  6. **`Content-Type` on S3 uploads — RESOLVED 2026-07-02.** `upload_to_s3()`
+     never set `Content-Type`, so quality-report HTML/JSON/CSV uploads
+     defaulted to `binary/octet-stream` (forced download instead of
+     in-browser rendering). Fixed centrally in the producer and reapplied
+     retroactively to already-published files. Verified via `curl -I`:
+     the geocoded quality report JSON now serves `application/json`; the
+     un-geocoded HTML report serves `text/html; charset=utf-8`.
