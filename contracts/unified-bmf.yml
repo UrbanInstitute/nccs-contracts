@@ -171,6 +171,17 @@ notes: |
   [[0037-master-bmf-rename-unified-supersession-provenance]] Outcome for the full
   detail.
 
+  REPUBLISHED 2026-07-02 (commit 3695028, same row count -- corrects NTEE
+  values in place, not row membership): full legacy NTEE reprocess complete
+  (all 85 in-scope legacy vintages), nteev2_code Z99 share 58.2% -> 23.79%,
+  better than the ~30.7% full-fix projection. See
+  [[0032-ntee-cleaner-university-code-loss]] Outcome. Same batch also fixed
+  two producer bugs found via a nccs-website consumer-side check: S3 uploads
+  never set Content-Type (quality reports forced a download instead of
+  rendering; verified fixed via curl -I) and the quality-report index
+  silently omitted the Unified BMF report (stale filename-pattern match).
+  Both retroactively applied to already-published files, not just new ones.
+
   ## Open items
 
   1. **`_manifest.json` — RESOLVED (2026-06-30, ADR 0037; live 2026-07-01).**

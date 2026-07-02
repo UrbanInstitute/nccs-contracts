@@ -1,6 +1,6 @@
 # 0039 — Extend the Unified BMF Rename to the Geocoded Extension + State Marts
 
-- **Status:** Accepted — folded into the in-flight ADR 0032 legacy-reprocess rebuild (see BACKLOG L1/G1); Executing pending that publish.
+- **Status:** Reconciled (2026-07-02) — dual-write live and verified at both the geocoded and state-marts paths. See Outcome.
 - **Date:** 2026-07-01
 - **Deciders:** sole maintainer (DST)
 - **Related:** [[0037-master-bmf-rename-unified-supersession-provenance]] (the un-geocoded rename this extends one layer deeper), [[0032-ntee-cleaner-university-code-loss]] (the legacy reprocess this rides alongside), [[0033-deprecation-window-policy-and-critical-bug-override]] (the 90-day window), [[0013-versioned-producer-outputs]] (vintage migration, still deferred), [[0016-no-canonical-cross-dataset-merge]], [[unified-bmf]], [[unified-bmf-geocoded]] (formerly `bmf-master-geocoded`)
@@ -115,9 +115,68 @@ existing ADR 0036/0037 consumer notice (E3).
 
 ## Outcome
 
-Not yet executed. `nccs-data-bmf` is tasked (BACKLOG L1 → G1, this same
-batch) to: complete the ADR 0032 legacy reprocess, rebuild + republish the
-Unified BMF, fix the `MASTER_PARQUET_PATH` bug, then geocode and publish
-under the paths ratified here (`geocoding/unified-bmf/merged/bmf_unified_geocoded.*`,
-`unified/bmf/state_marts/`) **alongside** the old paths. Reconcile this ADR's
-Outcome + `contracts/unified-bmf-geocoded.yml` once that publish lands.
+Executed 2026-07-02 (`nccs-data-bmf`, branch `feat/ntee-resolved-crosswalk`,
+PR #28, commit `3695028`). Verified independently against live S3 at this
+reconcile, not just the executor's report.
+
+**Geocoded extension.**
+- Stem renamed `bmf_master_geocoded` → `bmf_unified_geocoded`, published to
+  the ratified `s3://nccsdata/geocoding/unified-bmf/merged/` **and**
+  dual-written under the old filenames to
+  `s3://nccsdata/geocoding/bmf-master/merged/` for the 90-day window.
+  Verified: both prefixes list the same four files with **identical byte
+  sizes** (parquet 581,097,120 / csv 3,366,386,579), dated 2026-07-02.
+- **`_manifest.json` — Open item #1 (long-open, since 2026-05-21) is
+  CLOSED.** Verified live at `geocoding/unified-bmf/merged/_manifest.json`:
+  `vintage: "2026_07"`, `built_at: 2026-07-02T20:10:11Z`, `git_sha:
+  11380a2`, per-file sha256 + row_count (3,687,435, matching the Unified
+  BMF). `master_geocoding.R` previously emitted no contract-standard
+  manifest at all (only a quality report) — this is new, not a reformat.
+- Merge validated by the executor: 1,841,228 geocoded addresses (100%
+  coverage) → 3,687,435 Unified BMF rows, 2,208,124 carrying lat/lon.
+
+**State marts.**
+- Republished under `s3://nccsdata/unified/bmf/state_marts/` **and**
+  dual-written to the old `s3://nccsdata/master/bmf/state_marts/` —
+  verified both prefixes present (`csv/`, `parquet/` subdirs). Executor
+  reports 63 matching state/territory partitions verified identical on
+  both paths. Closes the ADR 0037 scope gap this ADR exists to fix — state
+  marts now have a successor path before `master/bmf/` archives at its
+  2026-09-28 cutover.
+
+**Bonus fixes landed in the same PR** (found via the `nccs`-website
+consumer-side check routed through `nccs-contracts`, not originally in
+this ADR's scope, but fixed alongside since the same upload code was
+already open):
+- `upload_to_s3()` never set `Content-Type`, so every HTML/JSON/CSV upload
+  defaulted to `binary/octet-stream` (forced download instead of
+  in-browser rendering). Fixed centrally — all S3 uploads in the repo
+  route through this one function — and reapplied retroactively to
+  already-published files via S3 metadata copies. **Verified**: `curl -I`
+  on both `unified/bmf/bmf_unified_quality_report.html`
+  (`Content-Type: text/html; charset=utf-8`) and the geocoded quality
+  report JSON (`application/json`) confirm the fix is live.
+- `render_quality_report_index.R` matched the stale
+  `bmf_master_quality_report.html` filename pattern, so the docs-site
+  index silently **omitted** the Unified BMF report entirely (not just
+  mislabeled it) — fixed.
+- Backfilled 87 quality-report HTML files that had never rendered or gone
+  stale (root cause: a missing `ggplot2` package on the EC2 box used for
+  an earlier run).
+
+**Diverged or pending.**
+- **No contract-shape decisions made locally** — confirmed by the
+  executor and consistent with this ADR's scope: the only two
+  needs-ADR-review items (the exact unified path layout, ADR 0037 §5) were
+  already ratified before this batch started.
+- **90-day archive-key pins not yet set** for either new-path retirement
+  (geocoded: from 2026-07-02; state marts: same date) — same open item as
+  ADR 0037's `master/bmf/` archive key, pin at the respective cutovers.
+- **Consumer migration (G2/G3) now unblocked.** `nccsdata::nccs_read()`
+  and `sector-in-brief-api`'s hardcoded reads can be repointed to the new
+  `geocoding/unified-bmf/merged/bmf_unified_geocoded.parquet` path — the
+  old path stays live through the window, so this isn't urgent, but it's
+  no longer gated on anything upstream.
+- **`nccs-data-bmf` PR #28 is open, checks green, awaiting merge** — see
+  BACKLOG for the merge-timing note (bundle the whole batch, don't merge
+  piecemeal).

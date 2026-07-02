@@ -1,6 +1,6 @@
 # 0032 — Correct NTEE Cleaning So `nteev2_subsector = UNI` Holds Actual Universities
 
-- **Status:** Accepted (partially executed 2026-06-17) — measurement done, producer fix shipped in `nccs-data-bmf` (PR #23), `latest` republished as a **current-vintage-only** reprocess (legacy 1989–2022 deferred), and contracts reconciled against the published parquet. `UNI`/`HOS` corrected; `nteev2_code` `Z99` share still elevated (58.2%, vs ~30.7% full-fix target) pending the legacy batch. See Outcome.
+- **Status:** Reconciled (2026-07-02) — full legacy reprocess complete (all 85 in-scope vintages), `Z99` share down to 23.79% (better than the ~30.7% projection). See Outcome.
 - **Date:** 2026-06-16
 - **Deciders:** sole maintainer; BMF data owner
 - **Related:** [[0021-canonical-county-identity-via-fips-crosswalk]] (same consumer-investigation → producer-defect pattern), [[0009-sector-in-brief-dashboard-hygiene]], [[0016-no-canonical-cross-dataset-merge]], [[0010-sector-in-brief-data-replaces-dataexplorer-data]], [[0022-cross-repo-contract-change-guard]], [[0008-modernize-dataexplorer-api]], [[bmf-master-geocoded]], [[bmf-lookups]], [[nccsdata]], [[sector-in-brief]]
@@ -253,6 +253,38 @@ INVALID→`UNU` fixture); it also asserts the Invariants.
   3,687,435, built_at `2026-06-17T17:43:38Z` (S3 `LastModified`). The
   immediate-cutover deprecation window (ADR 0033 override) starts at this
   republish. Manifest emission tracked as [[bmf-master-geocoded]] Open item #1.
+
+### Full legacy reprocess — DONE 2026-07-02 (closes the deferred scope)
+
+Completed as BACKLOG L1, folded into the same `nccs-data-bmf` batch as ADR
+0037/0039's rebuild and rename (branch `feat/ntee-resolved-crosswalk`, PR
+#28, commits `50c4d08..3695028`).
+
+- **Scope:** all **85 in-scope legacy vintages** reprocessed with the
+  corrected NTEE cleaner (`scripts/run_all_legacy.sh`, full — no
+  `SKIP_EXISTING`, so existing outputs were overwritten, not skipped). Two
+  operational hiccups along the way (a disk-full mid-run, a false-positive
+  `SKIP_EXISTING` skip on resume), both resolved without any design
+  decision.
+- **Result:** `nteev2_code == "Z99"` share **58.2% → 23.79%**
+  (877,129 / 3,687,435 EINs) — **better than the ~30.7% full-fix
+  projection** this ADR recorded at measurement time.
+- **Republish:** the Unified BMF was rebuilt off the reprocessed legacy data
+  and republished 2026-07-02 (`UNIFIED_S3_PREFIX="unified/bmf/"`
+  unchanged, no path decision needed) — same row count as the 2026-07-01
+  publish (3,687,435 EINs; this rebuild corrects NTEE values in place, not
+  row membership). Verified directly against the live quality report:
+  `total_rows` / `n_input_files` / `n_vintages` unchanged (3,687,435 / 118
+  / 114), consistent with an in-place value correction. `master/bmf/`
+  confirmed untouched, still live per the ADR 0037 90-day window.
+- **Geocoded companion + state marts:** rebuilt from the corrected Unified
+  BMF and published under the ADR 0039-ratified paths — see that ADR's
+  Outcome.
+- This closes the "legacy 1989–2022 reprocess deferred" scope noted
+  throughout this ADR's original Outcome and in [[unified-bmf-geocoded]]'s
+  NTEE note. `Z99` will not fall further without a new defect being found —
+  23.79% reflects the corrected cleaner applied to the full historical
+  archive, not a partial fix.
 
 ### Diverged
 
