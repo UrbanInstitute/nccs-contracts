@@ -67,8 +67,11 @@ retaining the Unified BMF name"; ADR 0022 consumer-notification obligation satis
 
 ## Active
 
+**→ NEXT SESSION: start with W1.**
+
 | # | Task | Where | Status / notes |
 |---|------|-------|----------------|
+| W1 | Refresh `nccs`'s BMF catalog page against the 2026-07-02 L1/G1 completion | `nccs` | **New, 2026-07-02. FIRST ORDER OF BUSINESS next session.** `catalog-bmf.qmd` was reconciled 2026-07-01 (E3/website leg) against the *first* Unified BMF publish, before L1 (full legacy reprocess) and G1 (geocoded rename + bug fixes) landed the next day. Needs a second pass: (a) update the `Z99`/NTEE-quality figures if the page cites them (58.2% is now stale, final is 23.79%); (b) confirm the quality-report links actually render now that the Content-Type bug and the index-omission bug are both fixed (verify, don't assume); (c) decide whether/when to mention the geocoded path rename (`geocoding/unified-bmf/`) — likely hold until G2/G3 land so the site doesn't describe a path nccsdata/the API aren't reading yet. See ADR 0032/0039 Outcomes for the source figures. |
 | 1 | Email Jesse: EIN conversion function is ready | *you* | **Artifact READY** — point him to `nccsdata::nccs_ein_to_ein2/ein2_to_ein` + `conventions/ein-format.md`. Just send. |
 | 2 | Email Jesse: harmonized retained-artifact contract is in place | *you* | **DONE & live** — ADR 0035 merged, contract committed, S3 delete-protection applied. Just send. |
 | E3 | Send the ADR 0036/0037 consumer notice | *you* → nccsdata, sector-in-brief API team | **Website leg CLOSED 2026-07-01** — `nccs` executed its half directly (catalog-bmf.qmd renamed to Unified BMF, new path documented, row counts, EIN columns, automation updated; reconciled in `contracts/unified-bmf.yml` consumers:). **Still owed:** nccsdata + sector-in-brief API — fold into the same notice as BACKLOG G2/G3 (ADR 0039 geocoded rename), since both read the geocoded artifact, not this one, directly. |
