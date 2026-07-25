@@ -13,7 +13,24 @@ open-loop ADR (`Accepted`/`Executing`) should map to a row here. Run
 `/reconcile-status` at boot to cross-check the board against downstream PRs and
 catch reconcile lag.
 
-_Last updated: 2026-07-01._
+_Last updated: 2026-07-24._
+
+---
+
+## Legacy street recovery + re-geocode + address-resolved crosswalk — ADR 0041 (Accepted 2026-07-24)
+
+Origin: user discrepancy report (nccs-inbox thread `2026-07-legacy-bmf-street-raw`;
+producer issue `nccs-data-bmf#29`). All street-derived columns silently absent from
+every `processed/bmf-legacy/` vintage; 58 vintages recoverable from raw `ADDRESS`.
+
+| # | Task | Where | Status / notes |
+|---|------|-------|----------------|
+| S1 | XWALK `ADDRESS→STREET` fix + drop+alias crosswalk gate + exists()-guarded control flags + fail-loud manifest upload; PR with `ADR 0041` breadcrumb | `nccs-data-bmf` | Branch `fix/legacy-street-address-29`; validated on 2013-07 (8 additive cols, 0 removals, identical row count). PR opening 2026-07-24. |
+| S2 | EC2 batch re-run + re-publish the **58** ADDRESS-carrying legacy vintages (skip the 30 street-less: output unchanged) | `nccs-data-bmf` | `run_all_legacy.sh` + SKIP_VINTAGES list; profile `thiya` provisions, role/exported creds on box. |
+| S3 | Unified BMF rebuild (street value-backfill for legacy-sourced rows; schema unchanged) + by-`bmf_source` completeness tripwire in master quality report (ADR 0041 §5) | `nccs-data-bmf` | After S2. |
+| S4 | Full geocoding cycle (export → Urban geocoder → merge): ~1.48M legacy-only orgs newly addressable; publish per **ADR 0039 ratified paths** (`geocoding/unified-bmf/`, `unified/bmf/state_marts/`), dual-write old paths only while 0039's window (from 2026-07-02) is open | `nccs-data-bmf` | Manual two-phase workflow; the expensive step this batch was bundled around. |
+| S5 | Build + first publish `crosswalks/address-resolved/` (ADR 0034 pattern); populate `contracts/address-resolved-crosswalk.yml` from the artifact | `nccs-data-bmf` + contracts | Blocked on S2 (needs street in legacy intermediates). |
+| S6 | Reconcile here: ADR 0041 Outcome, contract population, this board; reply to reporter (drafted in nccs-inbox); note pre-2010 geocoding-coverage caveat improvement for the Milwaukee request docs | contracts + nccs-inbox | At the end. |
 
 ---
 
