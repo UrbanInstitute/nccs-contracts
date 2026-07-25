@@ -1,0 +1,72 @@
+# STUB — authored 2026-07-24 at ADR 0041 acceptance, ahead of the artifact.
+# Populate from the published artifact + producer code at reconcile (same
+# authoritative-population rule as every other contract). Per ADR 0041 §4: a
+# per-EIN address-history crosswalk built like the NTEE-resolved one
+# (ADR 0034 pattern — expose all resolutions, no opinionated pick). Blocked
+# on the ADR 0041 legacy street re-publish: the legacy intermediate parquets
+# must carry org_addr_street_raw before this can aggregate it.
+
+name: address-resolved-crosswalk
+
+description: >
+  Per-EIN mailing-address history resolved across every vintage of both BMF
+  pipelines (current monthly + legacy 501CX). Aggregates the raw address
+  fields (street delivery line, city, state, zip) per EIN across vintages
+  and exposes parallel resolutions with no opinionated pick: addr_current
+  (may be NULL), addr_most_recent, addr_first, each as a (street, city,
+  state, zip) tuple with first/last vintage stamps, plus
+  n_distinct_addresses, n_vintages_with_address, and addr_distribution
+  (JSON: address -> vintage span). Carries ein_prefixed + EIN2 alongside
+  canonical ein (ADR 0036). Separate join layer keyed on ein; address
+  history is deliberately NOT added to the Unified BMF (ADR 0016).
+  Supersedes the ad-hoc 2024 meta/metadata-address* tables as the
+  maintained address-history surface. Legacy street coverage begins at the
+  2009 vintages (earlier legacy files never carried streets — ADR 0041).
+  See [[0041-legacy-street-recovery-address-resolved-crosswalk]].
+
+producer:
+  repo: UrbanInstitute/nccs-data-bmf
+  publish_path: null  # TODO at reconcile (expected: thin wrapper over R/publish_crosswalk.R)
+
+format: parquet  # CSV mirror also published; parquet is the machine contract
+compression: null  # TODO at reconcile (expected zstd, matching ntee-resolved)
+partitioned: false  # single-file per-EIN lookup expected (~3.7M rows)
+
+s3:
+  bucket: nccsdata
+  key_prefix: crosswalks/address-resolved/
+  # Flat prefix expected (same ADR 0013 exception as ntee-resolved): vintage
+  # carried in the ADR 0014 manifest, tracking the monthly BMF.
+  versioned_template: null
+
+cadence:
+  type: monthly
+  notes: >
+    TODO at reconcile — expected to match ntee-resolved: rebuilt and
+    republished after each new monthly current BMF so addr_current tracks
+    the newest vintage; the legacy half is static after the ADR 0041
+    street re-publish.
+
+manifest:
+  path: crosswalks/address-resolved/_manifest.json  # ADR 0014 shape; expected `vintage` = YYYY_MM; inputs[] to record both intermediate prefixes
+  schema_version: 2
+
+schema:
+  source: inline
+  # TODO at reconcile: populate the column list + types from the published
+  # artifact. Expected per ADR 0041 §4: ein, ein_prefixed, EIN2, then the
+  # addr_current / addr_most_recent / addr_first tuples (street, city,
+  # state, zip + vintage stamps), n_distinct_addresses,
+  # n_vintages_with_address, addr_distribution (JSON). ~3.7M rows expected.
+
+consumers: []
+  # None yet — artifact not first-published (blocked on ADR 0041 S2).
+  # Expected first consumers at reconcile: nccs website catalog +
+  # nccs-data-requests reads; supersedes ad-hoc meta/metadata-address*.
+
+drift_detection:
+  trigger: event
+  schedule: ""
+  event: "publish-crosswalks"  # expected: republished alongside the monthly BMF / unified rebuild
+
+deprecation_window_days: 90
