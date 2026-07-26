@@ -31,6 +31,7 @@ every `processed/bmf-legacy/` vintage; 58 vintages recoverable from raw `ADDRESS
 | S4 | Full geocoding cycle (export → Urban geocoder → merge): ~1.48M legacy-only orgs newly addressable; publish per **ADR 0039 ratified paths** (`geocoding/unified-bmf/`, `unified/bmf/state_marts/`), dual-write old paths only while 0039's window (from 2026-07-02) is open | `nccs-data-bmf` | Manual two-phase workflow; the expensive step this batch was bundled around. |
 | S5 | Build + first publish `crosswalks/address-resolved/` (ADR 0034 pattern); populate `contracts/address-resolved-crosswalk.yml` from the artifact | `nccs-data-bmf` + contracts | Blocked on S2 (needs street in legacy intermediates). |
 | S6 | Reconcile here: ADR 0041 Outcome, contract population, this board; reply to reporter (drafted in nccs-inbox); note pre-2010 geocoding-coverage caveat improvement for the Milwaukee request docs | contracts + nccs-inbox | At the end. |
+| S7 | ADR 0042 (Proposed): vintage retention + latest/ for unified/geocoded/metadata tables; long-format address log (amends 0041 §4); docs-automation CI; validation gate. Two decision points await maintainer in the PR | contracts + `nccs-data-bmf` | Drafted 2026-07-25; evidence incl. Capital One v1.1 breakage (unknown consumer, no notice). |
 
 ---
 
