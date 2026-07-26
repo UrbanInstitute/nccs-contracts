@@ -13,15 +13,31 @@ open-loop ADR (`Accepted`/`Executing`) should map to a row here. Run
 `/reconcile-status` at boot to cross-check the board against downstream PRs and
 catch reconcile lag.
 
-_Last updated: 2026-07-24._
+_Last updated: 2026-07-26._
 
 ---
 
-## Legacy street recovery + re-geocode + address-resolved crosswalk — ADR 0041 (Accepted 2026-07-24)
+## Legacy street recovery + re-geocode + address-resolved crosswalk — ADR 0041 (RECONCILED 2026-07-26)
 
 Origin: user discrepancy report (nccs-inbox thread `2026-07-legacy-bmf-street-raw`;
 producer issue `nccs-data-bmf#29`). All street-derived columns silently absent from
 every `processed/bmf-legacy/` vintage; 58 vintages recoverable from raw `ADDRESS`.
+
+**RECONCILED 2026-07-26** — S1-S6 executed and verified (see ADR 0041 Outcome):
+55/55 vintages re-published + gate PASS; unified rebuilt (street legacy 0% -> 56.9%);
+geocoded coverage 59.9% -> **82.7%** (+842,207 orgs); address log first-published
+(11.45M spells, v2026_07 + latest); marts rebuilt; batch box terminated. ADR 0042
+first versioned publishes live for all three artifacts.
+
+**REVIEW DEBT (resilience-note throttle rule)**: open PRs awaiting maintainer:
+bmf #32 #34 #35 #36 #37 #38 #39, core #12, contracts #66 #67 #68, website #90 #91.
+Send-ready in nccs-inbox: Jesse email, Dylan reply, 3 triage replies.
+
+**NEW FOLLOW-UPS**: report geocoder crash-alarm gap to UI-Research/techforms-geocoding
+owners (incident 2026-07-26; procedure documented producer-side); consumer repoints
+to latest/ (nccsdata + sector-in-brief-api; website in PR #91); delta-geocoding
+address cache (etiquette doc, next cycle); ADR 0043 implementation (compat views +
+legacy metadata tables in nccs-data-core) is the next build.
 
 | # | Task | Where | Status / notes |
 |---|------|-------|----------------|
