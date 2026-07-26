@@ -1,6 +1,6 @@
 # 0042 - Vintage Retention + latest/ Convention for Rolling Artifacts; Address-History Table Shape; Docs Automation
 
-- **Status:** Proposed (2026-07-25; two maintainer decision points marked below)
+- **Status:** Accepted (2026-07-25; both decision points resolved by maintainer, see below)
 - **Date:** 2026-07-25
 - **Deciders:** sole maintainer
 - **Related:** [[0013-versioned-producer-outputs]] (the deferral this partially un-defers), [[0037-master-bmf-rename-unified-supersession-provenance]] + [[0039-unified-bmf-geocoded-extension-rename]] (rolling INTERIM-flat publishes this versions), [[0041-legacy-street-recovery-address-resolved-crosswalk]] (§4 amended here), [[0014]] (manifest shape), [[0006]] (archive discipline), [[0034]] (ntee-resolved precedent)
@@ -50,10 +50,10 @@ their next publish:
 - Existing flat keys remain live as deprecated aliases for one standard
   90-day window ([[0033]]) after the first versioned publish, then
   archive per [[0006]].
-- **DECISION POINT A (maintainer):** vintage folders retain parquet only
-  (recommended: geocoded CSV is ~3.4 GB per build, roughly 40 GB per
-  year of pure duplication; latest/ always carries both parquet and
-  CSV), or retain CSV in every vintage as well.
+- **DECISION A (resolved 2026-07-25): vintage folders retain parquet
+  only.** latest/ always carries both parquet and CSV. (The rejected
+  alternative, CSV in every vintage, would add roughly 40 GB per year
+  for the geocoded artifact alone.)
 
 **2. Address-history table shape (amends [[0041]] §4).** The
 address-resolved table is a per-spell **long-format log**: one row per
@@ -68,11 +68,10 @@ address-resolved table is a per-spell **long-format log**: one row per
   `crosswalks/address-resolved/` with the §1 vintage/latest layout, plus
   an **HTML quality report** in the style of the BMF vintages.
   Supersedes the ad-hoc 2024 `meta/metadata-address*` tables.
-- **DECISION POINT B (maintainer):** the originally sketched wide format
-  (repeating column sets: first set, next prior set, ...) is documented
-  and recommended against: the number of address spells per EIN is
-  unbounded, so wide is ragged and schema-unstable; long is
-  pivot-derivable in one line. Override here if wide is required.
+- **DECISION B (resolved 2026-07-25): long format ratified.** The wide
+  repeating-column-set sketch is rejected: spells per EIN are unbounded,
+  so wide is ragged and schema-unstable; wide views are pivot-derivable
+  from long in one line.
 
 **3. Docs automation (machinery note, no contract surface).** Producer
 repos add a CI workflow rendering their Quarto guidebook on merge to
