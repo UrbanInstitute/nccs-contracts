@@ -47,6 +47,33 @@ permanently poorer schema up for contracts, drift, and retention.
    merged panel they project (row parity per scope predicate, no NA
    coercion through the rename).
 
+**6. Legacy-only column preservation (amended 2026-07-26 after full
+crosswalk audit: 171 PZ + 82 PF unmapped legacy columns).** Three
+metadata tables preserve the genuine per-(EIN, tax_year) curation the
+harmonized panel does not carry, published with the standard
+vintage/latest layout and manifests:
+
+- `core-legacy-classification-provenance`: reported NTEE per year,
+  NTEESRC, confidence, OUTNCCS/OUTREAS scope flags (the time dimension
+  ntee-resolved's per-EIN aggregate lacks).
+- `core-legacy-imputation-flags`: the 31 supplemental *Code/*Yr
+  imputation-provenance pairs plus GovGtEstimate. **DECISION POINT C
+  (maintainer): these were historically authorized-users-only; publish
+  publicly or restrict?**
+- `core-legacy-filing-provenance`: DLN/DOCLOCNO, SOURCE, DocCD/CODE990,
+  RECCODE.
+
+Explicitly NOT preserved (documented in the catalog): BMF-duplicate
+descriptors (join the Unified BMF), NTEE hierarchy derivables (lookup
+functions of the code), and internal QA plumbing. Unmapped PF form line
+items (P1GOODS, P6INVTAX, P6TXRFD, P2EYASST) are a harmonization gap
+routed to the nccs-data-core crosswalk workflow, not metadata.
+
+**7. Consumer surface.** The CORE catalog's classic section gains a
+"rebuilding the fully expanded record" join recipe; the nccsdata package
+gains a thin `nccs_read_core_metadata()` reader (a one-shot expand
+helper waits for demonstrated demand per the ADR 0024 graduation rule).
+
 ## Consequences
 
 - Jesse/Lewis-style consumers get new years in their preferred shape,
