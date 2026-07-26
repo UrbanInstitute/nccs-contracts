@@ -43,12 +43,12 @@ s3:
   # the retiring master/bmf/ and to bmf_master/bmf_unified). RESOLVED: the
   # producer set UNIFIED_S3_PREFIX="unified/bmf/" (commit 11380a2) and published
   # 2026-07-01. The stem (UNIFIED_STEM="bmf_unified") matched from the start.
-  key_prefix: unified/bmf/  # INTERIM (flat-now)
+  key_prefix: unified/bmf/latest/  # ADR 0042: stable always-current mirror (consumer-facing); flat unified/bmf/ keys remain live as deprecated aliases through the 90-day window from 2026-07-26
   # INTERIM: flat publish now (no {vintage}/ subdir, no latest/ mirror). The
   # versioned subdir + latest/ mirror is deferred to the in-flight ADR 0013
   # versioning work, which migrates this and unified-bmf-geocoded in lockstep
   # (see Open item #2). Vintage is carried in the manifest meanwhile.
-  versioned_template: null  # INTERIM null; flips to unified/bmf/{YYYY_MM}/bmf_unified.parquet under ADR 0013
+  versioned_template: unified/bmf/v{YYYY_MM}/bmf_unified.parquet  # ADR 0042 (un-defers ADR 0013): permanent per-build vintages, parquet-only per Decision A; first versioned publish v2026_07 (2026-07-26)
   latest_template: unified/bmf/bmf_unified.parquet  # INTERIM flat root; becomes unified/bmf/latest/ mirror under ADR 0013
   # Co-located sub-artifacts at the same prefix (written by
   # run_master_pipeline.R Phase 6 / write_master_outputs()), confirmed live on

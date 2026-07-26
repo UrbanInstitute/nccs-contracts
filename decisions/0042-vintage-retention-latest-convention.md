@@ -1,6 +1,6 @@
 # 0042 - Vintage Retention + latest/ Convention for Rolling Artifacts; Address-History Table Shape; Docs Automation
 
-- **Status:** Accepted (2026-07-25; both decision points resolved by maintainer, see below)
+- **Status:** Executing (2026-07-26; first versioned publishes live, see Outcome)
 - **Date:** 2026-07-25
 - **Deciders:** sole maintainer
 - **Related:** [[0013-versioned-producer-outputs]] (the deferral this partially un-defers), [[0037-master-bmf-rename-unified-supersession-provenance]] + [[0039-unified-bmf-geocoded-extension-rename]] (rolling INTERIM-flat publishes this versions), [[0041-legacy-street-recovery-address-resolved-crosswalk]] (§4 amended here), [[0014]] (manifest shape), [[0006]] (archive discipline), [[0034]] (ntee-resolved precedent)
@@ -101,8 +101,19 @@ ADR 0041 legacy re-publish is the first artifact held to this gate.
 Standard 90 days ([[0033]]) for the flat-key aliases after each
 artifact's first versioned publish. Nothing else moves or breaks.
 
-## Outcome
+## Outcome (partial, 2026-07-26)
 
-_To be filled at reconcile: first versioned publishes with manifest
-verification, decision points A/B as resolved, consumer repoints, and
-the Capital One reply linking the canonical latest/ URL._
+- **First versioned publishes VERIFIED live** (listings + manifests):
+  `unified/bmf/{v2026_07,latest}/` (parquet-only vintage per Decision A;
+  latest carries parquet + CSV), `geocoding/unified-bmf/{v2026_07,latest}/`,
+  and `crosswalks/address-resolved/{v2026_07,latest}/` (first publish of
+  the Decision-B long-format address log: 11,447,794 spells).
+- **§4 validation gate exercised twice in its first week**: the legacy
+  re-publish (55/55 PASS against raw sources) and the address log's
+  zip-format defect caught pre-publish by the cross-source invariant.
+- **§3 docs automation**: producer CI trigger-widening PRs open
+  (nccs-data-bmf #39, nccs-data-core #12).
+- **Pending**: consumer repoints to latest/ (website PR #91 open;
+  nccsdata + sector-in-brief-api unmigrated), flat-alias window clocks
+  start at each artifact's first versioned publish (2026-07-26), Capital
+  One reply drafted in nccs-inbox awaiting send.

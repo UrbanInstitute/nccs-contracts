@@ -1,6 +1,6 @@
 # 0041 — Recover Legacy Street Addresses; Re-geocode the Unified BMF; Address-Resolved Crosswalk
 
-- **Status:** Accepted (2026-07-24)
+- **Status:** Reconciled (2026-07-26)
 - **Date:** 2026-07-24
 - **Deciders:** sole maintainer
 - **Related:** [[0016-no-canonical-cross-dataset-merge]] (separate join layer, not master columns), [[0034]] (NTEE-resolved crosswalk; the "expose all, no opinionated pick" precedent this new artifact copies), [[0037-master-bmf-rename-unified-supersession-provenance]] + [[0039-unified-bmf-geocoded-extension-rename]] (ratified unified paths + dual-write discipline this work publishes under), [[0022]] (contracts guard), [[0014]] (manifest shape), producer issue `nccs-data-bmf#29`
@@ -104,7 +104,46 @@ obligations are [[0039]]'s, honored while its window is open.
 
 ## Outcome
 
-_To be filled at reconcile: producer PR link + merge SHA, re-published
-vintage list + manifest verification, unified rebuild + geocode-cycle
-verification (per-source street completeness before/after, lat/lon coverage
-delta), address-resolved crosswalk first publish + contract population._
+Executed 2026-07-24 through 2026-07-26; every figure below verified
+against live S3 by the reconciler.
+
+- **Fix**: `nccs-data-bmf` PR #30 merged (`2daa055`); drop+alias
+  crosswalk gate live. Guard companions merged: #31 (by-source
+  tripwire), #33 (geocoder service docs).
+- **Re-publish (S2)**: all 55 ADDRESS-carrying vintages rebuilt and
+  published to `processed/bmf-legacy/` (profile run + 54-vintage batch,
+  JOBS=10, ~65 min, zero failures). **Validation gate: 55/55 PASS**
+  (row parity, deterministic column expectation, exact street parity,
+  clean value checks); evidence:
+  `s3://nccsdata/logs/adr0041/validation_gate.tsv` (+ all phase logs).
+- **Unified rebuild (S3)**: published 2026-07-25 (3,687,435 rows,
+  EIN-unique, git `15ecca9`, vintage 2026_07). Tripwire before/after:
+  street family cleared the one-sided-outage flags (legacy 0% -> 56.93%
+  non-null); the 21 remaining flags audited as legitimately one-sided
+  (no legacy source columns exist for them). Manifest byte-overflow
+  found (bytes:"NA" above 2 GiB) and fixed (PR #37, open at reconcile;
+  published manifests hand-corrected).
+- **Geocode cycle (S4)**: 2,592,609 unique addresses (vs 1,841,228 the
+  prior cycle: +751k from street recovery) in 3 batches through the
+  automated service; 100% match rate. One engine crash mid-batch-3
+  (idle 4+ h, no service alarm): recovered via the now-documented
+  stop/re-trigger procedure; stall-detection + recovery codified in
+  `nccs-data-bmf/docs/reference/geocoder-service.md`. **Coverage:
+  2,208,124 -> 3,050,331 orgs with lat/lon (59.9% -> 82.7%).**
+  Published to the ADR 0039 paths with dual-writes; state marts
+  rebuilt (63 partitions, both paths).
+- **Address log (S5)**: shape per ADR 0042 Decision B; first publish
+  `crosswalks/address-resolved/{v2026_07,latest}/`: 11,447,794 spells,
+  3,687,468 EINs, 68.2% multi-address. A zip-format spell-splitting
+  defect (raw ZIP+4 vs 5-digit) was caught by the zero-cross-source
+  quality invariant BEFORE publish and fixed (zip5 key); invariants
+  systematized as build-stopping gates + standing validation suite
+  (producer PR #32, open at reconcile). Contract populated from the
+  artifact in this reconcile.
+- **Infra**: batch box terminated after evidence archive; lessons in
+  `docs/reference/ec2-lessons.md` (PR #38).
+- **Open at reconcile**: producer PRs #32/#34-#39, core #12, website
+  #91 (naming + latest/ links + catalog) awaiting maintainer review;
+  crash-alarm gap to be reported to the geocoder service owners;
+  consumer repoints (`nccsdata`, API) to latest/ still pending per
+  ADR 0039/0042 follow-ups.
