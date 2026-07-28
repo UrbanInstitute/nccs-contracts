@@ -48,31 +48,64 @@ permanently poorer schema up for contracts, drift, and retention.
    coercion through the rename).
 
 **6. Legacy-only column preservation (amended 2026-07-26 after full
-crosswalk audit: 171 PZ + 82 PF unmapped legacy columns).** Three
-metadata tables preserve the genuine per-(EIN, tax_year) curation the
-harmonized panel does not carry, published with the standard
-vintage/latest layout and manifests:
+crosswalk audit: 171 PZ + 82 PF unmapped legacy columns; narrowed
+2026-07-28 to a single table).** ONE metadata table preserves the
+per-(EIN, tax_year) curation worth carrying forward, published with the
+standard vintage/latest layout and manifests:
 
 - `core-legacy-classification-provenance`: reported NTEE per year,
   NTEESRC, confidence, OUTNCCS/OUTREAS scope flags (the time dimension
-  ntee-resolved's per-EIN aggregate lacks).
-- `core-legacy-imputation-flags`: the 31 supplemental *Code/*Yr
-  imputation-provenance pairs plus GovGtEstimate. **DECISION POINT C
-  (maintainer): these were historically authorized-users-only; publish
-  publicly or restrict?**
-- `core-legacy-filing-provenance`: DLN/DOCLOCNO, SOURCE, DocCD/CODE990,
-  RECCODE.
+  ntee-resolved's per-EIN aggregate lacks). 22 PZ + 13 PF columns.
 
-Explicitly NOT preserved (documented in the catalog): BMF-duplicate
-descriptors (join the Unified BMF), NTEE hierarchy derivables (lookup
-functions of the code), and internal QA plumbing. Unmapped PF form line
-items (P1GOODS, P6INVTAX, P6TXRFD, P2EYASST) are a harmonization gap
-routed to the nccs-data-core crosswalk workflow, not metadata.
+Explicitly NOT preserved (documented in the catalog):
+
+- **Imputation-provenance pairs** (29 PZ `*Code`/`*Yr` columns plus
+  GovGtEstimate). Historically authorized-users-only, so not publishing
+  them continues the existing restriction rather than removing something
+  users have. This retires the ADR 0043 Decision Point C: there is no
+  publish-or-restrict question left to answer.
+- **Filing provenance** (DLN/DOCLOCNO, SOURCE, DocCD/CODE990, RECCODE;
+  6 PZ + 5 PF columns). These do not support CORE-to-e-file linkage and
+  should not be preserved on that hope: DLN runs only 2000-2010 (PZ) and
+  1999-2010 (PF), with 1997-1999 carrying it under the different name
+  DOCLOCNO, so it stops at roughly the point 990 e-file XML begins.
+  Linking CORE records to e-file filings requires a record-linkage
+  procedure of our own, which is its own ADR, not a preserved column.
+- BMF-duplicate descriptors (join the Unified BMF) and internal QA
+  plumbing.
+- **NTEE hierarchy derivables** (subsector, major group, division:
+  lookup functions of the code). These belong in a dedicated NTEE
+  metadata table rather than a CORE-legacy table, and are routed to
+  their own ADR + PR. That ADR must reconcile with what already exists
+  rather than duplicate it: `lookups/bmf/` already publishes
+  `ntee_code`, `ntee_common_code`, `ntee_code_major_group` and
+  `nteev2_subsector`, and `crosswalks/ntee-resolved/` already carries
+  per-EIN resolved NTEE under ADR 0034. The open question it decides is
+  ownership, since those artifacts are produced by `nccs-data-bmf`
+  while the legacy NTEE columns here are CORE-side.
+
+Unmapped PF form line items (P1GOODS, P6INVTAX, P6TXRFD, P2EYASST) are
+a harmonization gap routed to the nccs-data-core crosswalk workflow,
+not metadata.
 
 **7. Consumer surface.** The CORE catalog's classic section gains a
 "rebuilding the fully expanded record" join recipe; the nccsdata package
-gains a thin `nccs_read_core_metadata()` reader (a one-shot expand
-helper waits for demonstrated demand per the ADR 0024 graduation rule).
+gains a thin reader for the metadata table, following the existing
+`nccs_read_core()` conventions:
+
+```r
+nccs_read_core_metadata(tax_year, form, columns = NULL, cache = TRUE,
+                        collect = TRUE)
+```
+
+It resolves the vintage/latest S3 path for
+`core-legacy-classification-provenance`, fetches the parquet (through
+the same cache as `nccs_read_core()`), and returns one row per
+(EIN, tax_year) so the caller can join it onto a harmonized panel they
+already hold. It does no joining, no reshaping and no scope filtering:
+those stay the consumer's business per ADR 0016. A one-shot expand
+helper that performs the join waits for demonstrated demand per the
+ADR 0024 graduation rule.
 
 ## Consequences
 
