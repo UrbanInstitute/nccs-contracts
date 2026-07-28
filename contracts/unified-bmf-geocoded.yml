@@ -34,8 +34,8 @@ s3:
   # geocoding/bmf-master/ -> geocoding/unified-bmf/, mirroring ADR 0037's
   # master/bmf/ -> unified/bmf/ swap. Stem swaps bmf_master_geocoded ->
   # bmf_unified_geocoded.
-  key_prefix: geocoding/unified-bmf/merged/
-  versioned_template: null  # unversioned — producer overwrites latest in place; see Open items
+  key_prefix: geocoding/unified-bmf/latest/  # ADR 0042: stable always-current mirror; merged/ remains the rolling build key and bmf-master the ADR 0039 dual-write alias through their windows
+  versioned_template: geocoding/unified-bmf/v{YYYY_MM}/bmf_unified_geocoded.parquet  # ADR 0042: permanent per-build vintages (parquet-only per Decision A); first versioned publish v2026_07 (2026-07-26)
   latest_template: geocoding/unified-bmf/merged/bmf_unified_geocoded.parquet
   # Co-located sub-artifacts at the same prefix (written by
   # master_geocoding.R upload_to_s3 calls):
