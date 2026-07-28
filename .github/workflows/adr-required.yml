@@ -51,13 +51,32 @@ jobs:
           echo "Shape-changing lines detected:"
           printf '%s\n' "$SHAPE_HIT" | sed 's/^/  /'
 
+          # A reconcile PR closes out an ADR that already exists: it flips the
+          # status of decisions/*.md from Accepted to Reconciled, fills the
+          # Outcome, and populates the stub contracts that decision covers. It
+          # adds no new ADR, so the added-file test below can never pass for
+          # one, and without this branch every reconcile that populates a
+          # schema is permanently red (first hit: PR #68, ADR 0041 + 0042).
+          # Keyed on the status line rather than the branch name because the
+          # status line is the claim being made; a branch name is just a label.
+          RECONCILED=$(git diff "$BASE"...HEAD -- 'decisions/*.md' \
+            | grep -E '^\+[-*][[:space:]]*\*\*Status:\*\*[[:space:]]*Reconciled' || true)
+
+          if [ -n "$RECONCILED" ]; then
+            echo
+            echo "Reconcile detected: existing ADR(s) moved to Reconciled."
+            printf '%s\n' "$RECONCILED" | sed 's/^/  /'
+            echo "ADR requirement satisfied by the decision being closed out."
+            exit 0
+          fi
+
           # New ADR files added in this PR
           NEW_ADRS=$(git diff --diff-filter=A --name-only "$BASE"...HEAD -- 'decisions/*.md' || true)
           NEW_ADR_COUNT=$(printf '%s\n' "$NEW_ADRS" | grep -c . || true)
 
           if [ "$NEW_ADR_COUNT" -eq 0 ]; then
             echo
-            echo "::error::Contract shape changed (schema/s3/cadence/format) but no new ADR was added under decisions/. Per CLAUDE.md house rules, shape-changing edits require a new ADR."
+            echo "::error::Contract shape changed (schema/s3/cadence/format) but this PR neither adds a new ADR under decisions/ nor moves an existing ADR to Reconciled. Per CLAUDE.md house rules, a shape change needs a written decision: add the ADR, or (if this is a reconcile) set its Status to Reconciled in the same PR."
             exit 1
           fi
 
