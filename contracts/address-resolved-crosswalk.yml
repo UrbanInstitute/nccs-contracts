@@ -2,6 +2,10 @@
 # and producer code (scripts/build_address_resolved_crosswalk.R,
 # R/publish_address_resolved_crosswalk.R, scripts/validate_address_crosswalk.R).
 # Shape per ADR 0042 Decision B (long-format address log, amends ADR 0041 §4).
+#
+# AMENDED 2026-07-28: the v2026_07 build carries a known ZIP defect (see
+# `known_defects` below). Shape and schema are unaffected; the row counts
+# quoted here change on rebuild. Producer fix merged in nccs-data-bmf #32.
 
 name: address-resolved-crosswalk
 
@@ -10,18 +14,41 @@ description: >
   pipelines (current monthly + legacy 501CX, 1989-present). LONG format:
   one row per (EIN, address spell), spell_rank 0 = most recent, ranked by
   last_vintage then observation count. Aggregates the raw address fields
-  with grouping normalization (upper/trim/empty->NULL; ZIP truncated to 5
-  digits for the spell key: current raw ZIPs are ZIP+4 vs legacy 5-digit,
-  and unnormalized keys format-split identical addresses). Street values
-  begin at the 2009 legacy vintages (earlier legacy files carried no
-  street; those spells keep city/state/zip honestly). Keyed EIN2 with
-  canonical ein + ein_prefixed alongside (ADR 0036). Separate join layer
-  (ADR 0016); supersedes the ad-hoc 2024 meta/metadata-address* tables.
-  First publish: 11,447,794 spells across 3,687,468 EINs; 68.2%
-  multi-address; max 36 spells. Build-stopping invariants: zip5 length,
-  spell-rank contiguity, cross-source spell share >= 1% at production
-  scale; standing suite scripts/validate_address_crosswalk.R adds a
-  1000-row spell-0 sample match against master raw values.
+  with grouping normalization (upper/trim/empty->NULL; ZIP reduced to the
+  shared 5-digit base). The two pipelines skew ZIPs in OPPOSITE directions
+  and both break the spell key: current raw ZIPs carry the ZIP+4 add-on
+  ("02138-1234"), while legacy raw ZIPs went through a numeric round-trip
+  that stripped leading zeros ("02138" stored as "2138"). Normalization is
+  therefore digits-only, first-5 if longer than 5, else left-pad to 5.
+  Street values begin at the 2009 legacy vintages (earlier legacy files
+  carried no street; those spells keep city/state/zip honestly). Keyed
+  EIN2 with canonical ein + ein_prefixed alongside (ADR 0036). Separate
+  join layer (ADR 0016); supersedes the ad-hoc 2024 meta/metadata-address*
+  tables. First publish (v2026_07, pre-fix): 11,447,794 spells across
+  3,687,468 EINs, 68.2% multi-address, max 36 spells; these figures move
+  on rebuild (~148k phantom spells collapse). Build-stopping invariants:
+  zip5 exactly 5 digits or absent, spell-rank contiguity, cross-source
+  spell share >= 1% at production scale nationally AND per state for any
+  state with >= 50k spells; standing suite
+  scripts/validate_address_crosswalk.R adds a 1000-row spell-0 sample
+  match against Unified BMF raw values.
+
+known_defects:
+  - id: zip5-leading-zeros
+    affects: "v2026_07 (first publish); fixed in producer code, rebuild pending"
+    detail: >
+      Legacy raw ZIPs lost their leading zeros upstream, and the original
+      normalization only truncated ZIP+4, so it did not restore them.
+      848,048 published rows carry a 3-4 character zip5 that joins to
+      nothing, 147,994 of those are phantom duplicate spells, and every
+      0-prefix state (ME, NH, VT, MA, RI, CT, NJ, PR, VI) shows 0.00%
+      cross-source spells against a 15.8% national rate, so address
+      history in those states appears to break at the 2023 pipeline
+      transition when it does not. The national 1% floor passed at 14.32%
+      throughout, which is why the per-state floor above now exists.
+    consumer_guidance: >
+      Until the rebuild lands, treat address changes in those nine states
+      as unreliable and left-pad zip5 to 5 digits before joining.
 
 producer:
   repo: UrbanInstitute/nccs-data-bmf

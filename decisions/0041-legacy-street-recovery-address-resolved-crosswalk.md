@@ -131,19 +131,43 @@ against live S3 by the reconciler.
   `nccs-data-bmf/docs/reference/geocoder-service.md`. **Coverage:
   2,208,124 -> 3,050,331 orgs with lat/lon (59.9% -> 82.7%).**
   Published to the ADR 0039 paths with dual-writes; state marts
-  rebuilt (63 partitions, both paths).
+  rebuilt (63 partitions, both paths). **Caveat found 2026-07-28**:
+  ~124k of those submissions went to the geocoder with no ZIP in the
+  address string, all legacy-sourced and concentrated in the 0-prefix
+  states, because the same leading-zero defect emptied `org_addr_zip5`
+  and with it the ZIP portion of `org_addr_full`. The service still
+  returned matches, but on street/city/state alone, so their
+  coordinates are less reliable than the rest of the cycle and they
+  need re-geocoding after the pipeline fix.
 - **Address log (S5)**: shape per ADR 0042 Decision B; first publish
   `crosswalks/address-resolved/{v2026_07,latest}/`: 11,447,794 spells,
-  3,687,468 EINs, 68.2% multi-address. A zip-format spell-splitting
-  defect (raw ZIP+4 vs 5-digit) was caught by the zero-cross-source
-  quality invariant BEFORE publish and fixed (zip5 key); invariants
-  systematized as build-stopping gates + standing validation suite
-  (producer PR #32, open at reconcile). Contract populated from the
+  3,687,468 EINs, 68.2% multi-address. Contract populated from the
   artifact in this reconcile.
+- **ZIP normalization: one defect caught, a second one shipped**
+  (amended 2026-07-28). The two pipelines skew ZIPs in opposite
+  directions. The first skew (current ZIP+4 vs legacy 5-digit) was
+  caught before publish by the zero-cross-source invariant and fixed by
+  truncating to 5 digits. The second was not: legacy raw ZIPs had also
+  lost their leading zeros upstream ("02138" stored as "2138"), which
+  truncation leaves untouched. That shipped. 848,048 published rows
+  carry a 3-4 character zip5 that joins to nothing, 147,994 of them are
+  phantom spells, and ME/NH/VT/MA/RI/CT/NJ/PR/VI each show 0.00%
+  cross-source spells against 15.8% nationally. The national 1% floor
+  passed at 14.32% the whole time: an aggregate gate cannot see a
+  failure confined to nine states, so a per-state floor was added
+  alongside the fix (producer PR #32, merged 2026-07-28). **Rebuild and
+  re-publish still pending**; the artifact on S3 carries the defect.
 - **Infra**: batch box terminated after evidence archive; lessons in
   `docs/reference/ec2-lessons.md` (PR #38).
-- **Open at reconcile**: producer PRs #32/#34-#39, core #12, website
-  #91 (naming + latest/ links + catalog) awaiting maintainer review;
-  crash-alarm gap to be reported to the geocoder service owners;
-  consumer repoints (`nccsdata`, API) to latest/ still pending per
-  ADR 0039/0042 follow-ups.
+- **Open at reconcile** (updated 2026-07-28): producer PRs #32/#34-#38
+  and core #12 now merged; website #91 (naming + latest/ links +
+  catalog) still open and should land only after the ZIP rebuild, since
+  its catalog listing is generated from live S3. Crash-alarm gap still
+  to be reported to the geocoder service owners; consumer repoints
+  (`nccsdata`, API) to latest/ still pending per ADR 0039/0042
+  follow-ups.
+- **Carried out of this reconcile**: rebuild + re-publish the address
+  log; re-run the legacy pipeline, Unified BMF and state marts with the
+  fixed `.clean_zip()`; re-geocode the ~124k ZIP-less addresses. Those
+  correct published data and are tracked separately, since this ADR is
+  closed on the street-recovery objective it set out to meet.
