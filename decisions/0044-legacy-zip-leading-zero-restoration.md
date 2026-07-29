@@ -7,7 +7,7 @@
 
 ## Context
 
-Review of `nccs-data-bmf#32` (2026-07-28) surfaced a second ZIP skew the
+Review of `nccs-data-bmf#32` (2026-07-28) surfaced a second ZIP defect the
 ADR 0041 campaign missed. Legacy raw BMF files went through a numeric
 round-trip upstream that stripped leading zeros, so a Boston ZIP arrives as
 `2138` instead of `02138`. `.clean_zip()` extracts `^\d{5}`, which cannot
@@ -16,10 +16,20 @@ match a 4-digit string, and returned NA instead of padding.
 Damage, all verified against live artifacts:
 
 - **848,048 published address-log rows** carry a 3-4 character `zip5` that
-  joins to nothing; **147,994 are phantom duplicate spells**.
-- ME/NH/VT/MA/RI/CT/NJ/PR/VI show **0.00% cross-source spells** against
-  15.8% nationally, so address history in those states shows fake 2023
-  "moves".
+  joins to nothing. **147,994 of them are phantom duplicates**: the address
+  log records one row (a "spell") per continuous period an organization
+  spends at an address, and because the legacy copy of an address lost its
+  ZIP while the current copy kept it, the same real address shows up as two
+  different spells instead of one.
+- The same mechanism shows up in the cross-source match rate. A spell is
+  *cross-source* when the same organization-plus-address is observed in
+  both the legacy vintages and the current monthly BMF, which is the normal
+  case for any long-lived organization that never moved. Nationally 15.8%
+  of spells are cross-source; ME/NH/VT/MA/RI/CT/NJ/PR/VI show **0.00%**.
+  A true rate of zero would mean every nonprofit in nine states changed
+  address when the data source changed, which is impossible: it is the
+  ZIP mismatch breaking every legacy-to-current match, and it makes the
+  address history in those states show fake 2023 "moves".
 - `org_addr_zip5`, `org_addr_zip`, and `org_addr_full` are empty for legacy
   rows in those states across **all 55 legacy vintages**, in the processed
   CSVs, the Unified BMF, and the state marts.
@@ -41,7 +51,14 @@ two leading zeros (00501 is the lowest in use), so a 1-2 digit value cannot
 be a stripped ZIP and is left to fail rather than be invented into a
 plausible-looking one.
 
-**2. Guardrail: destructive-transform gate.** New
+**2. Guardrail: destructive-transform gate.** Two possible designs here:
+make the pipelines finally read `generate_quality_report()`'s `report$passed`
+(one general gate), or add a targeted hard gate for this defect class. This
+ADR chooses the **targeted gate now**, and defers the general
+`report$passed` gate to Backlog Z9: flipping `report$passed` on would
+likely fail legacy vintages on pre-existing critical-field nulls unrelated
+to this defect, and needs a dry run across all 55 vintages first. The two
+are complements, not alternatives; Z9 remains open. Concretely: new
 `assert_zip_integrity()` in `R/quality/post_checks.R`, wired into **both**
 pipelines before the write/upload phases and bound to
 `STRICT_QUALITY_GATES`. It compares raw against cleaned row by row: a raw
