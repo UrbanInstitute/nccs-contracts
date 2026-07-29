@@ -30,11 +30,25 @@ dictionary.
 GEOIDs nest: the 15-digit block GEOID contains block group (12), tract (11),
 county (5), and state (2) as prefixes. Columns:
 
-- `ein` (canonical `XX-XXXXXXX`)
+- `ein` (canonical `XX-XXXXXXX`) plus the additive coercion-safe forms
+  `ein_prefixed` / `EIN2` per ADR 0036, so legacy/NODC-keyed workflows join
+  without reformatting.
 - `block_geoid_2020`, `block_geoid_2010` — one column per decennial
   boundary vintage. Both ship from day one: analysts joining pre-2020 ACS
   need 2010 boundaries. Tract/BG/county are documented derivations
   (substring), not stored columns.
+- `zcta_2020`, `congressional_district` — also point-in-polygon
+  assignments with no substring relationship to the block GEOID, so they
+  are stored, not derived. ZCTA because ZIP-to-ZCTA is a common analyst
+  trap (ZIPs are routes, ZCTAs are areas); congressional district because
+  it is the most-requested policy geography. The CD column is labeled with
+  the Congress/TIGER vintage it was drawn from in the dictionary, since
+  redistricting invalidates it on a different clock than the decennial.
+- **CBSA/MSA is deliberately NOT a column.** County→CBSA is already
+  published as the `cbsa` crosswalk; consumers derive the county FIPS from
+  the block GEOID prefix and join that crosswalk. Duplicating it here
+  would mint a second CBSA surface that can drift from the first (the ADR
+  0016 rule: one authoritative surface per relationship).
 - `geo_match_type`, `geo_score`, `org_addr_is_po_box` carried through so
   consumers can filter on assignment quality.
 
@@ -46,7 +60,12 @@ time and recorded in the dictionary.
 
 **4. Implementation: local point-in-polygon**, ~2.4M geocoded points
 against TIGER/Line block shapefiles (sf or DuckDB spatial) in
-`nccs-data-bmf`. No geocoder involvement, no per-call cost. Validation
+`nccs-data-bmf`. No geocoder involvement, no per-call cost. **No EC2**:
+partitioned state-by-state (the largest state's block file is ~1M polygons)
+this is a laptop-scale job, minutes per state with a spatial index; an EC2
+box would add provisioning and teardown overhead for a compute step smaller
+than the validation runs we already do locally. Escalate to EC2 only if
+memory forces it, which is not expected. Validation
 gate: every assigned block's county prefix must match the org's
 crosswalk-resolved county FIPS; disagreements halt and are triaged as
 geocoding defects (free quality check on the geocoder itself).
