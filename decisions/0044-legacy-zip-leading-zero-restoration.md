@@ -45,11 +45,20 @@ separate because flipping it on needs a dry run across the 55 vintages).
 ## Decision
 
 **1. Fix (producer, branch `fix/legacy-zip-leading-zeros`).** In
-`.clean_zip()`, pad 3-4 digit values left with zeros to width 5 before the
-`^\d{5}` extraction. Only 3-4 digit values are padded: a US ZIP has at most
-two leading zeros (00501 is the lowest in use), so a 1-2 digit value cannot
-be a stripped ZIP and is left to fail rather than be invented into a
-plausible-looking one.
+`.clean_zip()`, repair by digit count before the `^\d{5}` extraction
+(amended 2026-07-29, PR #40 review):
+
+- **3-4 digits: pad to 5.** A US ZIP has at most two leading zeros (00501
+  is the lowest in use), so a 1-2 digit value cannot be a stripped ZIP and
+  is left to fail rather than be invented into a plausible-looking one.
+- **8 digits: pad to 9.** An 8-digit undashed value can only be a ZIP+4
+  that lost its leading zero (`02138-1234` stored as `21381234`). Without
+  this pad the extraction returned `21381`, a wrong-but-plausible ZIP5 the
+  integrity gate cannot detect because a 5-digit result was produced.
+- **6, 7 and 10+ digits: force NA.** No unambiguous repair exists;
+  extracting a 5-digit prefix would invent a plausible wrong ZIP. The
+  gate's recoverable set (3/4/5/8/9 digits must clean to a ZIP5) mirrors
+  this exactly, so the deliberate NAs are not violations.
 
 **2. Guardrail: destructive-transform gate.** Two possible designs here:
 make the pipelines finally read `generate_quality_report()`'s `report$passed`
