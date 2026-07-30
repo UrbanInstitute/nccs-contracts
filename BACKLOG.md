@@ -13,7 +13,7 @@ open-loop ADR (`Accepted`/`Executing`) should map to a row here. Run
 `/reconcile-status` at boot to cross-check the board against downstream PRs and
 catch reconcile lag.
 
-_Last updated: 2026-07-28._
+_Last updated: 2026-07-30._
 
 ---
 
@@ -41,7 +41,7 @@ legacy metadata tables in nccs-data-core) is the next build.
 
 | # | Task | Where | Status / notes |
 |---|------|-------|----------------|
-| Z1 | **Rebuild + re-publish everything the ZIP defect touched** | `nccs-data-bmf` | **Blocks the rest of Z.** `.clean_zip()` dropped the ZIP for legacy rows in ME/NH/VT/MA/RI/CT/NJ/PR/VI (leading zeros stripped upstream, `^\d{5}` returned NA). Fix + `assert_zip_integrity()` gate on branch `fix/legacy-zip-leading-zeros`, covered by **ADR 0044** (changes published column values). Sequence: merge ADR 0044 + producer PR, re-run 55 legacy vintages, rebuild Unified BMF + state marts, re-geocode the ~124k ZIP-less addresses (delta, not a full cycle), rebuild + re-publish the address log, re-run `validate_address_crosswalk.R` (2 checks currently fail). |
+| Z1 | ~~Rebuild + re-publish everything the ZIP defect touched~~ **DONE 2026-07-30** | `nccs-data-bmf` | Executed per ADR 0044 (see its Outcome): 85/85 vintages re-run (gate PASS), unified rebuilt (3.69M EINs), 60,257-address delta re-geocode + 2.53M carryover, marts rebuilt, address log re-published (11.30M spells, ~148k phantoms collapsed), `validate_address_crosswalk.R` all checks PASS (cross-source 15.82%, no state below floor). Box terminated. New follow-ups: batch-box role lacks geocoder-bucket PutObject (submit as maintainer); export script must check `system()` exit codes; `run_all_legacy.sh` exits 0 on all-fail; `setup_ec2.sh` missing `aws.ec2metadata`. |
 | Z2 | Regenerate the BMF catalog and drop the ZIP caveat | `nccs` | After Z1. `catalogs/get-aws-files.R bmf`, re-render `catalog-bmf.qmd`, delete the warning callout added in nccs #92, refresh the coverage figure if re-geocoding moves it off 82.7%. |
 | Z3 | Publish a data dictionary for the address-resolved crosswalk | `nccs-data-bmf` | No dictionary ships with the artifact today (probed: no `*_data_dictionary.csv` under `crosswalks/address-resolved/latest/`), unlike the Unified BMF. Columns are self-explanatory so this is not urgent, but every other published product has one. Fold into the Z1 re-publish if convenient. |
 | Z4 | Fix the address-resolved publisher's default prefix | `nccs-data-bmf` | `publish_address_resolved_crosswalk()` defaults `s3_prefix` to a flat `crosswalks/address-resolved/`, but the artifact lives at `{v2026_07,latest}/` per ADR 0042; the published layout came from passing prefixes by hand. Anyone following the run instructions in the file header writes to a dead path and leaves `latest/` stale. Bites at the Z1 re-publish. |
