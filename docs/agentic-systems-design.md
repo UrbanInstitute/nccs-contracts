@@ -90,14 +90,14 @@ world would have no ground truth — only code to imitate.
 ```mermaid
   flowchart TB
       subgraph SPINE["nccs-contracts — the legibility spine"]
-          contracts["contracts/*.yml<br/>14 machine-checkable specs<br/>(5 still carry TODO)"]:::progress
-          adrs["decisions/*.md<br/>24 ADRs (the why + revisit triggers)"]:::live
+          contracts["contracts/*.yml<br/>17 machine-checkable specs<br/>(5 still carry TODO)"]:::progress
+          adrs["decisions/*.md<br/>44 ADRs (the why + revisit triggers)"]:::live
           validator["validate_contracts.py<br/>(spec well-formedness)"]:::live
           guard["contracts-guard.yml + adr-required.yml<br/>cross-repo change guard (ADR 0022, rolling out)"]:::progress
       end
 
       subgraph PRODN["Producers — converging on the spec"]
-          bmf["BMF → master / geocoded / lookups / legacy<br/>(unified products retired, 0005)"]:::live
+          bmf["BMF → Unified BMF + geocoded / lookups / legacy<br/>(renamed back from 'master', 0037/0039;<br/>vintaged + latest/, 0042)"]:::live
           xwalk["Geo crosswalks (NCCS-owned, LIVE)<br/>county-fips · cbsa · ct-planning-region (0021/0023)"]:::live
           core["Core 990 → 990 / harmonized / legacy / panel tiers (0015)"]:::live
           efile["E-file Phase 0 — LIVE 2026-05-29<br/>vendored-NODC + build-time verification (0007/0017)"]:::live
@@ -215,7 +215,7 @@ and why. That legibility is what makes the next state reachable at all.
       %% ===== Agentic operations =====
       subgraph OPS["Agentic operations"]
           check["Deterministic GH Actions<br/>schema · manifest · sha256 · row-count<br/>cron (batch) · event (continuous)"]:::progress
-          agent["Copilot agent (Opus)<br/>L1 drift remediation · L2 pin-bumps · L3 PR review"]:::progress
+          agent["Copilot agent (Sonnet — guidelines are explicit,<br/>so execution beats model intelligence)<br/>L1 drift remediation · L2 pin-bumps · L3 PR review"]:::progress
       end
 
       %% ===== Data + control flow =====

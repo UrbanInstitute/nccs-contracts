@@ -13,7 +13,7 @@ open-loop ADR (`Accepted`/`Executing`) should map to a row here. Run
 `/reconcile-status` at boot to cross-check the board against downstream PRs and
 catch reconcile lag.
 
-_Last updated: 2026-07-30._
+_Last updated: 2026-08-07._
 
 ---
 
@@ -53,7 +53,7 @@ legacy metadata tables in nccs-data-core) is the next build.
 | Z10 | ADR note: `nccs-data-archive` made public-read | `nccs-contracts` | Bucket policy changed 2026-07-28: anonymous GetObject only (no ListBucket, ACLs still blocked). Contents audited: 117 objects, 9.89 GB, all superseded public-derived products. Changes the ADR 0037 supersession posture and turns those URLs into a retention commitment; needs an ADR note (amend 0037 or a short new ADR). |
 | Z11 | Build the census-geo-resolved crosswalk (ADR 0045) | `nccs-data-bmf` | After Z1 (re-geocode moves ~124k coordinates). Per-EIN block GEOIDs (2010 + 2020 boundaries) via local point-in-polygon of geocoded lat/lon against TIGER/Line; point-level matches only; county-prefix consistency gate against the county-fips join. Demand: Milwaukee MSA, IL county, and the 2026-07-29 internal FIPS ask all reduce to "NCCS + census geography". |
 | Z12 | Document the county-FIPS join recipe where users look | `nccs` + `nccsdata` | Recurring internal asks show people don't know FIPS is one crosswalk join away (and the API already serves `geo_county_fips` pre-joined). Add the recipe (label join; CT by coordinate) to the website catalog pages and the nccsdata vignette. Cheap, do before Z11 ships. |
-| Z13 | Merge publisher must write `v{YYYY_MM}/` + `latest/` itself | `nccs-data-bmf` | **PR OPEN 2026-08-05** — bmf PR #41 (`ADR 0042` breadcrumb, contracts-guard green): `merge_master_geocoded_results()` writes `v{YYYY_MM}/` (parquet-only, Decision A) + `latest/` (full set) with per-prefix `_manifest.json`, idempotent sha256 vs the remote manifest; `merged/` + old `bmf-master/` stay as window dual-writes. Z4 folded in. First live merge run after merge verifies; then Z14 unblocks. |
+| Z13 | Merge publisher must write `v{YYYY_MM}/` + `latest/` itself | `nccs-data-bmf` | **PR OPEN 2026-08-05** — bmf PR #41 (`ADR 0042` breadcrumb, contracts-guard green): `merge_master_geocoded_results()` writes `v{YYYY_MM}/` (parquet-only, Decision A) + `latest/` (full set) with per-prefix `_manifest.json`, idempotent sha256 vs the remote manifest; `merged/` + old `bmf-master/` stay as window dual-writes. Z4 folded in. **MERGED 2026-08-10** (+ review commit `78b9c17`: naming cleanups). Live verification DEFERRED by decision to the August monthly cycle: local re-merge would need reconstructed inputs (7/26 staged addr-lookup/batches predate the Z1 ZIP repairs; the box's regenerated inputs died with it) and a byte-different parquet would overwrite the verified 7/29 `latest/`. Recovery note: the Z1 delta geocoder output survives at `s3://geocoding-codestar-prod/data/output-data/thiya-1785360031-public.csv` (60,257 addresses; ledger in `geocoding/unified-bmf/runs/z1_2026_07/`). Z14 unblocks after the August run verifies. |
 | Z14 | Repoint sector-in-brief-api + nccsdata to `geocoding/unified-bmf/latest/` | `sector-in-brief-api` + `nccsdata` | Both still read the pre-ADR-0039 `geocoding/bmf-master/merged/` path, alive only via dual-write until the 90-day window closes (~2026-10). Sequence AFTER Z13 (or the interim manual copy) so `latest/` is trustworthy first. Each PR needs its contracts-guard breadcrumb. Was prose in the ADR 0041 follow-ups; now a row. |
 | S1 | XWALK `ADDRESS→STREET` fix + drop+alias crosswalk gate + exists()-guarded control flags + fail-loud manifest upload; PR with `ADR 0041` breadcrumb | `nccs-data-bmf` | Branch `fix/legacy-street-address-29`; validated on 2013-07 (8 additive cols, 0 removals, identical row count). PR opening 2026-07-24. |
 | S2 | EC2 batch re-run + re-publish the **58** ADDRESS-carrying legacy vintages (skip the 30 street-less: output unchanged) | `nccs-data-bmf` | `run_all_legacy.sh` + SKIP_VINTAGES list; profile `thiya` provisions, role/exported creds on box. |
@@ -131,6 +131,7 @@ retaining the Unified BMF name"; ADR 0022 consumer-notification obligation satis
 | 3 | Make harmonized CORE datasets more visible on the NCCS website | `nccs` | Not started. Batch with #4–#6 (all `nccs`). |
 | 4 | Link/mention the bmf + core crosswalks on the website's BMF & CORE pages | `nccs` | BMF page: geography crosswalks (`county-fips`/`cbsa`/`ct-planning-region`) + `ntee-resolved`. CORE page: the legacy→harmonized crosswalks (live in the producer repos). |
 | 5 | CORE page copy: parallel datasets use different column names (beginner accessibility); harmonized CORE remains available on site | `nccs` | Copy task. |
+| 5b | Contact-page deflection for misdirected NTEE-assignment emails | `nccs` | **New 2026-08-10** (nccs-inbox thread `2026-08-ntee-misdirected-requests`; several/week per Thiya). The deflection content already exists at `_resources/ntee.md`; the gap is routing: add an "Applying for tax-exempt status / need an NTEE code?" callout on the contact page linking `resources/ntee/`, plus a form dropdown category whose NTEE/IRS option shows the deflection inline or fires a Formspree auto-reply (pattern per inbox thread `2026-07-formspree-delivery`). Keyword-sniffing free text rejected (false positives on real data questions). Canned reply template lives in the inbox thread. Batch with #3-#5 or Z2. |
 | 6 | Publish/formalize the NTEE-EIN crosswalk on the website | `nccs` | **✅ DONE** — published on the BMF catalog (nccs PR #88, live on Pages); consumer back-reconciled into the contract + ADR 0034 (nccs-contracts PR #45). |
 | 7 | Build the modular `_nccs` metadata datasets (separate, contracted, joinable on `ein`) | `nccs-data-bmf` / `nccs-data-core` + contracts | **ADR-NEEDED (§4.2).** ⚠️ overlaps #12 (Jesse ratifies). See sequencing note below. |
 | 8 | Expose the optional metadata merge in nccsdata (off by default) | `nccsdata` | **ADR-NEEDED (§4.3).** Same Jesse-gating as #7. Design sketch in the fact-finding §4.3. |
@@ -144,6 +145,31 @@ retaining the Unified BMF name"; ADR 0022 consumer-notification obligation satis
 |---|------|-------|
 | 12 | Draft ADRs as the first July quarterly agenda | The 5 ADR-NEEDED items: master BMF versioning + `/latest`; NTEE backfill into master; modular `_nccs` metadata datasets (ratifies #7/#8); nccsdata optional-merge; quarterly governance cadence + decision-split taxonomy + auto-gen decision doc. **+ EIN cluster: J2 (all-join-IDs, optional) + J3 (Giving Tuesday format confirm); J1 convergence is decided (not pursued).** |
 | 13 | Schedule the July check-in once Jesse responds; bring the decision-split taxonomy draft | — |
+
+## NODC SOI-harmonization interoperability — ADR 0046 (Proposed 2026-08-06)
+
+Origin: Jesse's public repo `Nonprofit-Open-Data-Collective/soi-extract-harmonization`
+(pinned review SHA `8632a5f`) independently harmonizes the same SOI extracts to NODC
+`F9_*` names, consumes our `BMF_UNIFIED_V1.1.csv`, and references an uncontracted
+write at `raw/soi/processed_plus_bmf/`. All work below is unilateral (no ask of Jesse).
+
+| # | Task | Where | Notes |
+|---|------|-------|-------|
+| C1 | Ratify ADR 0046; review draft concordance in `notes/adr-0046-concordance-draft/` | nccs-contracts | Draft composes 345/345 SOI 990+EZ vars across both harmonizations; 132 carry legacy PZ names. |
+| C2 | Build + publish `lookups/variable-concordance/` (vYYYY.MM + latest, manifest, dictionary) | nccs-data-core | Snapshot NODC crosswalk at recorded upstream SHA. PF = future extension. |
+| C3 | Land EIN2/ein_prefixed in CORE outputs (ADR 0036, pending core PR #11 checklist item) | nccs-data-core | Now also the join key to NODC-keyed workflows; priority raised. |
+| C4 | Provenance note in workspace `DATA-LIFECYCLE.md`: external BMF v1.1 pin + `raw/soi/processed_plus_bmf/` observation | workspace root | Documentation only, no contract. |
+
+## ODC-BY licensing alignment (Steven Jones inquiry; Legal confirmed 2026-08-06)
+
+Origin: external commercial-use question via datacatalog inbox; catalog says ODC-BY,
+NCCS terms page said "personal use only" (legacy GuideStar-era boilerplate, per Boris).
+Sarah Trumble (Legal) confirmed ODC-BY governs. Reply sent to Steven 2026-08-07.
+
+| # | Task | Where | Notes |
+|---|------|-------|-------|
+| L1 | Commit + deploy terms page update (new §3.5 ODC-BY carve-out, renumbered §3.6/§3.7) | `nccs` | Edited in working tree 2026-08-07, uncommitted. Delete or re-render stale root `terms.html` in same commit. Optionally run §3.5 wording past Sarah first. |
+| L2 | Flag to Graham (datacatalog) once live so he can note it catalog-side | email | Catalog entry itself unchanged by design. |
 
 ## Background / noted (not urgent)
 
