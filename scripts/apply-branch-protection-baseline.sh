@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
-# apply-branch-protection-baseline.sh — ADR 0047: require PRs + review +
-# green checks on the default branch of every in-scope repo.
+# apply-branch-protection-baseline.sh — ADR 0047: require PRs + review on
+# the default branch of every in-scope repo, plus the contracts-guard
+# status check where the guard caller exists (no other checks mandated).
 #
 # Ruleset body: branch-protection-baseline.json (PRs required, 1 approving
-# review with repository-admin bypass, no deletions/force-pushes). On repos
+# review with repository-admin bypass in pull_request mode -- admins
+# self-merge but cannot skip PR flow; no deletions/force-pushes). On repos
 # that carry the contracts-guard caller, the guard status check is appended
 # as a required check (composing ADR 0022 step 4 into the same ruleset).
 #

@@ -1,4 +1,4 @@
-# 0047 — Org-wide branch-protection baseline (require PRs, review, green checks)
+# 0047 — Org-wide branch-protection baseline (require PRs + review; guard check where it exists)
 
 Status: Proposed
 Date: 2026-08-11
@@ -28,14 +28,19 @@ branch of every in-scope repo where the maintainer holds admin:
 
 1. **Pull requests required** — no direct pushes to the default branch.
 2. **One approving review required**, with **repository admins as
-   bypass actors**. Rationale: the maintainer is the only reviewer in
-   practice; without a bypass, single-maintainer repos deadlock (an
-   author cannot approve their own PR). The bypass is role-based
-   (admin), not user-based.
-3. **Required status checks**: `contracts-guard / contracts-guard` on
-   repos that carry the guard caller (unchanged from ADR 0022 step 4;
-   the guard's own `ADR NNNN` / `contracts-ack` relief valve stands).
-   Repos without CI get rules 1-2 only until CI exists.
+   bypass actors in `pull_request` mode**: an admin may merge their own
+   PR without a second reviewer, but CANNOT bypass PR flow itself --
+   direct pushes to the default branch are impossible for every role.
+   Rationale: the maintainer is the only reviewer in practice; without
+   a bypass, single-maintainer repos deadlock (an author cannot approve
+   their own PR). The bypass is role-based (admin), not user-based.
+3. **Required status check** -- `contracts-guard / contracts-guard` --
+   ONLY on repos that carry the guard caller (unchanged from ADR 0022
+   step 4; the guard's own `ADR NNNN` / `contracts-ack` relief valve
+   stands). This baseline mandates no other checks: repos without the
+   guard (today: sector-in-brief-api) get PR + review + protection
+   rules only. A general green-CI gate is a future per-repo addition
+   once test workflows exist, not part of this ADR.
 4. **Block force pushes and deletions** on the default branch.
 
 In-scope now (maintainer admin confirmed 2026-08-11): `nccs-data-bmf`,
