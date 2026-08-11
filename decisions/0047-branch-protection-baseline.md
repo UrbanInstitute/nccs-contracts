@@ -1,8 +1,9 @@
 # 0047 — Org-wide branch-protection baseline (require PRs + review; guard check where it exists)
 
-Status: Proposed
-Date: 2026-08-11
-Relates: 0022 (contract-change guard; step-4 ruleset tooling), BACKLOG item 10
+- **Status:** Accepted (ratified at merge 2026-08-11; applied same day)
+- **Date:** 2026-08-11
+- **Deciders:** sole maintainer
+- **Relates:** ADR 0022 (contract-change guard; step-4 ruleset tooling), BACKLOG item 10
 
 ## Context
 
