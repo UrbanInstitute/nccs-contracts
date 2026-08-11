@@ -1,6 +1,6 @@
 # 0044 — Restore Legacy ZIP Leading Zeros; Gate Destructive Transforms
 
-- **Status:** Proposed
+- **Status:** Reconciled (2026-07-30)
 - **Date:** 2026-07-28
 - **Deciders:** sole maintainer
 - **Related:** [[0041-legacy-street-recovery-address-resolved-crosswalk]] (the campaign that missed this defect; the address-resolved crosswalk it damages), [[0042-vintage-retention-latest-convention]] (versioned re-publish paths the rebuild uses), [[0022]] (contracts guard), [[0014]] (manifest shape), Backlog Z1 (rebuild campaign this ADR unblocks)
@@ -103,5 +103,32 @@ comes out after the rebuild (Z2).
 
 ## Outcome
 
-_To be filled at reconcile: rebuild counts, gate results across the 55
-vintages, coverage delta, address-log spell correction counts._
+Executed 2026-07-29/30 on EC2 `m6i.8xlarge` (terminated after the run):
+
+- **Legacy re-run: 85/85 vintages** re-processed and re-published (the full
+  bucket, a superset of the 55 damaged ones; publish is sha256-idempotent).
+  Every vintage passed `assert_zip_integrity()`. One vintage (2008-12)
+  needed a retry after a transient S3 500; one environment defect surfaced
+  (`aws.ec2metadata` missing, R-side AccessDenied while the CLI worked) and
+  is noted for `setup_ec2.sh`.
+- **Unified BMF rebuilt + published**: 3,687,435 unique EINs, quality gate
+  PASSED.
+- **Delta re-geocode, not a full cycle**: 60,257 changed/new unique
+  addresses submitted (stem `thiya-1785360031-public`); 2,532,364 prior
+  geocodes carried over by exact address match. Geocoded coverage
+  3,050,331 orgs (82.7%). Ledger at
+  `geocoding/unified-bmf/runs/z1_2026_07/`. Note: the batch box's role
+  cannot PutObject to the geocoder bucket; submission must come from the
+  maintainer identity (first "submission" failed silently — the export
+  script's unchecked `system()` call is a follow-up fix).
+- **State marts rebuilt** from the new geocoded unified.
+- **Address log rebuilt + published** (`v2026_07/` + `latest/`):
+  **11,299,800 spells** across 3,687,468 EINs, down ~150k from the damaged
+  11.45M — the predicted ~148k phantom duplicate spells collapsed.
+- **`validate_address_crosswalk.R`: all checks PASS**, including the two
+  that failed pre-fix: cross-source spell share 15.82% (the damaged states
+  showed 0.00%), and no large state below the 1% cross-source floor.
+
+Remaining follow-ups tracked on the board: Z2 (catalog caveat removal),
+Z3 (dictionary), Z4 (publisher default prefix — two more precondition
+traps hit during this run), Z5, Z8, Z9.

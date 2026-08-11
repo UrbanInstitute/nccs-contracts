@@ -13,7 +13,7 @@ open-loop ADR (`Accepted`/`Executing`) should map to a row here. Run
 `/reconcile-status` at boot to cross-check the board against downstream PRs and
 catch reconcile lag.
 
-_Last updated: 2026-07-28._
+_Last updated: 2026-08-11._
 
 ---
 
@@ -41,25 +41,20 @@ legacy metadata tables in nccs-data-core) is the next build.
 
 | # | Task | Where | Status / notes |
 |---|------|-------|----------------|
-| Z1 | **Rebuild + re-publish everything the ZIP defect touched** | `nccs-data-bmf` | **Blocks the rest of Z.** `.clean_zip()` dropped the ZIP for legacy rows in ME/NH/VT/MA/RI/CT/NJ/PR/VI (leading zeros stripped upstream, `^\d{5}` returned NA). Fix + `assert_zip_integrity()` gate on branch `fix/legacy-zip-leading-zeros`, covered by **ADR 0044** (changes published column values). Sequence: merge ADR 0044 + producer PR, re-run 55 legacy vintages, rebuild Unified BMF + state marts, re-geocode the ~124k ZIP-less addresses (delta, not a full cycle), rebuild + re-publish the address log, re-run `validate_address_crosswalk.R` (2 checks currently fail). |
+| Z1 | ~~Rebuild + re-publish everything the ZIP defect touched~~ | `nccs-data-bmf` | **DONE 2026-07-30** per ADR 0044 Outcome (85/85 vintages, unified 3.69M EINs, delta re-geocode, marts, address log). Detail: BACKLOG-ARCHIVE.md. Open follow-ups tracked as Z8 (done), batch-box role, exit-code checks. |
 | Z2 | Regenerate the BMF catalog and drop the ZIP caveat | `nccs` | After Z1. `catalogs/get-aws-files.R bmf`, re-render `catalog-bmf.qmd`, delete the warning callout added in nccs #92, refresh the coverage figure if re-geocoding moves it off 82.7%. |
 | Z3 | Publish a data dictionary for the address-resolved crosswalk | `nccs-data-bmf` | No dictionary ships with the artifact today (probed: no `*_data_dictionary.csv` under `crosswalks/address-resolved/latest/`), unlike the Unified BMF. Columns are self-explanatory so this is not urgent, but every other published product has one. Fold into the Z1 re-publish if convenient. |
-| Z4 | Fix the address-resolved publisher's default prefix | `nccs-data-bmf` | `publish_address_resolved_crosswalk()` defaults `s3_prefix` to a flat `crosswalks/address-resolved/`, but the artifact lives at `{v2026_07,latest}/` per ADR 0042; the published layout came from passing prefixes by hand. Anyone following the run instructions in the file header writes to a dead path and leaves `latest/` stale. Bites at the Z1 re-publish. |
+| Z4 | ~~Fix the address-resolved publisher's default prefix~~ | `nccs-data-bmf` | **DONE** — merged in bmf #41 with Z13. Detail: BACKLOG-ARCHIVE.md. |
 | Z5 | Sweep every `_manifest.json` for `bytes: "NA"` | `nccs-data-bmf` | The 2 GiB integer overflow (fixed in PR #37) wrote `"NA"` into manifests for any file over 2 GiB. The 2026-07-25 unified manifest was hand-corrected; nobody has checked the rest of the bucket. Needs SSO. |
 | Z6 | New ADR: NTEE metadata table | `nccs-contracts` | Maintainer call on ADR 0043: NTEE hierarchy derivables belong in a dedicated NTEE metadata table, not a CORE-legacy one. The ADR must settle ownership rather than mint a third NTEE surface: `lookups/bmf/` already publishes `ntee_code`, `ntee_common_code`, `ntee_code_major_group`, `nteev2_subsector`, and `crosswalks/ntee-resolved/` carries per-EIN resolved NTEE (ADR 0034), both produced by `nccs-data-bmf` while the legacy NTEE columns are CORE-side. Ship a data dictionary with the table. |
 | Z7 | New ADR: CORE-to-e-file record linkage | `nccs-contracts` | Maintainer call on ADR 0043: DLN cannot serve as the join key (present only 2000-2010 in PZ, 1999-2010 in PF, as DOCLOCNO 1997-1999), so it stops about where 990 e-file XML begins. Linking CORE rows to e-file filings needs a record-linkage procedure of our own. |
-| Z8 | Implement the geocoder ledger and address cache | `nccs-data-bmf` | `docs/reference/geocoder-service.md` (PR #35) mandates a `geocode_ledger.tsv` and a persistent `f_address` cache; neither exists in code, so rules 3, 4, 6 and 7 are a checklist someone follows at 1am. The cache pays for itself at Z1: keyed on normalized `f_address`, the ~124k repaired addresses miss and resubmit while ~3.5M stay cached. |
+| Z8 | ~~Implement the geocoder ledger and address cache~~ | `nccs-data-bmf` | **DONE 2026-08-11** — bmf #43 merged (`R/master_geocoding_delta.R`; windowed submission, S3-synced fail-closed run state, run-stamped retention; rule-7 cache = published-artifact carryover). Detail + residuals: BACKLOG-ARCHIVE.md. |
 | Z9 | Wire `report$passed` into a hard gate | `nccs-data-bmf` | `generate_quality_report()` computes it and neither pipeline reads it; `STRICT_QUALITY_GATES` only ever bound the pre-checks. That is why a transform could empty a column across 55 vintages and still report success. Not done with the ZIP fix because flipping it on would likely fail legacy vintages on pre-existing critical-field nulls, untested across the 55. Needs a dry run first. |
 | Z10 | ADR note: `nccs-data-archive` made public-read | `nccs-contracts` | Bucket policy changed 2026-07-28: anonymous GetObject only (no ListBucket, ACLs still blocked). Contents audited: 117 objects, 9.89 GB, all superseded public-derived products. Changes the ADR 0037 supersession posture and turns those URLs into a retention commitment; needs an ADR note (amend 0037 or a short new ADR). |
 | Z11 | Build the census-geo-resolved crosswalk (ADR 0045) | `nccs-data-bmf` | After Z1 (re-geocode moves ~124k coordinates). Per-EIN block GEOIDs (2010 + 2020 boundaries) via local point-in-polygon of geocoded lat/lon against TIGER/Line; point-level matches only; county-prefix consistency gate against the county-fips join. Demand: Milwaukee MSA, IL county, and the 2026-07-29 internal FIPS ask all reduce to "NCCS + census geography". |
 | Z12 | Document the county-FIPS join recipe where users look | `nccs` + `nccsdata` | Recurring internal asks show people don't know FIPS is one crosswalk join away (and the API already serves `geo_county_fips` pre-joined). Add the recipe (label join; CT by coordinate) to the website catalog pages and the nccsdata vignette. Cheap, do before Z11 ships. |
-| S1 | XWALK `ADDRESS→STREET` fix + drop+alias crosswalk gate + exists()-guarded control flags + fail-loud manifest upload; PR with `ADR 0041` breadcrumb | `nccs-data-bmf` | Branch `fix/legacy-street-address-29`; validated on 2013-07 (8 additive cols, 0 removals, identical row count). PR opening 2026-07-24. |
-| S2 | EC2 batch re-run + re-publish the **58** ADDRESS-carrying legacy vintages (skip the 30 street-less: output unchanged) | `nccs-data-bmf` | `run_all_legacy.sh` + SKIP_VINTAGES list; profile `thiya` provisions, role/exported creds on box. |
-| S3 | Unified BMF rebuild (street value-backfill for legacy-sourced rows; schema unchanged) + by-`bmf_source` completeness tripwire in master quality report (ADR 0041 §5) | `nccs-data-bmf` | After S2. |
-| S4 | Full geocoding cycle (export → Urban geocoder → merge): ~1.48M legacy-only orgs newly addressable; publish per **ADR 0039 ratified paths** (`geocoding/unified-bmf/`, `unified/bmf/state_marts/`), dual-write old paths only while 0039's window (from 2026-07-02) is open | `nccs-data-bmf` | Manual two-phase workflow; the expensive step this batch was bundled around. |
-| S5 | Build + first publish `crosswalks/address-resolved/` (ADR 0034 pattern); populate `contracts/address-resolved-crosswalk.yml` from the artifact | `nccs-data-bmf` + contracts | Blocked on S2 (needs street in legacy intermediates). |
-| S6 | Reconcile here: ADR 0041 Outcome, contract population, this board; reply to reporter (drafted in nccs-inbox); note pre-2010 geocoding-coverage caveat improvement for the Milwaukee request docs | contracts + nccs-inbox | At the end. |
-| S7 | ADR 0042 (Proposed): vintage retention + latest/ for unified/geocoded/metadata tables; long-format address log (amends 0041 §4); docs-automation CI; validation gate. Two decision points await maintainer in the PR | contracts + `nccs-data-bmf` | Drafted 2026-07-25; evidence incl. Capital One v1.1 breakage (unknown consumer, no notice). |
+| Z13 | ~~Merge publisher writes `v{YYYY_MM}/` + `latest/` itself~~ | `nccs-data-bmf` | **DONE; VERIFIED LIVE 2026-08-11** (bmf #41 merged; first machine-written v2026_08/ + latest/ publish, sha-skip observed). Detail + ops notes: BACKLOG-ARCHIVE.md. Z14 unblocked. |
+| Z14 | Repoint sector-in-brief-api + nccsdata to `geocoding/unified-bmf/latest/` | `sector-in-brief-api` + `nccsdata` | Both still read the pre-ADR-0039 `geocoding/bmf-master/merged/` path, alive only via dual-write until the 90-day window closes (~2026-10). Sequence AFTER Z13 (or the interim manual copy) so `latest/` is trustworthy first. Each PR needs its contracts-guard breadcrumb. Was prose in the ADR 0041 follow-ups; now a row. |
 
 ---
 
@@ -129,6 +124,7 @@ retaining the Unified BMF name"; ADR 0022 consumer-notification obligation satis
 | 3 | Make harmonized CORE datasets more visible on the NCCS website | `nccs` | Not started. Batch with #4–#6 (all `nccs`). |
 | 4 | Link/mention the bmf + core crosswalks on the website's BMF & CORE pages | `nccs` | BMF page: geography crosswalks (`county-fips`/`cbsa`/`ct-planning-region`) + `ntee-resolved`. CORE page: the legacy→harmonized crosswalks (live in the producer repos). |
 | 5 | CORE page copy: parallel datasets use different column names (beginner accessibility); harmonized CORE remains available on site | `nccs` | Copy task. |
+| 5b | Contact-page deflection for misdirected NTEE-assignment emails | `nccs` | **New 2026-08-10** (nccs-inbox thread `2026-08-ntee-misdirected-requests`; several/week per Thiya). The deflection content already exists at `_resources/ntee.md`; the gap is routing: add an "Applying for tax-exempt status / need an NTEE code?" callout on the contact page linking `resources/ntee/`, plus a form dropdown category whose NTEE/IRS option shows the deflection inline or fires a Formspree auto-reply (pattern per inbox thread `2026-07-formspree-delivery`). Keyword-sniffing free text rejected (false positives on real data questions). Canned reply template lives in the inbox thread. Batch with #3-#5 or Z2. |
 | 6 | Publish/formalize the NTEE-EIN crosswalk on the website | `nccs` | **✅ DONE** — published on the BMF catalog (nccs PR #88, live on Pages); consumer back-reconciled into the contract + ADR 0034 (nccs-contracts PR #45). |
 | 7 | Build the modular `_nccs` metadata datasets (separate, contracted, joinable on `ein`) | `nccs-data-bmf` / `nccs-data-core` + contracts | **ADR-NEEDED (§4.2).** ⚠️ overlaps #12 (Jesse ratifies). See sequencing note below. |
 | 8 | Expose the optional metadata merge in nccsdata (off by default) | `nccsdata` | **ADR-NEEDED (§4.3).** Same Jesse-gating as #7. Design sketch in the fact-finding §4.3. |
@@ -142,6 +138,31 @@ retaining the Unified BMF name"; ADR 0022 consumer-notification obligation satis
 |---|------|-------|
 | 12 | Draft ADRs as the first July quarterly agenda | The 5 ADR-NEEDED items: master BMF versioning + `/latest`; NTEE backfill into master; modular `_nccs` metadata datasets (ratifies #7/#8); nccsdata optional-merge; quarterly governance cadence + decision-split taxonomy + auto-gen decision doc. **+ EIN cluster: J2 (all-join-IDs, optional) + J3 (Giving Tuesday format confirm); J1 convergence is decided (not pursued).** |
 | 13 | Schedule the July check-in once Jesse responds; bring the decision-split taxonomy draft | — |
+
+## NODC SOI-harmonization interoperability — ADR 0046 (Proposed 2026-08-06)
+
+Origin: Jesse's public repo `Nonprofit-Open-Data-Collective/soi-extract-harmonization`
+(pinned review SHA `8632a5f`) independently harmonizes the same SOI extracts to NODC
+`F9_*` names, consumes our `BMF_UNIFIED_V1.1.csv`, and references an uncontracted
+write at `raw/soi/processed_plus_bmf/`. All work below is unilateral (no ask of Jesse).
+
+| # | Task | Where | Notes |
+|---|------|-------|-------|
+| C1 | Ratify ADR 0046; review draft concordance in `notes/adr-0046-concordance-draft/` | nccs-contracts | Draft composes 344/344 unique (SOI var, form) keys across both harmonizations (year-split rows collapsed per review 2026-08-11); 131 carry legacy PZ names. |
+| C2 | Build + publish `lookups/variable-concordance/` (vYYYY.MM + latest, manifest, dictionary) | nccs-data-core | Snapshot NODC crosswalk at recorded upstream SHA. PF = future extension. |
+| C3 | Land EIN2/ein_prefixed in CORE outputs (ADR 0036, pending core PR #11 checklist item) | nccs-data-core | Now also the join key to NODC-keyed workflows; priority raised. |
+| C4 | Provenance note in workspace `DATA-LIFECYCLE.md`: external BMF v1.1 pin + `raw/soi/processed_plus_bmf/` observation | workspace root | Documentation only, no contract. |
+
+## ODC-BY licensing alignment (Steven Jones inquiry; Legal confirmed 2026-08-06)
+
+Origin: external commercial-use question via datacatalog inbox; catalog says ODC-BY,
+NCCS terms page said "personal use only" (legacy GuideStar-era boilerplate, per Boris).
+Sarah Trumble (Legal) confirmed ODC-BY governs. Reply sent to Steven 2026-08-07.
+
+| # | Task | Where | Notes |
+|---|------|-------|-------|
+| L1 | Commit + deploy terms page update (new §3.5 ODC-BY carve-out, renumbered §3.6/§3.7) | `nccs` | Edited in working tree 2026-08-07, uncommitted. Delete or re-render stale root `terms.html` in same commit. Optionally run §3.5 wording past Sarah first. |
+| L2 | Flag to Graham (datacatalog) once live so he can note it catalog-side | email | Catalog entry itself unchanged by design. |
 
 ## Background / noted (not urgent)
 

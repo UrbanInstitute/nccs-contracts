@@ -1,0 +1,345 @@
+soi_source_var,form,core_harmonized_name,nodc_efile_var,legacy_core_names,nodc_vscope,nodc_label,core_description,core_years,nodc_years,legacy_years
+a_tax_prd,EZ,tax_period,F9_00_TAX_PERIOD_END_DATE,TAXPER,BOTH,Tax period end date,Tax period,2015,2015-2015,1989-2011
+actvtynotprevrptcd,EZ,significant_new_activity_cd,F9_06_ACT_NOT_PREVIOUSLY_REP_X,,F990EZ,Engaged in significant activity not previous reported [x],Activity not previously reported?,2013-2024,2013-2024,
+basisalesexpnsothr,EZ,cost_basis_other_assets,F9_08_REV_OTH_SALE_LESS_COST,P1OTHC;SALEOTHE,F990EZ,Cost of assets and sales expenses,Cost or other basis and sales expenses,2012-2024,2012-2024,1997-1999;1997-2011
+chngsinorgcd,EZ,changes_to_governing_docs_cd,F9_06_GVRN_CHANGE_DOC_X,,F990EZ,Made significant changes to governing documents [x],Significant changes to governing docs?,2013-2024,2013-2024,
+contractioncd,EZ,liquidated_terminated_cd,F9_04_LTD_DOA_X,,F990EZ,Discontinued operations or disposed of more than 25% of net assets [x],"Liquidation, dissolution, termination, or contraction",2013-2024,2013-2024,
+costgoodsold,EZ,cost_of_goods_sold,F9_08_REV_OTH_INV_COST_GOODS,GOODS;P1INVNTC,BOTH,Cost of goods sold,Less: cost of goods sold,2012-2024,2012-2024,1989-1999;1989-2011
+direxpns,EZ,gaming_fundraising_direct_expenses,F9_08_REV_OTH_EVNT_DIRECT_EXP,P1SPEVE,F990EZ,Direct expenses from fundraising events and gaming activities,Special events direct expenses,2012-2024,2012-2024,1991-1999
+duesassesmnts,EZ,membership_dues_assessments,F9_08_REV_CONTR_MEMBSHIP_DUE,,F990EZ,Membership dues,Membership dues and assessments,2012-2024,2012-2024,
+e-file,EZ,efile_indicator,EFILE_X,,BOTH,E-file indicator,E-file indicator,2020,2020-2020,
+efile,EZ,efile_indicator,EFILE_X,,BOTH,E-file indicator,E-file indicator,2021-2024,2021-2024,
+ein,EZ,ein,F9_00_ORG_EIN,EIN,BOTH,EIN,Employer Identification Number,2012;2013-2024,2012-2024,1989-2011
+elf,EZ,efile_indicator,EFILE_X,,BOTH,E-file indicator,E-file indicator,2015-2019,2015-2019,
+excds1pct509,EZ,excess_over_1pct_sec509,SA_03_PUB_AMT_CONTR_SBST_TOT,,BOTH,"Public support from exceeding $5,000 or 1% of total during the current tax year and the four years prior",Amount support exceeds total (509),2017-2024,2014-2024,
+excds2pct170,EZ,excess_over_2pct_sec170,SA_02_PUB_CONTR_SBST_TOT,,BOTH,Portion of total contributions exceeding 2% of total,Amount support exceeds total (170),2017-2024,2014-2024,
+exceeds1pct509,EZ,excess_over_1pct_sec509,SA_03_PUB_AMT_CONTR_SBST_TOT,,BOTH,"Public support from exceeding $5,000 or 1% of total during the current tax year and the four years prior",Amount support exceeds total (509),2013-2016,2013-2020,
+exceeds2pct170,EZ,excess_over_2pct_sec170,SA_02_PUB_CONTR_SBST_TOT,,BOTH,Portion of total contributions exceeding 2% of total,Amount support exceeds total (170),2013-2016,2013-2020,
+filedf1120polcd,EZ,filed_form_1120pol_cd,F9_06_POLI_FORM1120_POL_FILED_X,,F990EZ,Filed Form 1120-POL [x],File Form 1120-POL?,2013-2024,2013-2024,
+filedf990tcd,EZ,filed_form_990t_cd,F9_05_UBIZ_FORM_990T_FILED_X,,BOTH,Filed a Form 990-T [x],Organization Filed 990T,2013-2024,2013-2024,
+filedfyyn0polcd,EZ,filed_form_1120pol_cd,F9_06_POLI_FORM1120_POL_FILED_X,,F990EZ,Filed Form 1120-POL [x],File Form 1120-POL? (2015 typo: Y for 1 and N for 2),2015,2015-2015,
+gftgrntrcvd170,EZ,gifts_grants_received_sec170,SA_02_PUB_GIFT_GRANT_CONTR_TOT,CONT4;gftgrntsrcvd170,BOTH,"Gifts, grants, contributions, and membership fees received during the current tax year and the four years prior",Gifts grants membership fees received (170),"2012, 2017-2024",2012-2024,1997-2010;2011
+gftgrntsrcvd170,EZ,gifts_grants_received_sec170,SA_02_PUB_GIFT_GRANT_CONTR_TOT,CONT4;gftgrntsrcvd170,BOTH,"Gifts, grants, contributions, and membership fees received during the current tax year and the four years prior",Gifts grants membership fees received (170),2013-2016,2013-2020,1997-2010;2011
+gnsaleofastothr,EZ,gain_loss_sales_other_assets,F9_08_REV_OTH_SALE_GAIN_NET_TOT,P1OTHN,BOTH,Net gain on sales of assets - total,Gain or (loss) from sale of assets,2012-2024,2012-2024,1997-1999
+grsalesminusret,EZ,gross_sales_inventory,F9_08_REV_OTH_INV_GRO_SALE,INVENTG;P1INVNTG,BOTH,Gross sales of inventory,Gross sales of inventory,2012-2024,2012-2024,1997-1999;1997-2011
+grsamtsalesastothr,EZ,gross_sales_other_assets,F9_08_REV_OTH_SALE_ASSET,P1OTHG;P1SECURG,F990EZ,Gross sales of assets,Gross amount from sale of assets,2012-2024,2012-2024,1989-1999;1997-1999
+grsinc170,EZ,gross_income_interest_sec170,SA_02_TOT_INCOME_GRO_TOT,A4A_IVST;grsinc170;INVINC4;SAVINT,BOTH,Gross investment income during the current tax year and the four years prior,Gross income from interest etc (170),2012-2024,2012-2024,1997-1999;1997-2010;2011
+grsinc509,EZ,gross_income_interest_sec509,SA_03_TOT_INCOME_GRO_TOT,,BOTH,Gross investment income during the current tax year and the four years prior,Gross income from interest etc (509),2013-2024,2013-2024,
+grsincgaming,EZ,gross_income_gaming_activities,F9_08_REV_OTH_GAMING,grsincgaming;SPEVTG,BOTH,Gross income from gaming activities,Gross income from gaming,2012-2024,2012-2024,"1989, 1997-2011;2011"
+grsprft,EZ,net_income_inventory_sales,F9_08_REV_OTH_INV_NET_TOT,GRPROF;P1INVNTN,BOTH,Net income from sales of inventory - total,Gross profit (or loss) from sales of inventory,2012-2024,2012-2024,1989-1999;1989-2011
+grspublicrcpts,EZ,gross_receipts_public_use,F9_05_501C7_GRO_RCPT_PUB_USE,GRRECPUB;P1SALES,BOTH,Gross receipts for public use of club facilities,Gross receipts for public use of club facilities,2012-2024,2012-2024,1989-1999;1989-2011
+grsrcptsactivities509,EZ,gross_receipts_related_activities_sec509,SA_03_PUB_GRO_RCPT_NONUBIZ_TOT,,BOTH,Gross receipts from activities that are not an unrelated trade or business during the current tax year and the four years prior,Gross receipts from related activities (509),2013-2016,2013-2020,
+grsrcptsactvts509,EZ,gross_receipts_related_activities_sec509,SA_03_PUB_GRO_RCPT_NONUBIZ_TOT,,BOTH,Gross receipts from activities that are not an unrelated trade or business during the current tax year and the four years prior,Gross receipts from related activities (509),2017-2024,2014-2024,
+grsrcptsadmiss509,EZ,gross_receipts_admissions_sec509,SA_03_PUB_GRO_RCPT_ADM_TOT,GRREC4;grsrcptsadmissn509,BOTH,"Gross receipts from admissions, merchandise sold or service performed, or facilities furnished during the current tax year and the four years prior",Receipts from admissions merchandise etc (509),"2012, 2017-2024",2012-2024,1997-2010;2011
+grsrcptsadmissn509,EZ,gross_receipts_admissions_sec509,SA_03_PUB_GRO_RCPT_ADM_TOT,GRREC4;grsrcptsadmissn509,BOTH,"Gross receipts from admissions, merchandise sold or service performed, or facilities furnished during the current tax year and the four years prior",Receipts from admissions merchandise etc (509),2013-2016,2013-2020,1997-2010;2011
+grsrcptsrelatd170,EZ,gross_receipts_related_activities_sec170,SA_02_TOT_GRO_RCPT_RLTD_ACTS,A4A_BUST;grsrcptsrelated170,BOTH,Gross receipts from related activities,Gross receipts from related activities (170),"2012, 2017-2024",2012-2024,1997-1999;2011
+grsrcptsrelated170,EZ,gross_receipts_related_activities_sec170,SA_02_TOT_GRO_RCPT_RLTD_ACTS,A4A_BUST;grsrcptsrelated170,BOTH,Gross receipts from related activities,Gross receipts from related activities (170),2013-2016,2013-2020,1997-1999;2011
+grsrevnuefndrsng,EZ,gross_income_fundraising_events,F9_08_REV_OTH_FUNDR_EVNT_1,grsincfndrsng;P1SPEVC,BOTH,Gross income from fundraising events,Special events gross revenue,2012-2024,2012-2024,1997-1999;2011
+initiationfee,EZ,initiation_fees,F9_05_501C7_INITIATION_FEES,INITFEES;P6INIFEE,BOTH,Initiation fees and capital contributions,Initiation fees and capital contributions,2012-2024,2012-2024,1989-1999;1989-2011
+loanstoofficers,EZ,loans_to_officers_amount,F9_04_LOAN_DTK_AMT,,F990EZ,"Loans to or from officers, directors, trustees, or key employees",Amount of loans to/from officers,2013-2024,2013-2024,
+loanstoofficerscd,EZ,loan_to_interested_person_cd,F9_04_LOAN_DTK_X,,BOTH,"Reported loans to or from current or former officers, directors, trustees, or key employees; or had outstanding loans [x]","Loans to/from officers, directors or trustees?",2013-2024,2013-2024,
+netincfndrsng,EZ,net_income_fundraising_events,F9_08_REV_OTH_FUNDR_NET_TOT,FUNDINC;netincfndrsng;P1SPEVN,BOTH,Net income from fundraising events - total,Special events net income (or loss),2012-2024,2012-2024,1989-2011;1991-1999;2011
+netincunrelatd170,EZ,net_ubi_sec170,SA_02_TOT_INCOME_NET_UBIZ_TOT,,BOTH,Net income from unrelated business activities during the current tax year and the four years prior,Net UBI (170),2017-2024,2014-2024,
+netincunrelatd509,EZ,net_ubi_excl_10b_sec509,SA_03_TOT_INCOME_NET_UBIZ_TOT,,BOTH,Net income from unrelated business activities during the current tax year and the four years prior,Net income from UBI not in 10b (509),2013-2016,2013-2020,
+netincunreltd170,EZ,net_ubi_sec170,SA_02_TOT_INCOME_NET_UBIZ_TOT,,BOTH,Net income from unrelated business activities during the current tax year and the four years prior,Net UBI (170),2013-2016,2013-2020,
+netincunreltd509,EZ,net_ubi_excl_10b_sec509,SA_03_TOT_INCOME_NET_UBIZ_TOT,,BOTH,Net income from unrelated business activities during the current tax year and the four years prior,Net income from UBI not in 10b (509),2017-2024,2014-2024,
+networthend,EZ,total_net_assets_eoy,F9_01_NAFB_TOT_EOY,FUNDBAL;P1NASEOY;p4b_net,F990EZ,Net assets or fund balances - end of year,Net assets EOY,2013-2024,2013-2024,1989-1999;1989-2011;1997-1999
+nonpfrea,EZ,non_pf_status_reason,NON_PF_REASON,REASON,BOTH,"",Reason for non-PF status,2012-2024,2012-2024,1989-2011
+othrchgsnetassetfnd,EZ,other_changes_net_assets_fund_balances,F9_11_RECO_OTH_CHANGE_NAFB,P1CHGAS,F990EZ,Other changes in net assets or fund balances,Other changes in net assets,2012-2024,2012-2024,1997-1999
+othrevnue,EZ,other_revenue_total_11e,F9_08_REV_MISC_TOT_TOT,OTHINC;P1OTHREV,BOTH,Total miscellaneous revenue,Other revenue - total,2012-2024,2012-2024,"1989, 1991-2011;1991-1999"
+othrinc170,EZ,other_income_sec170,SA_02_TOT_INCOME_OTH_TOT,A4A_OTHT,BOTH,Other income during the current tax year and the four years prior,Other income (170),2013-2024,2013-2024,1997-1999
+othrinc509,EZ,other_income_sec509,SA_03_TOT_INCOME_OTH_TOT,,BOTH,Other income during the current tax year and the four years prior,Other income (509),2013-2024,2013-2024,
+othrinvstinc,EZ,investment_income,F9_01_REV_INVEST_TOT_CY,INVINC;OTHINVST;P1INVST;P7DIVRIN;P7INVRIN;SECINC,F990EZ,Investment income - current year,Investment income,2012-2024,2012-2024,1989-1999;1989-2011;1997-1999;1997-2010
+politicalexpend,EZ,political_expenditures,F9_06_POLI_EXP,P6POLEXP;POLPURP,F990EZ,Direct or indirect political expenditures,Direct or indirect political expenditures.,2013-2024,2013-2024,1989-1999;1989-2010
+prgmservrev,EZ,program_service_revenue,F9_08_REV_PROG_TOT_TOT,P1PSREV;PROGREV,BOTH,Total program service revenue,Program service revenue,2012-2024,2012-2024,1989-2011;1991-1999
+prohibtdtxshltrcd,EZ,prohibited_tax_shelter_cd,F9_05_PTST_X,,BOTH,Party to a prohibited tax shelter transaction [x],Party to a prohibited tax shelter transaction?,2013-2024,2013-2024,
+pubsupplesspct170,EZ,public_support_sec170,SA_02_PUB_SUPPORT_TOT,DirSupEstimate,BOTH,Public support total,Public support (170),2013-2024,2013-2024,1998-2011
+pubsupplesssub509,EZ,public_support_sec509,SA_03_PUB_SUPPORT_TOT,,BOTH,Public support total,Public support (509),2017-2024,2014-2024,
+pubsupplesub509,EZ,public_support_sec509,SA_03_PUB_SUPPORT_TOT,,BOTH,Public support total,Public support (509),2013-2016,2013-2020,
+pubsuppsubtot170,EZ,public_support_subtotal_sec170,SA_02_PUB_TOT_L123_TOT,IndSupEstimate,BOTH,Total public support during the current tax year and the four years prior,Public support subtotal (170),2013-2024,2013-2024,1998-2011
+pubsuppsubtot509,EZ,public_support_subtotal_line6_sec509,SA_03_PUB_TOT_L1_5_TOT,,BOTH,Total public support during the current tax year and the four years prior,Public support subtotal (509),2013-2024,2013-2024,
+rcvdfrmdisqualsub509,EZ,disqualified_persons_amts_sec509,SA_03_PUB_AMT_PERS_DSQ_TOT,,BOTH,Public support from disqualified persons during the current tax year and the four years prior,Amounts from disqualified persons (509),2013-2024,2013-2024,
+s4958excessbenefcd,EZ,excess_benefit_transaction_cd,F9_04_TRANSAC_ENGAGED_X,,BOTH,Engaged in excess benefit transaction - current year [x],Section 4958 excess benefit transactions?,2013-2024,2013-2024,
+samepubsuppsubtot170,EZ,public_support_subtotal_line4_ref_sec170,SA_02_TOT_AMT_L4_CY_TOT,,BOTH,Total public support during the current tax year and the four years prior,Public support from line 4 (170),2013-2024,2013-2024,
+samepubsuppsubtot509,EZ,public_support_subtotal_line6_ref_sec509,SA_03_TOT_AMT_L6_TOT,,BOTH,Total public support during the current tax year and the four years prior,Public support from line 6 (509),2013-2024,2013-2024,
+srvcsval170,EZ,gov_services_value_sec170,SA_02_PUB_VALUE_SVC_GOVT_TOT,A4A_GVTT;GVTSRV4;srvcsval170,BOTH,Value of services and facilities furnished by government during the current tax year and the four years prior,Services or facilities furnished by gov (170),2012-2024,2012-2024,1997-1999;1997-2010;2011
+srvcsval509,EZ,gov_services_value_sec509,SA_03_PUB_VALUE_SVC_GOVT_TOT,srvcsval509,BOTH,Value of services or facilities furnished by government during the current tax year and the four years prior,Services or facilities furnished by gov (509),2012-2024,2012-2024,2011
+subseccd,EZ,subsection_cd,F9_00_EXEMPT_STAT,SUBSECCD,BOTH,501C subsection code,Subsection code,2012-2024,2012-2024,1989-2011
+subtotpub509,EZ,public_support_subtotal_line7c_sec509,SA_03_PUB_ADD_L7AB_TOT,,BOTH,Public support from disqualified persons or in excess during the current tax year and the four years prior,Public support subtotal (509),2013-2024,2013-2024,
+subtotsuppinc509,EZ,total_support_subtotal_sec509,SA_03_TOT_ADD_L10AB_TOT,subtotsuppinc509,BOTH,Gross investment income and unrelated business taxable income during the current tax year and the four years prior,Subtotal total support (509),2012-2024,2012-2024,2011
+tax_pd,EZ,tax_period,F9_00_TAX_PERIOD_END_DATE,TAXPER,BOTH,Tax period end date,Tax period,"2013,2016",2013-2020,1989-2011
+tax_prd,EZ,tax_period,F9_00_TAX_PERIOD_END_DATE,TAXPER,BOTH,Tax period end date,Tax period,2012,2012-2012,1989-2011
+taxpd,EZ,tax_period,F9_00_TAX_PERIOD_END_DATE,TAXPER,BOTH,Tax period end date,Tax period,2017-2024,2017-2024,1989-2011
+taxprd,EZ,tax_period,F9_00_TAX_PERIOD_END_DATE,TAXPER,BOTH,Tax period end date,Tax period,2014,2014-2014,1989-2011
+totassetsend,EZ,total_assets_eoy,F9_10_ASSET_TOT_EOY,ASS_EOY;P4E_ASST,BOTH,Total assets - end of year,Total assets e-o-y,2012-2024,2012-2024,1989-1999;1989-2011
+totcntrbs,EZ,total_contributions,F9_01_REV_CONTR_TOT_CY_2,A4A_CNT;CONT;P1TCONT,F990EZ,"Contributions, gifts, grants, and similar amounts received","Contributions, gifts, grants, etc received",2012-2024,2012-2024,1989-1999;1989-2011;1997-1999
+totexcessyr,EZ,excess_or_deficit_for_year,F9_01_EXP_REV_LESS_EXP_CY,,F990EZ,Revenue less expenses - current year,Excess or deficit,2012-2024,2012-2024,
+totexpns,EZ,total_expenses,F9_01_EXP_TOT_CY,EXPS;P1TOTEXP,F990EZ,Total expenses - current year,Total expenses,2012-2024,2012-2024,1989-1999;1989-2011
+totgftgrntrcvd509,EZ,total_gifts_grants_received_sec509,SA_03_PUB_GIFT_GRANT_CONTR_TOT,totgftgrntrcvd509,BOTH,"Gifts, grants, contributions, and membership fees received during the current tax year and the four years prior",Gifts grants membership fees received (509),2012-2024,2012-2024,2011
+totliabend,EZ,total_liabilities_eoy,F9_10_LIAB_TOT_EOY,LIAB_EOY;P4E_LIAB,BOTH,Total liabilities - end of year,Total liabilities e-o-y,2012-2024,2012-2024,1989-1999;1989-2011
+totnetassetsend,EZ,total_net_assets_eoy,F9_10_NAFB_TOT_EOY,FUNDBAL;P1NASEOY;p4b_net,BOTH,Net assets or fund balances - end of year,Total net worth e-o-y,2012-2024,2012-2024,1989-1999;1989-2011;1997-1999
+totnoforgscnt,EZ,n_orgs_supported,SA_01_PCSTAT_SUPPORT_ORG_NUM,,BOTH,Number of supported organizations,Number of organizations supported,2017-2024,2014-2024,
+totnooforgscnt,EZ,n_orgs_supported,SA_01_PCSTAT_SUPPORT_ORG_NUM,,BOTH,Number of supported organizations,Number of organizations supported,2013-2016,2013-2020,
+totrevnue,EZ,total_revenue,F9_01_REV_TOT_CY,P1TOTREV;TOTREV;TOTREV2,F990EZ,Total revenue - current year,Total revenue,2012-2024,2012-2024,1989-2011;1993-1999;1997-2011
+totsupp170,EZ,total_support_sec170,SA_02_TOT_SUPPORT_TOT,A4A_TOTT;OTHINC4,BOTH,Total support during the current tax year and the four years prior,Total support (170),2013-2016,2013-2020,1997-1999;1997-2010
+totsupp509,EZ,total_support_sec509,SA_03_TOT_SUPPORT_TOT,totsupp509,BOTH,"Gifts, grants, contributions, and membership fees received during the current tax year and the four years prior",Total support (509),2012-2024,2012-2024,2011
+totsupport,EZ,total_support_amount,SA_01_PCSTAT_ORG_AMT_SUPPORT,,BOTH,Amount of monetary support,Sum of amounts of support,2013-2024,2013-2024,
+totsupport170,EZ,total_support_sec170,SA_02_TOT_SUPPORT_TOT,A4A_TOTT;OTHINC4,BOTH,Total support during the current tax year and the four years prior,Total support (170),2017-2024,2014-2024,1997-1999;1997-2010
+txrevnuelevied170,EZ,tax_revenues_levied_sec170,SA_02_PUB_TAXREV_LEVIED_TOT,A4A_TAXT;TAXREV4;txrevnuelevied170,BOTH,Tax revenues levied for organization benefit during the current tax year and the four years prior,Tax revenues levied (170),2012-2024,2012-2024,1997-1999;1997-2010;2011
+txrevnuelevied509,EZ,tax_revenues_levied_sec509,SA_03_PUB_TAXREV_LEVIED_TOT,txrevnuelevied509,BOTH,Tax revenues levied for organization benefit during the current tax year and the four years prior,Tax revenues levied (509),2012-2024,2012-2024,2011
+unrelbusincd,EZ,unrelated_business_income_1k_cd,F9_05_UBIZ_IMCOME_OVER_LIMIT_X,P6UNRELB,BOTH,"Had unrelated business gross income of $1,000 or more [x]","UBI over $1,000?",2012-2024,2012-2024,1989-1999
+unreltxincls511tx509,EZ,net_ubi_line10b_sec509,SA_03_TOT_INCOME_UBIZ_TOT,,BOTH,Gross unrelated business taxable income during the current tax year and the four years prior,Net UBI (509),2013-2024,2013-2024,
+accntingfees,PC,accounting_fees,F9_09_EXP_FEE_SVC_ACC_TOT,,F990,Fees for services - accounting - total expenses,Accounting fees,2013-2024,2013-2024,
+accntspayableend,PC,accounts_payable_eoy,F9_10_LIAB_ACC_PAYABLE_EOY,,F990,Accounts payable and accrued expenses - end of year,Accounts payable and accrued expenses -- eoy,2013-2024,2013-2024,
+accntsrcvblend,PC,accounts_receivable_eoy,F9_10_ASSET_ACC_NET_EOY,,F990,Net accounts receivable - end of year,Accounts receivable -- eoy,2013-2024,2013-2024,
+actonbehalfcd,PC,act_on_behalf_of_issuer_cd,F9_04_TAX_EXEMPT_BOND_ISSUER_X,,F990,"Acted as an """"on behalf of"""" issuer [x]",On behalf of issuer?,2013-2024,2013-2024,
+advrtpromo,PC,advertising_promotion,F9_09_EXP_AD_PROMO_TOT,,F990,Advertising and promotion - total expenses,Advertising and promotion,2013-2024,2013-2024,
+awarexcessbnftcd,PC,aware_prior_excess_benefit_cd,F9_04_TRANSAC_PY_X,,F990,Engaged in excess benefit transaction - prior year [x],Prior excess benefit transaction?,2013-2024,2013-2024,
+benifitsmembrs,PC,benefits_to_members,F9_09_EXP_BEN_PAID_MEMB_TOT,,F990,Benefits paid to or for members - total expenses,Benefits paid to or for members,2013-2024,2013-2024,
+capitalstktrstend,PC,capital_stock_or_trust_eoy,F9_10_NAFB_CAP_STCK_EOY,,F990,"Capital stock or trust principal, current funds - end of year",Capital stock or trust principal -- eoy,2013-2024,2013-2024,
+ceaseoperationscd,PC,terminated_cd,F9_04_LTD_X,,F990,"Liquidated, terminated, or dissolved and ceased operations [x]",Terminated?,2013-2024,2013-2024,
+compltschocd,PC,schedule_o_completed_cd,F9_04_SCHED_O_REQ_X,,F990,Completed Schedule O and explained Part VI lines 11b and 19 [x],Schedule O completed?,2013-2024,2013-2024,
+compnsatnandothr,PC,compensation_disqualified_persons,F9_09_EXP_COMP_DSQ_PERS_TOT,,F990,Compensation not included above to disqualified persons - total expenses,Compensation of disqualified persons,2013-2024,2013-2024,
+compnsatncurrofcr,PC,compensation_current_officers,F9_09_EXP_COMP_DTK_TOT,COMPENS;P2TCOMP,F990,"Compensation of current officers, directors, trustees, and key employees - total expenses","Compensation of current officers, directors, etc",2012-2024,2012-2024,1989-1999;1989-2011
+conduct5percentcd,PC,partnership_activities_5pct_cd,F9_04_PTR_ACT_X,,F990,Conducted more than 5% of activities through non-related partner [x],Activities conducted thru partnership?,2013-2024,2013-2024,
+converconventmtng,PC,conferences_conventions_meetings,F9_09_EXP_CONF_MEETING_TOT,,F990,"Conferences, conventions, and meetings - total expenses","Conferences, conventions, meetings",2013-2024,2013-2024,
+crcounselingqstncd,PC,credit_counseling_cd,F9_04_CREDIT_COUNS_X,,F990,"Reported an amount of escrow or custodial account liability, served as a custodian or amounts not listed in Part 10; or provided credit counseling, debt management, credit repair, or debt negotiation services [x]",Credit counseling?,2013-2024,2013-2024,
+cstbasisecur,PC,cost_basis_securities,F9_08_REV_OTH_SALE_LESS_COST_SEC,P1SECURC;SALESEXP,F990,Cost of assets and sales expenses - securities,Sales expense -- Securities,2012-2024,2012-2024,1989-1999;1989-2011
+cstbasisothr,PC,cost_basis_other,F9_08_REV_OTH_SALE_LESS_COST_OTH,,F990,Cost of assets and sales expenses - other,Sales expense -- Other assets,2012-2024,2012-2024,
+currfrmrcvblend,PC,officer_receivables_eoy,F9_10_ASSET_LOAN_OFF_EOY,,F990,"Loans and other receivables from officers, directors, trustees, key employees, creators or founders, substantial contributors, or 35% controlled entities or family members - end of year","Receivables from officers, directors, etc. -- eoy",2013-2024,2013-2024,
+deferedrevnuend,PC,deferred_revenue_eoy,F9_10_LIAB_REV_DEFERRED_EOY,,F990,Deferred revenue - end of year,Deferred revenue -- eoy,2013-2024,2013-2024,
+deprcatndepletn,PC,depreciation_depletion,F9_09_EXP_DEPREC_TOT,,F990,"Depreciation, depletion, and amortization - total expenses","Depreciation, depletion, amortization",2013-2024,2013-2024,
+dirbusnreltdcd,PC,director_business_relationship_cd,F9_04_BIZ_TRANSAC_DTK_X,,F990,"Was party to a business transaction with a current or former officer, director, trustee, key employee, creator or founder, or substantial contributor [x]",Business relationship with organization?,2013-2024,2013-2024,
+distribtodonorcd,PC,distribution_to_donor_cd,F9_05_DAF_DIST_DONOR_X,,F990,"Made taxable distributions to a donor, donor advisor, or related person [x]",Distribution to donor?,2013-2024,2013-2024,
+dnradvisedfundscd,PC,donor_advised_funds_cd,F9_04_DAF_X,,F990,Maintained donor advised funds [x],Donor advised funds?,2013-2024,2013-2024,
+efile,PC,efile_indicator,EFILE_X,,BOTH,E-file indicator,E-file indicator,2020-2024,2020-2024,
+ein,PC,ein,F9_00_ORG_EIN,EIN,BOTH,EIN,Employer Identification Number,2012-2024,2012-2024,1989-2011
+elf,PC,efile_indicator,EFILE_X,,BOTH,E-file indicator,E-file indicator,2015-2019,2015-2019,
+engageexcessbnftcd,PC,excess_benefit_transaction_cd,F9_04_TRANSAC_ENGAGED_X,,BOTH,Engaged in excess benefit transaction - current year [x],Excess benefit transaction?,2013-2024,2013-2024,
+escrwaccntliabend,PC,escrow_account_liability_eoy,F9_10_LIAB_ESCROW_ACC_EOY,,F990,Escrow or custodial account liability - end of year,Escrow account liability -- eoy,2013-2024,2013-2024,
+excbushldngscd,PC,excess_business_holdings_cd,F9_05_DAF_EXCESS_BIZ_HOLDING_X,,F990,Maintained donor advised fund with excess business holdings [x],Excess business holdings?,2013-2024,2013-2024,
+exceeds1pct509,PC,excess_over_1pct_sec509,SA_03_PUB_AMT_CONTR_SBST_TOT,,BOTH,"Public support from exceeding $5,000 or 1% of total during the current tax year and the four years prior",Amount support exceeds total (509),2013-2024,2013-2024,
+exceeds2pct170,PC,excess_over_2pct_sec170,SA_02_PUB_CONTR_SBST_TOT,,BOTH,Portion of total contributions exceeding 2% of total,Amount support exceeds total (170),2013-2024,2013-2024,
+exprstmntcd,PC,nondeductible_disclosure_cd,F9_05_NONDEDUCT_CONTR_NOTIFY_X,,F990,Included express statements with solicitations of non-deductible contributions [x],Non-deduct. disclosure?,2013-2024,2013-2024,
+f1096cnt,PC,n_form_1096,F9_05_NUM_FORM_1096_BOX_3,,F990,Number reported in box 3 of Form 1096,Number forms transmitted with 1096,2013-2024,2013-2024,
+f8282cnt,PC,n_form_8282,F9_05_170C_NUM_FORM_8282_FILED_X,,F990,Number of Forms 8282 filed,Number of 8282s filed,2013-2024,2013-2024,
+feesforsrvcinvstmgmt,PC,fees_for_services_investment_mgmt,F9_09_EXP_FEE_SVC_INVEST_TOT,,F990,Fees for services - investment management fees - total expenses,Investment management fees,2013-2024,2013-2024,
+feesforsrvclobby,PC,fees_for_services_lobbying,F9_09_EXP_FEE_SVC_LOB_TOT,,F990,Fees for services - lobbying - total expenses,Lobbying fees,2013-2024,2013-2024,
+feesforsrvcmgmt,PC,fees_for_services_management,F9_09_EXP_FEE_SVC_MGMT_TOT,,F990,Fees for services - management - total expenses,Management fees,2013-2024,2013-2024,
+feesforsrvcothr,PC,fees_for_services_other,F9_09_EXP_FEE_SVC_OTH_TOT,,F990,Fees for services - other - total expenses,Other fees,2013-2024,2013-2024,
+filedf1098ccd,PC,filed_form_1098c_cd,F9_05_170C_FORM_1098C_FILED_X,,F990,Filed Form 1098-C [x],Form 1098-C filed?,2013-2024,2013-2024,
+filedf720cd,PC,filed_form_720_cd,F9_05_TANNING_FORM_720_FILED_X,,F990,Filed a Form 720 [x],Filed Form 720 for tanning,2013-2024,2013-2024,
+filedf7n0cd,PC,filed_form_720_cd,F9_05_TANNING_FORM_720_FILED_X,,F990,Filed a Form 720 [x],Filed Form 720 for tanning (2015 typo: N for 2),2015,2015-2015,
+filedf8282cd,PC,property_disposition_8282_cd,F9_05_170C_FORM_8282_REQ_X,,F990,Required to file Form 8282 [x],Form 8282 property disposed of?,2013-2024,2013-2024,
+filedf8886tcd,PC,filed_form_8886t_cd,F9_05_PTST_FORM_8886T_FILED_X,,F990,Filed Form 8886-T [x],Form 8886-T filed?,2013-2024,2013-2024,
+filedf8899cd,PC,filed_form_8899_cd,F9_05_170C_FORM_8899_FILED_X,,F990,Filed Form 8899 [x],Form 8899 filed?,2013-2024,2013-2024,
+filedf8n8ncd,PC,property_disposition_8282_cd,F9_05_170C_FORM_8282_REQ_X,,F990,Required to file Form 8282 [x],Form 8282 property disposed of? (2015 typo: N for 2),2015,2015-2015,
+filedf990tcd,PC,filed_form_990t_cd,F9_05_UBIZ_FORM_990T_FILED_X,,BOTH,Filed a Form 990-T [x],Form 990-T filed?,2013-2024,2013-2024,
+filedfy098ccd,PC,filed_form_1098c_cd,F9_05_170C_FORM_1098C_FILED_X,,F990,Filed Form 1098-C [x],Form 1098-C filed? (2015 typo: Y for 1),2015,2015-2015,
+filedlieuf1041cd,PC,filed_in_lieu_1041_cd,F9_05_4947_FORM_990_FILED_1041_X,,F990,Filing Form 990 in lieu of Form 1041 [x],Form 990 in lieu of 1041?,2013-2024,2013-2024,
+filedlieufy04ycd,PC,filed_in_lieu_1041_cd,F9_05_4947_FORM_990_FILED_1041_X,,F990,Filing Form 990 in lieu of Form 1041 [x],Form 990 in lieu of 1041? (2015 typo: Y for 1),2015,2015-2015,
+filerqrdrtnscd,PC,filed_employment_tax_returns_cd,F9_05_EMPL_TAX_RETURN_FILED_X,,F990,Filed all required federal employment tax returns [x],Employment tax returns filed?,2013-2024,2013-2024,
+fmlybusnreltdcd,PC,family_business_relationship_cd,F9_04_BIZ_TRANSAC_DTK_FAM_X,,F990,"Was party to a business transaction with a family member of a current or former officer, director, trustee, key employee, creator or founder, or substantial contributor [x]",Business relationship thru family member?,2013-2024,2013-2024,
+fndsrcvdcd,PC,received_funds_for_premiums_cd,F9_05_170C_FUNDS_FOR_PREMIUM_X,,F990,Received funds to pay premiums on a personal benefit contract [x],Funds to pay premiums?,2013-2024,2013-2024,
+frgnacctcd,PC,foreign_account_cd,F9_05_FRGN_FIN_ACC_X,,F990,Had a foreign financial account [x],Foreign financial account?,2013-2024,2013-2024,
+frgnaggragrntscd,PC,foreign_grants_indiv_5k_cd,F9_04_GRANT_MT_5K_FRGN_INDIV_X,,F990,"Reported more than $5,000 to or for foreign individuals [x]","More than $5000 to individuals Part IX, line 3?",2013-2024,2013-2024,
+frgngrntscd,PC,foreign_grants_orgs_5k_cd,F9_04_GRANT_MT_5K_FRGN_ORG_X,,F990,"Reported more than $5,000 to or for any foreign organization [x]","More than $5000 to organizations Part IX, line 3?",2013-2024,2013-2024,
+frgnofficecd,PC,foreign_office_cd,F9_04_FRGN_OFFICE_X,,F990,Maintained a foreign office [x],Foreign office?,2013-2024,2013-2024,
+frgnrevexpnscd,PC,foreign_activities_cd,F9_04_FRGN_ACT_X,,F990,"Aggregated revenues or expenses of more than $10,000 from grantmaking, fundraising, business, investment, and program service activities outside the US, or aggregated foreign investments valued at $100,000 or more [x]","Foreign activities, etc?",2013-2024,2013-2024,
+fw2gcnt,PC,n_form_w2g,F9_05_NUM_FORM_W2G,,F990,Number of Forms W-2G included on line 1a,Number W-2Gs included in 1a,2013-2024,2013-2024,
+gftgrntsrcvd170,PC,gifts_grants_received_sec170,SA_02_PUB_GIFT_GRANT_CONTR_TOT,CONT4;gftgrntsrcvd170,BOTH,"Gifts, grants, contributions, and membership fees received during the current tax year and the four years prior",Gifts grants membership fees received (170),2012-2024,2012-2024,1997-2010;2011
+gnlsecur,PC,net_gain_loss_securities,F9_08_REV_OTH_SALE_GAIN_SEC,P1SECURN;SALESECN,F990,Gain on sales of assets - securities,Net gain from sales -- Securities,2012-2024,2012-2024,1997-1999;1997-2011
+gnlsothr,PC,net_gain_loss_other,F9_08_REV_OTH_SALE_GAIN_OTH,SALEOTHN,F990,Gain on sales of assets - other,Net gain from sales -- Other assets,2012-2024,2012-2024,1997-2011
+grantoofficercd,PC,grant_to_related_person_cd,F9_04_GRANT_RLTD_PERS_X,,F990,"Provided grants to current or former officers, directors, trustees, key employees, creators or founders, or substantial contributors, or their family members or controlled entities [x]",Grant to related person?,2013-2024,2013-2024,
+grnsttoindiv,PC,grants_to_individuals,F9_09_EXP_GRANT_US_INDIV_TOT,,F990,Grants to domestic individuals - total expenses,Grants to individuals in the US,2013-2024,2013-2024,
+grntspayableend,PC,grants_payable_eoy,F9_10_LIAB_GRANT_PAYABLE_EOY,,F990,Grants payable - end of year,Grants payable -- eoy,2013-2024,2013-2024,
+grntstofrgngovt,PC,grants_to_foreign_govt,F9_09_EXP_GRANT_FRGN_TOT,,F990,"Grants to foreign organizations, governments, and individuals - total expenses",Grants to orgs and individuals outside the US,2013-2024,2013-2024,
+grntstogovt,PC,grants_to_govt,F9_09_EXP_GRANT_US_ORG_TOT,,F990,Grants to domestic organizations and government - total expenses,Grants to governments/orgs in the US,2013-2024,2013-2024,
+grsalesecur,PC,gross_sales_securities,F9_08_REV_OTH_SALE_ASSET_SEC,SECUR,F990,Gross sales of assets - securities,Gross sales -- Securities,2012-2024,2012-2024,1989-2011
+grsalesinvent,PC,gross_sales_inventory,F9_08_REV_OTH_INV_GRO_SALE,INVENTG;P1INVNTG,BOTH,Gross sales of inventory,Gross sales of inventory,2012-2024,2012-2024,1997-1999;1997-2011
+grsalesothr,PC,gross_sales_other,F9_08_REV_OTH_SALE_ASSET_OTH,SALEOTHG,F990,Gross sales of assets - other,Gross sales -- Other assets,2012-2024,2012-2024,1997-2011
+grsinc170,PC,gross_income_interest_sec170,SA_02_TOT_INCOME_GRO_TOT,A4A_IVST;grsinc170;INVINC4;SAVINT,BOTH,Gross investment income during the current tax year and the four years prior,Gross income from interest etc (170),2012-2024,2012-2024,1997-1999;1997-2010;2011
+grsinc509,PC,gross_income_interest_sec509,SA_03_TOT_INCOME_GRO_TOT,,BOTH,Gross investment income during the current tax year and the four years prior,Gross income from interest etc (509),2013-2024,2013-2024,
+grsincfndrsng,PC,gross_income_fundraising_events,F9_08_REV_OTH_FUNDR_EVNT_1,grsincfndrsng;P1SPEVC,BOTH,Gross income from fundraising events,Gross fundraising,2012-2024,2012-2024,1997-1999;2011
+grsincgaming,PC,gross_income_gaming_activities,F9_08_REV_OTH_GAMING,grsincgaming;SPEVTG,BOTH,Gross income from gaming activities,Gross income from gaming,2012-2024,2012-2024,"1989, 1997-2011;2011"
+grsincmembers,PC,gross_income_members,F9_05_501C12_GRO_INCOME_MEMB,GRRECMEM;P6MEMINC,F990,Gross income from members or shareholders,Gross income from members,2012-2024,2012-2024,1989-1999;1989-2011
+grsincother,PC,gross_income_other,F9_05_501C12_GRO_INCOME_OTH,GRRECOTH;P6OTHINC,F990,Gross income from other sources,Gross income from other sources,2012-2024,2012-2024,1989-1999;1989-2011
+grsrcptsactivities509,PC,gross_receipts_related_activities_sec509,SA_03_PUB_GRO_RCPT_NONUBIZ_TOT,,BOTH,Gross receipts from activities that are not an unrelated trade or business during the current tax year and the four years prior,Gross receipts from related activities (509),2013-2024,2013-2024,
+grsrcptsadmissn509,PC,gross_receipts_admissions_sec509,SA_03_PUB_GRO_RCPT_ADM_TOT,GRREC4;grsrcptsadmissn509,BOTH,"Gross receipts from admissions, merchandise sold or service performed, or facilities furnished during the current tax year and the four years prior",Receipts from admissions merchandise etc (509),2012-2024,2012-2024,1997-2010;2011
+grsrcptspublicuse,PC,gross_receipts_public_use,F9_05_501C7_GRO_RCPT_PUB_USE,GRRECPUB;P1SALES,BOTH,Gross receipts for public use of club facilities,Gross receipts amount,2012-2024,2012-2024,1989-1999;1989-2011
+grsrcptsrelated170,PC,gross_receipts_related_activities_sec170,SA_02_TOT_GRO_RCPT_RLTD_ACTS,A4A_BUST;grsrcptsrelated170,BOTH,Gross receipts from related activities,Gross receipts from related activities (170),2012-2024,2012-2024,1997-1999;2011
+grsrntsprsnl,PC,gross_rents_personal,F9_08_REV_OTH_RENT_GRO_PERS,grsrntsprsnl,F990,Gross rents - personal,Gross rents -- Personal property,2012-2024,2012-2024,2011
+grsrntsreal,PC,gross_rents_real,F9_08_REV_OTH_RENT_GRO_REAL,grsrntsreal,F990,Gross rents - real,Gross rents -- Real estate,2012-2024,2012-2024,2011
+hldassetsintermpermcd,PC,donor_restricted_endowments_cd,F9_04_ENDOW_X,,F990,Held assets in donor-restricted or quasi endowments [x],Term or permanent endowments?,2013-2024,2013-2024,
+hospaudfinstmtcd,PC,hospital_audited_attached_cd,F9_04_HOSPITAL_AFS_X,,F990,Hospital and attached audited financial statements [x],Hospital audited financial statement included?,2013-2024,2013-2024,
+inclinfinstmtcd,PC,included_in_consol_audited_cd,F9_04_AFS_CONSOL_X,,F990,Included in consolidated independent audited financial statements [x],Included in consolidated financial statements?,2013-2024,2013-2024,
+infotech,PC,information_technology,F9_09_EXP_INFO_TECH_TOT,,F990,Information technology - total expenses,Information technology,2013-2024,2013-2024,
+initiationfees,PC,initiation_fees,F9_05_501C7_INITIATION_FEES,INITFEES;P6INIFEE,BOTH,Initiation fees and capital contributions,Initiation fees amount,2012-2024,2012-2024,1989-1999;1989-2011
+insurance,PC,insurance,F9_09_EXP_INSURANCE_TOT,,F990,Insurance - total expenses,Insurance,2013-2024,2013-2024,
+intangibleassetsend,PC,intangible_assets_eoy,F9_10_ASSET_INTANGIBLE_EOY,,F990,Intangible assets - end of year,Intangible assets -- eoy,2013-2024,2013-2024,
+interestamt,PC,interest_expense,F9_09_EXP_INT_TOT,P7INTXAT,F990,Interest - total expenses,Interest expense,2013-2024,2013-2024,1997-1999
+intincntrlcd,PC,related_org_controlled_cd,F9_04_ENTITY_CTRL_X,,F990,Had a controlled entity [x],Related organization a controlled entity?,2013-2024,2013-2024,
+invntriesalesend,PC,inventories_for_sale_eoy,F9_10_ASSET_INV_SALE_EOY,,F990,Inventories for sale or use - end of year,Inventories for sale or use -- eoy,2013-2024,2013-2024,
+invstmntinc,PC,investment_income,F9_08_REV_OTH_INVEST_INCOME_TOT,INVINC;OTHINVST;P1INVST;P7DIVRIN;P7INVRIN;SECINC,F990,Investment income - total,Investment income,2012-2024,2012-2024,1989-1999;1989-2011;1997-1999;1997-2010
+invstmntsend,PC,investments_eoy,F9_10_ASSET_INVEST_SEC_EOY,InvSecEstimate,F990,Investments - publicly traded securities - end of year,Investments in publicly traded securities -- eoy,2013-2024,2013-2024,1998-2010
+invstmntsothrend,PC,investments_other_eoy,F9_10_ASSET_INVEST_SEC_OTH_EOY,InvOthEstimate,F990,Investments - other securities - end of year,Investments in other securities -- eoy,2013-2024,2013-2024,1998-2010
+invstmntsprgmend,PC,program_related_investments_eoy,F9_10_ASSET_INVEST_PROG_RLTD_EOY,,F990,Investments - program-related - end of year,Program-related investments -- eoy,2013-2024,2013-2024,
+invstproceedscd,PC,bond_proceeds_invested_cd,F9_04_TAX_EXEMPT_BOND_INVEST_X,,F990,Invested proceeds of tax-exempt bonds [x],Investment income?,2013-2024,2013-2024,
+lbbyingactvtscd,PC,lobbying_activities_cd,F9_04_LOB_ACT_X,A3LOBBY,F990,Engaged in lobbying or had a section 501(h) election [x],Lobbying activities?,2013-2024,2013-2024,1989-1999
+legalfees,PC,legal_fees,F9_09_EXP_FEE_SVC_LEGAL_TOT,,F990,Fees for services - legal - total expenses,Legal fees,2013-2024,2013-2024,
+lesscstofgoods,PC,cost_of_goods_sold,F9_08_REV_OTH_INV_COST_GOODS,GOODS;P1INVNTC,BOTH,Cost of goods sold,Cost of goods sold (inventory),2012-2024,2012-2024,1989-1999;1989-2011
+lessdirfndrsng,PC,fundraising_events_direct_expenses,F9_08_REV_OTH_FUNDR_DIRECT_EXP,lessdirfndrsng;P1FREXP;SOLICIT,F990,Direct expenses from fundraising events,Fundraising expenses,2012-2024,2012-2024,1989-1999;1989-2010;2011
+lessdirgaming,PC,gaming_activities_direct_expenses,F9_08_REV_OTH_GAMING_DIRECT_EXP,lessdirgaming,F990,Direct expenses from gaming activities,Gaming expenses,2012-2024,2012-2024,2011
+lndbldgsequipend,PC,land_bldg_equip_eoy,F9_10_ASSET_LAND_BLDG_DEPREC,NetLandEstimate;nInvLndEstimate,F990,"Accumulated depreciation of land, buildings, and equipment","Land, buildings, & equipment (net) -- eoy",2013-2024,2013-2024,1998-2008;1998-2010
+loantofficercd,PC,loan_to_interested_person_cd,F9_04_LOAN_DTK_X,,BOTH,"Reported loans to or from current or former officers, directors, trustees, or key employees; or had outstanding loans [x]",Loan to officer or DQP?,2013-2024,2013-2024,
+maintescrwaccntcd,PC,escrow_account_cd,F9_04_TAX_EXEMPT_BOND_ESCROW_X,,F990,Maintained an escrow account [x],Escrow account?,2013-2024,2013-2024,
+maintwrkofartcd,PC,art_historical_collections_cd,F9_04_COLLEC_ART_X,,F990,"Maintained collections of art, historical treasures, or other similar assets [x]",Collections of art?,2013-2024,2013-2024,
+miscrev11acd,PC,other_revenue_code_11a,F9_08_REV_MISC_BIZCODE_LINE_A,,F990,Miscellaneous revenue business code,Other revenue code 11a,2013-2024,2013-2024,
+miscrev11bcd,PC,other_revenue_code_11b,F9_08_REV_MISC_BIZCODE_LINE_B,,F990,Miscellaneous revenue business code,Other revenue code 11b,2013-2024,2013-2024,
+miscrev11ccd,PC,other_revenue_code_11c,F9_08_REV_MISC_BIZCODE_LINE_C,,F990,Miscellaneous revenue business code,Other revenue code 11c,2013-2024,2013-2024,
+miscrevtot11b,PC,other_revenue_amount_11b,F9_08_REV_MISC_TOT_LINE_B,,F990,Miscellaneous revenue - total,Other revenue amount 11b,2013-2024,2013-2024,
+miscrevtot11c,PC,other_revenue_amount_11c,F9_08_REV_MISC_TOT_LINE_C,,F990,Miscellaneous revenue - total,Other revenue amount 11c,2013-2024,2013-2024,
+miscrevtot11d,PC,other_revenue_amount_11d,F9_08_REV_MISC_OTH_TOT,,F990,Other miscellaneous revenue - total,Other revenue amount 11d,2013-2024,2013-2024,
+miscrevtot11e,PC,other_revenue_total_11e,F9_08_REV_MISC_TOT_TOT,OTHINC;P1OTHREV,BOTH,Total miscellaneous revenue,Other revenue,2012-2024,2012-2024,"1989, 1991-2011;1991-1999"
+miscrevtota,PC,other_revenue_amount_11a,F9_08_REV_MISC_TOT_LINE_A,,F990,Miscellaneous revenue - total,Other revenue amount 11a,2013-2024,2013-2024,
+netgnls,PC,net_gain_loss_sales,F9_08_REV_OTH_SALE_GAIN_NET_TOT,,BOTH,Net gain on sales of assets - total,Sales of assets,2012-2024,2012-2024,
+netincfndrsng,PC,net_income_fundraising_events,F9_08_REV_OTH_FUNDR_NET_TOT,FUNDINC;netincfndrsng;P1SPEVN,BOTH,Net income from fundraising events - total,Fundraising income,2012-2024,2012-2024,1989-2011;1991-1999;2011
+netincgaming,PC,net_income_gaming_activities,F9_08_REV_OTH_GAMING_NET_TOT,netincgaming,F990,Net income from gaming activities - total,Gaming income,2012-2024,2012-2024,2011
+netincsales,PC,net_income_inventory_sales,F9_08_REV_OTH_INV_NET_TOT,GRPROF;P1INVNTN,BOTH,Net income from sales of inventory - total,Income from sales of inventory,2012-2024,2012-2024,1989-1999;1989-2011
+netincunrelatd509,PC,net_ubi_excl_10b_sec509,SA_03_TOT_INCOME_NET_UBIZ_TOT,,BOTH,Net income from unrelated business activities during the current tax year and the four years prior,Net income from UBI not in 10b (509),2013-2024,2013-2024,
+netincunreltd170,PC,net_ubi_sec170,SA_02_TOT_INCOME_NET_UBIZ_TOT,,BOTH,Net income from unrelated business activities during the current tax year and the four years prior,Net UBI (170),2013-2024,2013-2024,
+netrntlinc,PC,net_rental_income,F9_08_REV_OTH_RENT_NET_TOT,NETRENT;P1RENTE;P1RENTN,F990,Net rental income - total,Net rental income,2012-2024,2012-2024,1991-1999;1997-1999;1997-2011
+nocontractor100kcnt,PC,n_contractors_over_100k,F9_07_COMP_KONTR_NUM_GT_100K,,F990,"Number of independent contractors who received more than $100,000 of compensation",Number of contractors greater than $100K,2013-2024,2013-2024,
+noemplyeesw3cnt,PC,n_employees_w3,F9_05_NUM_EMPL,NumEmpEstimate,F990,Number of employees on Form W-3,Number of employees,2013-2024,2013-2024,2008-2010
+noindiv100kcnt,PC,n_indiv_over_100k,F9_07_COMP_DTK_NUM_GT_100K,,F990,"Number of individuals who received more than $100,000 of compensation",Number individuals greater than $100K,2013-2024,2013-2024,
+nonintcashend,PC,noninterest_cash_eoy,F9_10_ASSET_CASH_EOY,CashEstimate,F990,"Cash, non-interest-bearing - end of year",Cash -- non-interest bearing -- eoy,2013-2024,2013-2024,1998-2010
+nonpfrea,PC,non_pf_status_reason,NON_PF_REASON,REASON,BOTH,"",Reason for non-PF status,2012-2024,2012-2024,1989-2011
+notesloansrcvblend,PC,notes_and_loans_receivable_eoy,F9_10_ASSET_NOTE_LOAN_NET_EOY,,F990,Net notes and loans receivable - end of year,Notes and loans receivables -- eoy,2013-2024,2013-2024,
+notfydnrvalcd,PC,notify_donor_value_cd,F9_05_170C_QUID_PRO_QUO_NOTIFY_X,,F990,Notified donor of the value of goods and services provided [x],Quid pro quo disclosure?,2013-2024,2013-2024,
+occupancy,PC,occupancy,F9_09_EXP_OCCUPANCY_TOT,,F990,Occupancy - total expenses,Occupancy,2013-2024,2013-2024,
+officexpns,PC,office_expenses,F9_09_EXP_OFFICE_TOT,,F990,Office expenses - total expenses,Office expenses,2013-2024,2013-2024,
+operatehosptlcd,PC,operates_hospital_cd,F9_04_HOSPITAL_X,,F990,Hospital [x],Hospital?,2013-2024,2013-2024,
+operateschools170cd,PC,operates_school_sec170_cd,F9_04_SCHOOL_X,,F990,School [x],School?,2013-2024,2013-2024,
+operateschoolsy70cd,PC,operates_school_sec170_cd,F9_04_SCHOOL_X,,F990,School [x],School? (2015 typo: Y for 1),2015,2015-2015,
+orgtrnsfrcd,PC,transfer_to_noncharitable_org_cd,F9_04_TRANSFER_EXEMPT_ORG_X,,F990,Made transfers to an exempt non-charitable related organization [x],Any transfers to exempt non-charitable org?,2013-2024,2013-2024,
+othrassetsend,PC,other_assets_eoy,F9_10_ASSET_OTH_EOY,OthAsstEstimate,F990,Other assets - end of year,Other assets -- eoy,2013-2024,2013-2024,1998-2010
+othremplyeebenef,PC,other_employee_benefits,F9_09_EXP_OTH_EMPL_BEN_TOT,,F990,Other employee benefits - total expenses,Other employee benefits,2013-2024,2013-2024,
+othrexpnsa,PC,other_expenses_24a,F9_09_EXP_OTH_24A,,F990,Other expenses - total expenses,Other expenses 24a,2013-2024,2013-2024,
+othrexpnsb,PC,other_expenses_24b,F9_09_EXP_OTH_24B,,F990,Other expenses - total expenses,Other expenses 24b,2013-2024,2013-2024,
+othrexpnsc,PC,other_expenses_24c,F9_09_EXP_OTH_24C,,F990,Other expenses - total expenses,Other expenses 24c,2013-2024,2013-2024,
+othrexpnsd,PC,other_expenses_24d,F9_09_EXP_OTH_24D,,F990,Other expenses - total expenses,Other expenses 24d,2013-2024,2013-2024,
+othrexpnse,PC,other_expenses_24e,F9_09_EXP_OTH_24E,,F990,All other expenses - total expenses,Other expenses 24e,2013-2024,2013-2024,
+othrexpnsf,PC,other_expenses_24f,F9_09_EXP_OTH_24F,,F990,All other expenses - total expenses,Other expenses 24f,2013-2024,2013-2024,
+othrinc170,PC,other_income_sec170,SA_02_TOT_INCOME_OTH_TOT,A4A_OTHT,BOTH,Other income during the current tax year and the four years prior,Other income (170),2013-2024,2013-2024,1997-1999
+othrinc509,PC,other_income_sec509,SA_03_TOT_INCOME_OTH_TOT,,BOTH,Other income during the current tax year and the four years prior,Other income (509),2013-2024,2013-2024,
+othrliabend,PC,other_liabilities_eoy,F9_10_LIAB_OTH_EOY,,F990,Other liabilities - end of year,Other liabilities -- eoy,2013-2024,2013-2024,
+othrsalwages,PC,other_salaries_wages,F9_09_EXP_OTH_SAL_WAGE_TOT,OTHSAL;P2TWAGES,F990,Other salaries and wages - total expenses,Other salaries and wages,2012-2024,2012-2024,1997-1999;1997-2011
+ownsepentcd,PC,disregarded_entity_cd,F9_04_ENTITY_DISREG_X,,F990,Owned 100% of a separate disregarded entity [x],Disregarded entity?,2013-2024,2013-2024,
+paidinsurplusend,PC,paid_in_surplus_eoy,F9_10_NAFB_CAP_SURPLUS_EOY,,F990,"Paid-in or capital surplus, or land, building, or equipment fund - end of year",Paid-in or capital surplus -- eoy,2013-2024,2013-2024,
+paybletoffcrsend,PC,payable_to_officers_eoy,F9_10_LIAB_LOAN_OFF_EOY,,F990,"Loans and other payables to officers, directors, trustees, key employees, creators or founders, substantial contributors, or 35% controlled entities or family members - end of year","Payables to officers, directors, etc. -- eoy",2013-2024,2013-2024,
+payrolltx,PC,payroll_taxes,F9_09_EXP_PAYROLL_TAX_TOT,P2TPYTAX;PAYTAX,F990,Payroll taxes - total expenses,Payroll taxes,2012-2024,2012-2024,1997-1999;1997-2011
+pensionplancontrb,PC,pension_plan_contributions,F9_09_EXP_PENSION_CONTR_TOT,,F990,Pension plan accruals and contributions - total expenses,Pension plan contributions,2013-2024,2013-2024,
+permrstrctnetasstsend,PC,permanently_restricted_net_assets_eoy,F9_10_NAFB_RESTRICT_PERM_EOY,PermRnaEstimate,F990,Permanently restricted net assets - end of year,Permanently restricted net assets -- eoy,2013-2024,2013-2024,1998-2010
+pldgegrntrcvblend,PC,pledges_grants_receivable_eoy,F9_10_ASSET_PLEDGE_NET_EOY,,F990,Net pledges and grants receivable - end of year,Pledges and grants receivable -- eoy,2013-2024,2013-2024,
+politicalactvtscd,PC,political_activities_cd,F9_04_POLI_ACT_X,,F990,Engaged in political campaign activities [x],Political activities?,2013-2024,2013-2024,
+premiumspaidcd,PC,paid_premiums_personal_benefit_cd,F9_05_170C_PREMIUM_PAID_X,,F990,Paid premiums on a personal benefit contract [x],Premiums paid?,2013-2024,2013-2024,
+prepaidexpnsend,PC,prepaid_expenses_eoy,F9_10_ASSET_EXP_PREPAID_EOY,,F990,Prepaid expenses and deferred charges - end of year,Prepaid expenses or deferred charges -- eoy,2013-2024,2013-2024,
+prgmservcode2acd,PC,program_revenue_code_2a,F9_08_REV_PROG_BIZCODE_LINE_A,,F990,Program service revenue business code,Program service revenue code 2a,2013-2024,2013-2024,
+prgmservcode2bcd,PC,program_revenue_code_2b,F9_08_REV_PROG_BIZCODE_LINE_B,,F990,Program service revenue business code,Program service revenue code 2b,2013-2024,2013-2024,
+prgmservcode2ccd,PC,program_revenue_code_2c,F9_08_REV_PROG_BIZCODE_LINE_C,,F990,Program service revenue business code,Program service revenue code 2c,2013-2024,2013-2024,
+prgmservcode2dcd,PC,program_revenue_code_2d,F9_08_REV_PROG_BIZCODE_LINE_D,,F990,Program service revenue business code,Program service revenue code 2d,2013-2024,2013-2024,
+prgmservcode2ecd,PC,program_revenue_code_2e,F9_08_REV_PROG_BIZCODE_LINE_E,,F990,Program service revenue business code,Program service revenue code 2e,2013-2024,2013-2024,
+profndraising,PC,professional_fundraising_fees,F9_09_EXP_FEE_SVC_FUNDR_TOT,FUNDFEES;P2TFRFEE,F990,Fees for services - professional fundraising services - total expenses,Professional fundraising fees,2012-2024,2012-2024,1989-1999;1989-2011
+prohibtdtxshltrcd,PC,prohibited_tax_shelter_cd,F9_05_PTST_X,,BOTH,Party to a prohibited tax shelter transaction [x],Prohibited tax shelter transaction?,2013-2024,2013-2024,
+providegoodscd,PC,quid_pro_quo_contributions_cd,F9_05_170C_QUID_PRO_QUO_CONTR_X,,F990,"Received payment over $75, partly as contribution and partly for goods and services [x]",Quid pro quo contributions?,2013-2024,2013-2024,
+prptyintrcvdcd,PC,conservation_easements_cd,F9_04_CONSERV_EMT_X,,F990,Received or held a conservation easement [x],Conservation easements?,2013-2024,2013-2024,
+prtynotifyorgcd,PC,taxable_party_notification_cd,F9_05_PTST_PARTY_NOTIFY_X,,F990,Notified by taxable party of being party to a prohibited tax shelter transaction [x],Taxable party notification?,2013-2024,2013-2024,
+pubsupplesspct170,PC,public_support_sec170,SA_02_PUB_SUPPORT_TOT,DirSupEstimate,BOTH,Public support total,Public support (170),2013-2024,2013-2024,1998-2011
+pubsupplesub509,PC,public_support_sec509,SA_03_PUB_SUPPORT_TOT,,BOTH,Public support total,Public support (509),2013-2024,2013-2024,
+pubsuppsubtot170,PC,public_support_subtotal_sec170,SA_02_PUB_TOT_L123_TOT,IndSupEstimate,BOTH,Total public support during the current tax year and the four years prior,Public support subtotal (170),2013-2024,2013-2024,1998-2011
+pubsuppsubtot509,PC,public_support_subtotal_line6_sec509,SA_03_PUB_TOT_L1_5_TOT,,BOTH,Total public support during the current tax year and the four years prior,Public support subtotal (509),2013-2024,2013-2024,
+pymtoaffiliates,PC,payments_to_affiliates,F9_09_EXP_PAY_AFFIL_TOT,PayAfflEstimate,F990,Payments to affiliates - total expenses,Payments to affiliates,2013-2024,2013-2024,1998-2010
+qualhlthonhnd,PC,qualified_health_plan_reserves_on_hand,F9_05_501C29_RESERVE_MAINT_AMT,,F990,Reserves on hand,Qualified health plan reserves on hand,2013-2024,2013-2024,
+qualhlthplncd,PC,qualified_health_plan_multi_state_cd,F9_05_501C29_LIC_HEALTH_PLAN_X,,F990,Licensed to issue qualified health plans in more than one state [x],Qualified health plan in multiple states,2013-2024,2013-2024,
+qualhlthreqmntn,PC,qualified_health_plan_reserves_required,F9_05_501C29_STATE_RESERVE_AMT,,F990,State required reserves,Qualified health plan reserves required,2013-2024,2013-2024,
+rcvbldisqualend,PC,receivables_disqualified_eoy,F9_10_ASSET_LOAN_DSQ_PERS_EOY,,F990,Loans and other receivables from disqualified persons - end of year,Receivables from disqualified persons -- eoy,2013-2024,2013-2024,
+rcvdfrmdisqualsub509,PC,disqualified_persons_amts_sec509,SA_03_PUB_AMT_PERS_DSQ_TOT,,BOTH,Public support from disqualified persons during the current tax year and the four years prior,Amounts from disqualified persons (509),2013-2024,2013-2024,
+rcvdpdtngcd,PC,received_pmt_indoor_tanning_cd,F9_05_TANNING_SVC_PROV_X,,F990,Received payments for indoor tanning services [x],Payments for indoor tanning,2013-2024,2013-2024,
+recvartcd,PC,recv_art_historical_contributions_cd,F9_04_CONTR_ART_HIST_X,,F990,"Received contributions of art, historical treasures, or other similar assets, or qualified conservation contributions [x]","Deductible contributions of art, etc?",2013-2024,2013-2024,
+recvnoncashcd,PC,recv_noncash_contributions_cd,F9_04_CONTR_NONCSH_MT_25K_X,,F990,"Received more than $25,000 in non-cash contributions [x]",Deductible non-cash contributions?,2013-2024,2013-2024,
+reltdorgcd,PC,related_entity_cd,F9_04_ENTITY_RLTD_X,,F990,Was related to any tax-exempt or taxable entity [x],Related entity?,2013-2024,2013-2024,
+retainedearnend,PC,retained_earnings_eoy,F9_10_NAFB_EARNING_RETAINED_EOY,P4E_RETN;RETEARN,F990,"Retained earnings, endowment, accumulated income, or other funds - end of year",Retained earnings -- eoy,2012-2024,2012-2024,1989-1999;1989-2011
+rntlexpnsprsnl,PC,rental_expense_personal,F9_08_REV_OTH_RENT_LESS_EXP_PERS,rntlexpnsprsnl,F990,Rental expenses - personal,Rental expense -- Personal property,2012-2024,2012-2024,2011
+rntlexpnsreal,PC,rental_expense_real,F9_08_REV_OTH_RENT_LESS_EXP_REAL,P7ESTRIN;RENTEXP;rntlexpnsreal,F990,Rental expenses - real,Rental expense -- Real estate,2012-2024,2012-2024,"1989, 1991-2011;1997-1999;2011"
+rntlincprsnl,PC,net_rent_personal,F9_08_REV_OTH_RENT_INCOME_PERS,rntlincprsnl,F990,Rental income - personal,Net rent -- Personal property,2012-2024,2012-2024,2011
+rntlincreal,PC,net_rent_real,F9_08_REV_OTH_RENT_INCOME_REAL,RETE_BOY;rntlincreal,F990,Rental income - real,Net rent -- Real estate,2012-2024,2012-2024,1997-2011;2011
+royaltsexpns,PC,royalties_expense,F9_09_EXP_ROY_TOT,,F990,Royalties - total expenses,Royalties,2013-2024,2013-2024,
+royaltsinc,PC,royalties_income,F9_08_REV_OTH_ROY_TOT,royaltsinc,F990,Royalties - total,Royalties,2012-2024,2012-2024,2011
+rptgrntstogovtcd,PC,rpt_grants_to_orgs_or_govt_cd,F9_04_GRANT_MT_5K_US_ORG_X,,F990,"Reported more than $5,000 to domestic organizations or government [x]",Grants to organizations?,2013-2024,2013-2024,
+rptgrntstoindvcd,PC,rpt_grants_to_individuals_cd,F9_04_GRANT_MT_5K_US_INDIV_X,,F990,"Reported more than $5,000 to or for domestic individuals [x]",Grants to individuals?,2013-2024,2013-2024,
+rptincfnndrsngcd,PC,rpt_fundraising_events_15k_cd,F9_04_FUNDR_ACT_X,,F990,"Reported more than $15,000 gross income and contributions from fundraising events [x]",Fundraising activities?,2013-2024,2013-2024,
+rptincgamingcd,PC,rpt_gaming_income_15k_cd,F9_04_GAMING_X,,F990,"Reported more than $15,000 gross income and contributions from gaming activity [x]",Gaming?,2013-2024,2013-2024,
+rptinvstothsecd,PC,rpt_investments_other_securities_cd,F9_04_REP_INVEST_OTH_SEC_X,,F990,Reported investments - other securities [x],Investments in other securities reported?,2013-2024,2013-2024,
+rptinvstprgrelcd,PC,rpt_program_related_investments_cd,F9_04_REP_PROG_RLTD_X,,F990,Reported investments - program related [x],Program related investments reported?,2013-2024,2013-2024,
+rptlndbldgeqptcd,PC,rpt_land_bldg_equip_cd,F9_04_REP_LAND_BLDG_EQUIP_X,NetLandCode,F990,"Reported land, buildings, and equipment [x]",Land buildings and equipment reported?,2013-2024,2013-2024,1998-2010
+rptothasstcd,PC,rpt_other_assets_cd,F9_04_REP_OTH_ASSET_X,OthAsstCode,F990,Reported other assets [x],Other assets reported?,2013-2024,2013-2024,1998-2010
+rptothliabcd,PC,rpt_other_liabilities_cd,F9_04_REP_OTH_LIAB_X,,F990,Reported other liabilities [x],Other liabilities reported?,2013-2024,2013-2024,
+rptprofndrsngfeescd,PC,rpt_prof_fundraising_fees_cd,F9_04_PROF_FUNDR_X,,F990,"Reported more than $15,000 for professional fundraising services [x]",Professional fundraising?,2013-2024,2013-2024,
+rptyestocompnstncd,PC,sched_j_required_cd,F9_04_COMP_DTK_YES_X,,F990,Required to complete Schedule J [x],Schedule J required?,2013-2024,2013-2024,
+s4966distribcd,PC,s4966_distributions_cd,F9_05_DAF_TAXABLE_DIST_X,,F990,Made taxable distributions [x],Taxable distributions?,2013-2024,2013-2024,
+s501c3or4947a1cd,PC,s501c3_or_4947a1_cd,F9_04_DESC_IN_501C3_X,,F990,Described in 501(c)(3) [x],Described in 501(c)(3)?,2013-2024,2013-2024,
+s50yc3or4947aycd,PC,s501c3_or_4947a1_cd,F9_04_DESC_IN_501C3_X,,F990,Described in 501(c)(3) [x],Described in 501(c)(3)? (2015 typo: Y for 1),2015,2015-2015,
+samepubsuppsubtot170,PC,public_support_subtotal_line4_ref_sec170,SA_02_TOT_AMT_L4_CY_TOT,,BOTH,Total public support during the current tax year and the four years prior,Public support from line 4 (170),2013-2024,2013-2024,
+samepubsuppsubtot509,PC,public_support_subtotal_line6_ref_sec509,SA_03_TOT_AMT_L6_TOT,,BOTH,Total public support during the current tax year and the four years prior,Public support from line 6 (509),2013-2024,2013-2024,
+schdbind,PC,sched_b_required_cd,F9_04_SCHED_B_REQ_X,,F990,Required to complete Schedule B [x],Schedule B required?,2013-2024,2013-2024,
+secrdmrtgsend,PC,secured_mortgages_eoy,F9_10_LIAB_MTG_NOTE_EOY,MRTG_EOY;P4E_MORT,F990,Secured mortgages and notes payable - end of year,Secured mortgages and notes payable -- eoy,2012-2024,2012-2024,1989-2011;1997-1999
+sellorexchcd,PC,partial_liquidation_cd,F9_04_DOA_X,,F990,Disposed of more than 25% of net assets [x],Partial liquidation?,2013-2024,2013-2024,
+sepcnsldtfinstmtcd,PC,fin48_footnote_cd,F9_04_REP_FOOTNOTE_FIN48_X,,F990,Included footnote for liability under FIN 48 [x],Separate consolidated financial statement,2013-2024,2013-2024,
+sepindaudfinstmtcd,PC,obtained_separate_audited_cd,F9_04_AFS_IND_X,,F990,Obtained audited financial statements [x],Separate audited financial statement,2013-2024,2013-2024,
+servasofficercd,PC,business_txn_with_35pct_entity_cd,F9_04_BIZ_TRANSAC_DTK_ENTITY_X,,F990,"Was party to a business transaction with a controlled entity of a current or former officer, director, trustee, key employee, creator or founder, or substantial contributor [x]","Officer, etc. of entity with business relationship?",2013-2024,2013-2024,
+solicitcntrbcd,PC,solicit_nondeductible_contributions_cd,F9_05_NONDEDUCT_CONTR_X,,F990,Solicited non-deductible contributions [x],Non-deductible contributions?,2013-2024,2013-2024,
+srvcsval170,PC,gov_services_value_sec170,SA_02_PUB_VALUE_SVC_GOVT_TOT,A4A_GVTT;GVTSRV4;srvcsval170,BOTH,Value of services and facilities furnished by government during the current tax year and the four years prior,Services or facilities furnished by gov (170),2012-2024,2012-2024,1997-1999;1997-2010;2011
+srvcsval509,PC,gov_services_value_sec509,SA_03_PUB_VALUE_SVC_GOVT_TOT,srvcsval509,BOTH,Value of services or facilities furnished by government during the current tax year and the four years prior,Services or facilities furnished by gov (509),2012-2024,2012-2024,2011
+subjto6033cd,PC,subject_to_proxy_tax_cd,F9_04_PROXY_TAX_X,,F990,Subject to proxy tax [x],Subject to proxy tax?,2013-2024,2013-2024,
+subseccd,PC,subsection_cd,F9_00_EXEMPT_STAT,SUBSECCD,BOTH,501C subsection code,Subsection code,2012-2024,2012-2024,1989-2011
+subtotpub509,PC,public_support_subtotal_line7c_sec509,SA_03_PUB_ADD_L7AB_TOT,,BOTH,Public support from disqualified persons or in excess during the current tax year and the four years prior,Public support subtotal (509),2013-2024,2013-2024,
+subtotsuppinc509,PC,total_support_subtotal_sec509,SA_03_TOT_ADD_L10AB_TOT,subtotsuppinc509,BOTH,Gross investment income and unrelated business taxable income during the current tax year and the four years prior,Subtotal total support (509),2012-2024,2012-2024,2011
+svngstempinvend,PC,savings_and_temp_investments_eoy,F9_10_ASSET_SAVING_EOY,,F990,Savings and temporary cash investments - end of year,Savings and temporary cash investments -- eoy,2013-2024,2013-2024,
+tax_pd,PC,tax_period,F9_00_TAX_PERIOD_END_DATE,TAXPER,BOTH,Tax period end date,Tax period,"2013,2016-2024",2013-2024,1989-2011
+tax_prd,PC,tax_period,F9_00_TAX_PERIOD_END_DATE,TAXPER,BOTH,Tax period end date,Tax period,"2012,2014-2015",2012-2015,1989-2011
+temprstrctnetasstsend,PC,temporarily_restricted_net_assets_eoy,F9_10_NAFB_RESTRICT_TEMP_EOY,TempRnaEstimate,F990,Net assets with donor restrictions - end of year,Temporarily restricted net assets -- eoy,2013-2024,2013-2024,1998-2010
+totassetsend,PC,total_assets_eoy,F9_10_ASSET_TOT_EOY,ASS_EOY;P4E_ASST,BOTH,Total assets - end of year,Total assets -- eoy,2012-2024,2012-2024,1989-1999;1989-2011
+totcntrbgfts,PC,total_contributions,F9_08_REV_CONTR_TOT,A4A_CNT;CONT;P1TCONT,F990,"Total contributions, gifts, grants, and other similar amounts",Total contributions,2012-2024,2012-2024,1989-1999;1989-2011;1997-1999
+totcomprelatede,PC,total_reportable_comp_from_related,F9_07_COMP_DTK_COMP_RLTD_TOT,,F990,Reportable compensation from related organizations - total,Reportable compensation from related orgs,2013-2024,2013-2024,
+totestcompf,PC,total_estimated_other_compensation,F9_07_COMP_DTK_COMP_OTH_TOT,,F990,Other compensation from the organization and related organizations - total,Other compensation,2013-2024,2013-2024,
+totfuncexpns,PC,total_expenses,F9_09_EXP_TOT_TOT,EXPS;P1TOTEXP,F990,Total functional expenses - total expenses,Total functional expenses (Form 990 Part IX Line 25; equivalent to Form 990-EZ Part I Line 17 total expenses),2012-2024,2012-2024,1989-1999;1989-2011
+totgftgrntrcvd509,PC,total_gifts_grants_received_sec509,SA_03_PUB_GIFT_GRANT_CONTR_TOT,totgftgrntrcvd509,BOTH,"Gifts, grants, contributions, and membership fees received during the current tax year and the four years prior",Gifts grants membership fees received (509),2012-2024,2012-2024,2011
+totliabend,PC,total_liabilities_eoy,F9_10_LIAB_TOT_EOY,LIAB_EOY;P4E_LIAB,BOTH,Total liabilities - end of year,Total liabilities -- eoy,2012-2024,2012-2024,1989-1999;1989-2011
+totnetassetend,PC,total_net_assets_eoy,F9_10_NAFB_TOT_EOY,FUNDBAL;P1NASEOY;p4b_net,BOTH,Net assets or fund balances - end of year,Total Net Assets -- eoy,2012-2024,2012-2024,1989-1999;1989-2011;1997-1999
+totnetliabastend,PC,total_liab_and_net_assets_eoy,F9_10_NAFB_TOT_LIAB_NAFB_EOY,,F990,Total liabilities and net assets/fund balances - end of year,Total Liabilities + Net Assets -- eoy,2013-2024,2013-2024,
+totnooforgscnt,PC,n_orgs_supported,SA_01_PCSTAT_SUPPORT_ORG_NUM,,BOTH,Number of supported organizations,Number of organizations supported,2013-2024,2013-2024,
+totprgmrevnue,PC,program_service_revenue,F9_08_REV_PROG_TOT_TOT,P1PSREV;PROGREV,BOTH,Total program service revenue,Program service revenue,2012-2024,2012-2024,1989-2011;1991-1999
+totreprtabled,PC,total_reportable_comp_from_org,F9_07_COMP_DTK_COMP_ORG_TOT,,F990,Reportable compensation from the organization - total,Reportable compensation from organization,2013-2024,2013-2024,
+totrev2acola,PC,program_revenue_amount_2a,F9_08_REV_PROG_TOT_LINE_A,,F990,Program service revenue - total,Program service revenue amount 2a,2013-2024,2013-2024,
+totrev2bcola,PC,program_revenue_amount_2b,F9_08_REV_PROG_TOT_LINE_B,,F990,Program service revenue - total,Program service revenue amount 2b,2013-2024,2013-2024,
+totrev2ccola,PC,program_revenue_amount_2c,F9_08_REV_PROG_TOT_LINE_C,,F990,Program service revenue - total,Program service revenue amount 2c,2013-2024,2013-2024,
+totrev2dcola,PC,program_revenue_amount_2d,F9_08_REV_PROG_TOT_LINE_D,,F990,Program service revenue - total,Program service revenue amount 2d,2013-2024,2013-2024,
+totrev2ecola,PC,program_revenue_amount_2e,F9_08_REV_PROG_TOT_LINE_E,,F990,Program service revenue - total,Program service revenue amount 2e,2013-2024,2013-2024,
+totrev2fcola,PC,program_revenue_amount_2f,F9_08_REV_PROG_OTH_TOT,,F990,Other program service revenue - total,Program service revenue amount 2f,2013-2024,2013-2024,
+totrevenue,PC,total_revenue,F9_08_REV_TOT_TOT,P1TOTREV;TOTREV;TOTREV2,F990,Total revenue - total,Total revenue,2012-2024,2012-2024,1989-2011;1993-1999;1997-2011
+totsupp170,PC,total_support_sec170,SA_02_TOT_SUPPORT_TOT,A4A_TOTT;OTHINC4,BOTH,Total support during the current tax year and the four years prior,Total support (170),2013-2024,2013-2024,1997-1999;1997-2010
+totsupp509,PC,total_support_sec509,SA_03_TOT_SUPPORT_TOT,totsupp509,BOTH,"Gifts, grants, contributions, and membership fees received during the current tax year and the four years prior",Total support (509),2012-2024,2012-2024,2011
+totsupport,PC,total_support_amount,SA_01_PCSTAT_ORG_AMT_SUPPORT,,BOTH,Amount of monetary support,Sum of amounts of support,2013-2024,2013-2024,
+travel,PC,travel,F9_09_EXP_TRAVEL_TOT,,F990,Travel - total expenses,Travel,2013-2024,2013-2024,
+travelofpublicoffcl,PC,travel_public_officials,F9_09_EXP_TRAVEL_ENTMT_TOT,,F990,Payments of travel or entertainment for public officials - total expenses,Travel/entertainment expenses to public officials,2013-2024,2013-2024,
+txexmptbndcd,PC,tax_exempt_bond_cd,F9_04_TAX_EXEMPT_BOND_X,,F990,"Had a tax-exempt bond with an outstanding principal of more than $100,000 [x]",Tax exempt bonds?,2013-2024,2013-2024,
+txexmptbndsend,PC,tax_exempt_bonds_eoy,F9_10_LIAB_TAX_EXEMPT_BOND_EOY,BOND_EOY;P4E_BOND,F990,Tax-exempt bond liabilities - end of year,Tax-exempt bond liabilities -- eoy,2012-2024,2012-2024,1989-2011;1997-1999
+txexmptbndsproceeds,PC,tax_exempt_bonds_proceeds,F9_08_REV_OTH_INVEST_BOND_TOT,txexmptbndsproceeds,F990,Income from investment of bonds - total,Tax-exempt bond proceeds,2012-2024,2012-2024,2011
+txexmptint,PC,tax_exempt_interest,F9_05_4947_TAX_EXEMPT_INT_AMT,,F990,Tax-exempt interest,Tax exempt interest in lieu of 1041,2013-2024,2013-2024,
+txrevnuelevied170,PC,tax_revenues_levied_sec170,SA_02_PUB_TAXREV_LEVIED_TOT,A4A_TAXT;TAXREV4;txrevnuelevied170,BOTH,Tax revenues levied for organization benefit during the current tax year and the four years prior,Tax revenues levied (170),2012-2024,2012-2024,1997-1999;1997-2010;2011
+txrevnuelevied509,PC,tax_revenues_levied_sec509,SA_03_PUB_TAXREV_LEVIED_TOT,txrevnuelevied509,BOTH,Tax revenues levied for organization benefit during the current tax year and the four years prior,Tax revenues levied (509),2012-2024,2012-2024,2011
+unrelbusinccd,PC,unrelated_business_income_1k_cd,F9_05_UBIZ_IMCOME_OVER_LIMIT_X,P6UNRELB,BOTH,"Had unrelated business gross income of $1,000 or more [x]",Unrelated business income?,2012-2024,2012-2024,1989-1999
+unreltxincls511tx509,PC,net_ubi_line10b_sec509,SA_03_TOT_INCOME_UBIZ_TOT,,BOTH,Gross unrelated business taxable income during the current tax year and the four years prior,Net UBI (509),2013-2024,2013-2024,
+unrstrctnetasstsend,PC,unrestricted_net_assets_eoy,F9_10_NAFB_UNRESTRICT_EOY,UnaseoyEstimate,F990,Net assets without donor restrictions - end of year,Unrestricted net assets -- eoy,2013-2024,2013-2024,1998-2010
+unsecurednotesend,PC,unsecured_notes_eoy,F9_10_LIAB_NOTE_UNSEC_EOY,unsecurednotesend,F990,Unsecured mortgages and notes payable - end of year,Unsecured mortgages and notes payable -- eoy,2012-2024,2012-2024,2011
+wthldngrulescd,PC,backup_withholding_compliance_cd,F9_05_COMPLY_BACKUP_WITHHOLD_X,,F990,Complied with backup withholding rules [x],Compliance with backup withholding?,2013-2024,2013-2024,
