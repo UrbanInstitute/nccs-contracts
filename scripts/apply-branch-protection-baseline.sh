@@ -48,8 +48,18 @@ for repo in "${REPOS[@]}"; do
   fi
 
   body="$(cat "${BODY}")"
-  # Compose the guard check into the ruleset where the caller exists.
-  if gh api "repos/${repo}/contents/${CALLER_PATH}" > /dev/null 2>&1; then
+  # Compose the guard check into the ruleset where a guard CALLER exists.
+  # Existence of the file is not enough: nccs-contracts hosts the reusable
+  # workflow_call definition at the same path, and requiring the check there
+  # deadlocks every PR (the check never runs). A caller is identified by its
+  # `uses:` line referencing the reusable guard.
+  caller_src="$(gh api "repos/${repo}/contents/${CALLER_PATH}" \
+                  --jq .content 2>/dev/null | base64 -d 2>/dev/null || true)"
+  if printf '%s' "${caller_src}" | grep -q 'workflow_call'; then
+    caller_src=""   # the reusable definition itself, not a caller
+  fi
+  if printf '%s' "${caller_src}" | \
+       grep -q '^\s*uses:.*nccs-contracts/.github/workflows/contracts-guard.yml'; then
     body="$(printf '%s' "${body}" | python3 -c "
 import json, sys
 r = json.load(sys.stdin)
