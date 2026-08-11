@@ -17,12 +17,12 @@ BLOB="https://github.com/UrbanInstitute/nccs-contracts/blob/main"
     num="${base%%-*}"
 
     # Title: first H1, strip leading '# ' and any leading 'NNNN — ' / 'NNNN -- '.
-    title="$(grep -m1 '^# ' "$f" | sed -E 's/^#[[:space:]]*//; s/^[0-9]+[[:space:]]*[—-]+[[:space:]]*//')"
+    title="$( { grep -m1 '^# ' "$f" || true; } | sed -E 's/^#[[:space:]]*//; s/^[0-9]+[[:space:]]*[—-]+[[:space:]]*//')"
     # Escape pipes so a stray '|' in a title can't break the table.
     title="${title//|/\\|}"
 
     # Status: leading canonical token of the Status line (first word).
-    status="$(grep -m1 '^- \*\*Status:\*\*' "$f" \
+    status="$( { grep -m1 '^- \*\*Status:\*\*' "$f" || true; } \
       | sed -E 's/^- \*\*Status:\*\*[[:space:]]*//; s/[[:space:]].*$//')"
     [ -n "$status" ] || status="—"
 
