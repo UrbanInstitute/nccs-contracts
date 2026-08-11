@@ -91,7 +91,7 @@ world would have no ground truth — only code to imitate.
   flowchart TB
       subgraph SPINE["nccs-contracts — the legibility spine"]
           contracts["contracts/*.yml<br/>17 machine-checkable specs<br/>(5 still carry TODO)"]:::progress
-          adrs["decisions/*.md<br/>44 ADRs (the why + revisit triggers)"]:::live
+          adrs["decisions/*.md<br/>46 ADRs (the why + revisit triggers)"]:::live
           validator["validate_contracts.py<br/>(spec well-formedness)"]:::live
           guard["contracts-guard.yml + adr-required.yml<br/>cross-repo change guard (ADR 0022, rolling out)"]:::progress
       end

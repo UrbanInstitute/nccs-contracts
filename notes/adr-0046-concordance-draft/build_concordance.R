@@ -5,14 +5,13 @@
 
 library(data.table)
 
-core_xw_dir <- "/Users/thiyaghessanpoongundranar/code/nccs/nccs-data-core/data/crosswalks"
-nodc_dir    <- "/private/tmp/claude-501/-Users-thiyaghessanpoongundranar-code-nccs/8698c298-96c1-49c8-a0f0-e1b44fd37de7/scratchpad/soi-extract-harmonization"
-out_csv     <- "/private/tmp/claude-501/-Users-thiyaghessanpoongundranar-code-nccs/8698c298-96c1-49c8-a0f0-e1b44fd37de7/scratchpad/core-variable-concordance-DRAFT.csv"
+core_xw_dir <- Sys.getenv("CORE_XW_DIR", "../../../nccs-data-core/data/crosswalks")
+nodc_vfinal <- Sys.getenv("NODC_VFINAL_CSV",
+  "SOI-EXTRACT-CROSSWALKS-2012-2024-EZ-PC-VFINAL.CSV")  # pinned SHA in README
+out_csv     <- "core-variable-concordance-DRAFT.csv"  # run from this directory
 
 ## ---- NODC side: one row per (soi raw variant, form) -> F9_* -------------
-nodc <- fread(file.path(nodc_dir, "00_crosswalks",
-                        "SOI-EXTRACT-CROSSWALKS-2012-2024-EZ-PC-VFINAL.CSV"),
-              colClasses = "character")
+nodc <- fread(nodc_vfinal, colClasses = "character")
 
 yr_cols <- grep("^YEAR\\.", names(nodc), value = TRUE)
 long <- melt(nodc,
@@ -44,6 +43,17 @@ core <- rbind(
   coreez[,  .(soi_raw_lc, form, core_harmonized_name = harmonized_name,
               core_description = description, core_years = years_present)]
 )
+## Collapse year-split crosswalk rows: the ADR promises ONE row per
+## (raw SOI variable, form). Same variable must map to the same
+## harmonized name across splits -- stop if not.
+split_check <- core[, uniqueN(core_harmonized_name), by = .(soi_raw_lc, form)]
+stopifnot(all(split_check$V1 == 1L))
+core <- core[, .(
+  core_harmonized_name = core_harmonized_name[1],
+  core_description     = core_description[1],
+  core_years           = paste(sort(unique(unlist(
+                           strsplit(core_years, ";")))), collapse = ";")
+), by = .(soi_raw_lc, form)]
 
 ## ---- join on (raw soi name, form) ---------------------------------------
 cc <- merge(core, nodc_map, by = c("soi_raw_lc", "form"), all = TRUE)
@@ -70,6 +80,7 @@ setorder(cc, form, soi_source_var, na.last = TRUE)
 fwrite(cc, out_csv)
 
 ## ---- coverage summary ----------------------------------------------------
+stopifnot(!anyDuplicated(cc[, .(soi_source_var, form)]))  # ADR shape gate
 cat("rows:", nrow(cc), "\n")
 cat("matched all three (soi+core+nodc+legacy):",
     cc[!is.na(core_harmonized_name) & !is.na(nodc_efile_var) &

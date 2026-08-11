@@ -9,8 +9,7 @@ direxpns,EZ,gaming_fundraising_direct_expenses,F9_08_REV_OTH_EVNT_DIRECT_EXP,P1S
 duesassesmnts,EZ,membership_dues_assessments,F9_08_REV_CONTR_MEMBSHIP_DUE,,F990EZ,Membership dues,Membership dues and assessments,2012-2024,2012-2024,
 e-file,EZ,efile_indicator,EFILE_X,,BOTH,E-file indicator,E-file indicator,2020,2020-2020,
 efile,EZ,efile_indicator,EFILE_X,,BOTH,E-file indicator,E-file indicator,2021-2024,2021-2024,
-ein,EZ,ein,F9_00_ORG_EIN,EIN,BOTH,EIN,Employer Identification Number,2013-2024,2012-2024,1989-2011
-ein,EZ,ein,F9_00_ORG_EIN,EIN,BOTH,EIN,Employer Identification Number,2012,2012-2024,1989-2011
+ein,EZ,ein,F9_00_ORG_EIN,EIN,BOTH,EIN,Employer Identification Number,2012;2013-2024,2012-2024,1989-2011
 elf,EZ,efile_indicator,EFILE_X,,BOTH,E-file indicator,E-file indicator,2015-2019,2015-2019,
 excds1pct509,EZ,excess_over_1pct_sec509,SA_03_PUB_AMT_CONTR_SBST_TOT,,BOTH,"Public support from exceeding $5,000 or 1% of total during the current tax year and the four years prior",Amount support exceeds total (509),2017-2024,2014-2024,
 excds2pct170,EZ,excess_over_2pct_sec170,SA_02_PUB_CONTR_SBST_TOT,,BOTH,Portion of total contributions exceeding 2% of total,Amount support exceeds total (170),2017-2024,2014-2024,

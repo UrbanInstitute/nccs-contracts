@@ -27,7 +27,8 @@ name, and both sides' crosswalks are public, so the bridge is mechanical.
 A draft composition (2026-08-06, from his
 `SOI-EXTRACT-CROSSWALKS-2012-2024-EZ-PC-VFINAL.CSV` × our
 `soi_990{,ez}_crosswalk_FINAL.csv` × `legacy_pz_crosswalk_FINAL.csv`)
-matches **345/345** raw SOI variables across both harmonizations (990 +
+matches **344/344** unique (raw SOI variable, form) keys across both
+harmonizations (990 +
 EZ), 132 of which also carry legacy CORE names. Zero unmatched on either
 side: both crosswalks exhaustively cover the same source files.
 

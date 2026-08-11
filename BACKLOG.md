@@ -148,7 +148,7 @@ write at `raw/soi/processed_plus_bmf/`. All work below is unilateral (no ask of 
 
 | # | Task | Where | Notes |
 |---|------|-------|-------|
-| C1 | Ratify ADR 0046; review draft concordance in `notes/adr-0046-concordance-draft/` | nccs-contracts | Draft composes 345/345 SOI 990+EZ vars across both harmonizations; 132 carry legacy PZ names. |
+| C1 | Ratify ADR 0046; review draft concordance in `notes/adr-0046-concordance-draft/` | nccs-contracts | Draft composes 344/344 unique (SOI var, form) keys across both harmonizations (year-split rows collapsed per review 2026-08-11); 131 carry legacy PZ names. |
 | C2 | Build + publish `lookups/variable-concordance/` (vYYYY.MM + latest, manifest, dictionary) | nccs-data-core | Snapshot NODC crosswalk at recorded upstream SHA. PF = future extension. |
 | C3 | Land EIN2/ein_prefixed in CORE outputs (ADR 0036, pending core PR #11 checklist item) | nccs-data-core | Now also the join key to NODC-keyed workflows; priority raised. |
 | C4 | Provenance note in workspace `DATA-LIFECYCLE.md`: external BMF v1.1 pin + `raw/soi/processed_plus_bmf/` observation | workspace root | Documentation only, no contract. |
