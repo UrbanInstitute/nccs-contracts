@@ -6,7 +6,10 @@ Requires: python-docx. Git is the source of truth; these exports are
 the committee-facing surface (see governance/README.md).
 """
 import re, sys, pathlib
-import docx
+try:
+    import docx
+except ModuleNotFoundError:
+    sys.exit("Requires python-docx: python3 -m pip install --user python-docx")
 from docx import Document
 from docx.shared import Pt, Inches, RGBColor
 from docx.oxml.ns import qn

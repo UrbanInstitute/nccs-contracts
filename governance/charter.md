@@ -127,8 +127,10 @@ for reproducible work (papers, replication code) — no date-guessing
 (`find_latest_index()` becomes: read `latest/_manifest.json`).
 **The manifest at `latest/` is the version registry**:
 machine-readable, per-artifact, always current.
-NEWS.md files rendered on the nccs website as a readable summary for
-humans.
+A website changelog page provides the readable summary for humans —
+generated from `governance/release-notes/` (the single authoring
+location; see `governance/decisions-pending.md` item 4), never
+hand-edited.
 
 ### Patches to rolling endpoints (e-file flow, agreed 2026-08-12)
 

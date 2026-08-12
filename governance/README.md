@@ -13,7 +13,9 @@ them.
 | `decisions-pending.md` | Deferred committee decisions | Groomed each meeting |
 
 Working conventions: git is the source of truth; Box carries rendered
-Word exports for committee members. Meeting transcripts are NEVER
+Word exports for committee members, generated with
+`python3 governance/export-box-docx.py <in.md> <out.docx>` (one-time
+setup: `python3 -m pip install --user python-docx`). Meeting transcripts are NEVER
 committed here (this repo is public) — they live on Box/local only.
 
 For Claude Code sessions: this directory is the entry point for
