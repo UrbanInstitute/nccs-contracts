@@ -11,7 +11,13 @@ Deferred by the committee (2026-08-12), queued for future meetings:
    equivalent) inside published files so provenance travels with the
    data. Design due-out with JL.
 4. **Website changelog / NEWS page** — human-readable release history
-   on the site (annotation, 2026-08-12).
+   on the site (annotation, 2026-08-12). **Design settled 2026-08-12
+   (PR review): fully DERIVED, no new authoring surface** — the page
+   is generated at site build from `governance/release-notes/*.md`
+   (the §6 flow's only output location), reverse-chronological, with
+   links into the decision-record index; same generation pattern as
+   the existing ADR index. Implementation = one script + page in the
+   website repo.
 5. **npmatch independent validation** — NCCS blind re-validation of
    the benchmark (offer stands; convert "self-validated 95%" to
    "NCCS-verified").

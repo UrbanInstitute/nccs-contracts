@@ -6,6 +6,10 @@ Start every non-trivial task by reading:
 
 0. `BACKLOG.md` — the maintainer's prioritized next-steps list (boot here first; the workflow is plan-here → execute-downstream → reconcile-here). Keep it updated at the reconcile step. Run `/reconcile-status` alongside it to surface open-loop ADRs and reconcile lag (ADR 0038).
 1. `ARCHITECTURE.md` — current-state system description.
+1a. `governance/` — the data-governance committee's home (charter,
+   monthly minutes, release notes, pending decisions). Anything
+   governance-related starts and ends here; see governance/README.md
+   for update cadence.
 2. `decisions/` — ADRs for the load-bearing calls (0001 S3 surface, 0002 merged artifact, 0003 DuckDB over Athena, 0004 cadence-aware drift detection). Read the ones relevant to the task.
 3. `contracts/_template.yml` — the canonical shape every contract follows.
 4. The specific `contracts/*.yml` relevant to the task. Most are TODO stubs awaiting authoritative population from the producer repos and live S3 artifacts.

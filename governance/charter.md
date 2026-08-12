@@ -39,12 +39,16 @@ depends on it staying stable: concretely, when it is:
 Currently, data contract YAMLs are specified in the: `nccs-contracts` GitHub repo under `contracts/`.
 One published file per specified contract, naming raw data origin, current location, schema, and consumers. 
 
-**Included datasets** (committee vocabulary, 2026-08-12: "core" means
-the 990 panel family — one dataset in several variants):
+**Included datasets.** The committee's shared vocabulary (2026-08-12)
+groups the 990-derived products as one conceptual "990 panel family" —
+but they remain SEPARATE registry entries, catalogued, contracted, and
+produced independently (the e-file panels are not part of the CORE
+product; they are a sibling in the family):
 
-* 990 panel family: NCCS CORE (PZ / PC / PF scope files), SOI
-  extracts, e-file panels (v2_x), 990-N postcards (not yet actively
-  maintained)
+* NCCS CORE (PZ / PC / PF scope files, incl. the harmonized SOI
+  panel)
+* E-file panels (v2_x; NODC-produced, NCCS-distributed)
+* 990-N postcards (family member; not yet actively maintained)
 * BMF (monthly releases + the Unified BMF)
 * Geographic crosswalks
 * Metadata tables (NTEE, address history)
