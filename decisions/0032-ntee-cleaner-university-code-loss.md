@@ -292,6 +292,15 @@ Completed as BACKLOG L1, folded into the same `nccs-data-bmf` batch as ADR
   during implementation, after the measurement showed the `nteev2_code` defect
   dominated; shipped in the same PR rather than split out.
 
+### Amended by ADR 0048 (2026-08-28)
+
+The "single derivation path" from Decision #2 was correct but the function
+was incomplete: it never applied the NTEE-V2 x00 rule (specialty/common
+codes 01-19 belong in the org-type slot, not the activity slot), so `B11`
+published as `EDU-B11-MS` on ~5% of rows across every surface rebuilt under
+this ADR. Corrected by [[0048-nteev2-specialty-code-x00-rule]], which also
+introduces the repo's first test suite. Found externally by NODC.
+
 ## Follow-up
 
 1. ~~**Run the open measurement.**~~ **Done 2026-06-16** — see the RESOLVED note

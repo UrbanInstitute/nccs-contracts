@@ -13,7 +13,7 @@ open-loop ADR (`Accepted`/`Executing`) should map to a row here. Run
 `/reconcile-status` at boot to cross-check the board against downstream PRs and
 catch reconcile lag.
 
-_Last updated: 2026-08-11._
+_Last updated: 2026-08-28._
 
 ---
 
@@ -55,6 +55,9 @@ legacy metadata tables in nccs-data-core) is the next build.
 | Z12 | Document the county-FIPS join recipe where users look | `nccs` + `nccsdata` | Recurring internal asks show people don't know FIPS is one crosswalk join away (and the API already serves `geo_county_fips` pre-joined). Add the recipe (label join; CT by coordinate) to the website catalog pages and the nccsdata vignette. Cheap, do before Z11 ships. |
 | Z13 | ~~Merge publisher writes `v{YYYY_MM}/` + `latest/` itself~~ | `nccs-data-bmf` | **DONE; VERIFIED LIVE 2026-08-11** (bmf #41 merged; first machine-written v2026_08/ + latest/ publish, sha-skip observed). Detail + ops notes: BACKLOG-ARCHIVE.md. Z14 unblocked. |
 | Z14 | Repoint sector-in-brief-api + nccsdata to `geocoding/unified-bmf/latest/` | `sector-in-brief-api` + `nccsdata` | Both still read the pre-ADR-0039 `geocoding/bmf-master/merged/` path, alive only via dual-write until the 90-day window closes (~2026-10). Sequence AFTER Z13 (or the interim manual copy) so `latest/` is trustworthy first. Each PR needs its contracts-guard breadcrumb. Was prose in the ADR 0041 follow-ups; now a row. |
+| Z16 | **Fix the NTEEV2 x00 rule in the BMF pipeline (`nteev2fix`) — ADR 0048** | `nccs-data-bmf` then `nccs` | **New 2026-08-27; ADR 0048 Proposed 2026-08-28.** `nteev2_code` double-encodes specialty/common codes 01-19 (`B11` -> `EDU-B11-MS`; spec and our own legacy lookup say `EDU-B00-MS`). ~5% of rows. Found by NODC (`matchdb` `faa4fe8`), never reported. Fix in the single derivation path + first test suite for the repo + recompute at the Unified BMF consolidation step + republish via Z13 publisher; per-vintage files lag until next reprocess. Pilot task for the Claude-implements / Codex-reviews workflow. Feeds Z2 (catalog re-render) and Z6 (resolution rule). |
+| Z17 | Register NODC-published surfaces as contracted producer entries (register, don't ask) | `nccs-contracts` | **New 2026-08-27.** Jesse has write access to `nccsdata` as an external fellow. `npmatch/R/fetch.R:5` hardcodes `nccsdata/crosswalks/npmatch/` (his `MANIFEST.csv`, `raw/normalized/results/` tiers); no contract, ADR, or backlog mention until now. `ef2` publishes 2.8-18 GB DuckDB archives at `nccs-efile/duckdb/efile_v2_2/EFILE<YEAR>.duckdb`. Write contract YAMLs describing both as they exist, owner = NODC, accept his manifest format as-is; record in September minutes as "recorded". Add a BMF column-stability statement to `contracts/unified-bmf.yml` (his `affiliates_bmf()` and `matchdb` hardcode our column names). Decide ownership/terms of `nccs-efile/duckdb/`. Weekly NODC audit routine (`trig_0167fGTULdcCEGHyPVYCPk4b`) files PRs under `governance/nodc-audits/`. |
+| Z18 | 12 NTEE-CC codes missing from the `ntee_code` lookup sheet (incl. B29 charter schools) | `nccs-data-bmf` | **New 2026-08-28**, side finding of ADR 0048 test B. `B29, E6A, F31, K2A, K2B, K2C, L4A, L4B, M99, P76, P7A, P83` are in the vendored NODC crosswalk but not in `data/lookup/bmf_code_lookup.xlsx`/`ntee_code` (643 rows), so they publish as `UNU-Z99-RG`. Measure prevalence on live data first (per code, per vintage), confirm each against the NTEE-CC standard, then add with definitions + NAICS and reprocess. Test `test-ntee-v2.R` pins the list; shorten it as codes land. |
 
 ---
 
