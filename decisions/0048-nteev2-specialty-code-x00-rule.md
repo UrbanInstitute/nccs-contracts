@@ -1,6 +1,6 @@
 # 0048 — Apply the NTEE-V2 x00 rule: specialty/common codes 01-19 must not appear in the activity slot
 
-- **Status:** Accepted (maintainer approved 2026-08-28; executing in `nccs-data-bmf` on `fix/0048-nteev2-x00`)
+- **Status:** Executing (nccs-data-bmf `fix/0048-nteev2-x00`; round-1 review complete, amendments of 2026-09-10 per `reviews/0048-claude-response-matrix.md`)
 - **Date:** 2026-08-28
 - **Deciders:** sole maintainer
 - **Relates:** ADR 0032 (NTEE cleaner; this amends its Outcome), ADR 0034 (NTEE-resolved crosswalk), ADR 0014 (manifests), ADR 0033 (deprecation window), BACKLOG Z16 / Z6 / Z2
@@ -55,7 +55,10 @@ Externally, by NODC (Jesse Lecy), recorded in
 `Nonprofit-Open-Data-Collective/matchdb` commit `faa4fe8` (2026-08-21) and
 `pfmatch/dev/SCHEDI-ALIAS-FINDINGS.md` §6d. His measurement: 21,983 of a
 400,000-row sample of the geocoded Unified BMF (5.5%) carry a 10-19 org-type
-code and are affected. He patched a private copy
+code. Measured on the full local Unified BMF (vintage 2026_08, git_sha
+6a7862c, 3,698,124 rows, 2026-08-28): **313,662 rows (8.48%) carry a
+specialty code in `nteev2_code`**, and a further **177,374 rows carry a
+stale value from a second defect** (see Decision #3a). He patched a private copy
 (`bmf_unified_geocoded-nteev2fix.csv`) and recomputes with
 `fiscal::get_nteev2()`; the defect was not reported to us. It reached us by
 reading his commit log. The credit belongs in the release note.
@@ -123,8 +126,10 @@ Every published surface that carries `nteev2_code` / `nteev2`, all produced by
 3. **Correct published artifacts by a full reprocess through the pipeline,
    not by patching files or by recomputing at the consolidation step.**
    After #1 merges: reprocess every legacy vintage (85, the BACKLOG L1
-   shape, `scripts/` EC2 batch runner) and the current monthly vintage,
-   then rebuild the Unified BMF, the geocoded Unified BMF, the state marts,
+   shape, `scripts/` EC2 batch runner) AND every historical current-monthly
+   processed vintage that feeds the Unified BMF (enumerate from
+   `processed/bmf/` at run time; ~37 files as of 2026-08), plus the current
+   monthly vintage, then rebuild the Unified BMF, the geocoded Unified BMF, the state marts,
    and the NTEE-resolved crosswalk (which cleans distinct raw codes through
    `transform_ntee_code()` and therefore picks the fix up automatically),
    and publish via the ADR 0042 / Z13 publisher (`v{YYYY_MM}/` then
@@ -135,6 +140,19 @@ Every published surface that carries `nteev2_code` / `nteev2`, all produced by
    add a recompute at the Unified BMF build, which would be a second
    derivation path and exactly what ADR 0032 forbids. Every published
    surface and every per-vintage file is correct after one cycle.
+
+3a. **Scope amendment (2026-09-10, from the round-1 review's reconciliation
+   check).** The maintainer's changed==flagged rule surfaced a SECOND
+   defect: 177,374 Unified BMF rows carry a stale `nteev2_code` (170,537 of
+   them `Z99`) despite a valid `ntee_code_clean`. 156,840 are
+   `bmf_source = current` rows whose `last_vintage_ym` falls in
+   2018-12..2026-05: monthly vintages processed before the ADR 0032 fix
+   (2026-06-16) and never reprocessed, because BACKLOG L1's scope was
+   legacy-only. Without the widened scope above, the x00 fix would land
+   while a third of a million rows keep pre-0032 values. Runtime: the
+   maintainer's ~1 day covered the legacy set; the ~37 current-monthly
+   files are expected to add hours, not days (inferred; confirm on the
+   first EC2 run).
 
 4. **Introduce a test suite in `nccs-data-bmf`.** The repo has no
    `tests/` directory at all (verified 2026-08-28). This ADR requires a
@@ -182,24 +200,45 @@ this table verbatim.
 | `Z99` | `Z99` | unclassified stays |
 
 **B. Oracle against our own lookup (code review level).** For every
-3-character `NTEE` in `data/lookup/ntee_legacy_5char_lookup.csv`, running
-the full `transform_ntee_code()` path on that code and concatenating
-`nteev2_subsector-nteev2_code-nteev2_org_type` equals the table's `NTEE2`
-column. Report the count tested and the count of mismatches; expected
-mismatches: 0. (Any residual mismatch must be listed and explained, not
-excluded.)
+3-character `NTEE` in `data/lookup/ntee_legacy_5char_lookup.csv` (655 rows),
+run the full `transform_ntee_code()` path and compare to the table's
+`NTEE2`, component-wise:
+- **Middle slot and org-type must match exactly for every row. Expected
+  mismatches: 0.** This is the surface this ADR changes; nothing may
+  diverge here.
+- **Subsector** is compared modulo the UNI/HOS carve-out: rows whose
+  cleaned code is in {B40,B41,B42,B43,B50} must yield `UNI` and
+  {E20,E21,E22,E24} must yield `HOS` even though the older crosswalk says
+  `EDU`/`HEL`; our published spec is authoritative for the carve-out.
+- **Rows whose code is absent from the `ntee_code` lookup sheet** clean to
+  `INVALID` and render `UNU-Z99-RG`; they are reported BY NAME in the test,
+  cross-referenced to BACKLOG Z18, and the pinned list may only shrink.
+- Any mismatch outside those two defined classes is a failure.
+For every 5-character `NTEE` (942 rows), the full composite must match
+`NTEE2` exactly; expected mismatches: 0.
 
-**C. Invariants (code review level, asserted in tests and in
-`.ntee_output_validation()`):**
+**C. Invariants (code review level, asserted in tests and at derivation
+time inside `transform_ntee_code()` as a hard stop; `.ntee_output_validation()`
+additionally re-checks the specialty pattern on the SCD projection):**
 - No row has `nteev2_code` matching `^[A-Z](0[1-9]|1[0-9])$`.
+- NA in `nteev2_code`, `nteev2`, or any composite component is a violation
+  (the guard must not be blind to NA), as is the literal string `"NA"`
+  appearing in the composite.
 - `nteev2 == paste(nteev2_subsector, nteev2_code, nteev2_org_type, sep = "-")` for all rows.
 - `nteev2_org_type != "RG"` if and only if the raw code's digits 2-3 are in `{01,02,03,05,11,12,19}` (pre-existing behaviour, now pinned).
 - `nteev2_subsector` and `nteev2_org_type` are byte-identical before and after the change on the same input.
 
-**D. Before/after on the Unified BMF (artifact or LIVE level).** Also
-report, per reprocessed legacy vintage, the count of rows changed in
-`nteev2_code` (a single table, 85 rows + current), so the reviewer can see
-the fix landed everywhere and nowhere else. On the
+**D. Before/after on the Unified BMF (artifact or LIVE level).** Method:
+`scripts/check_nteev2_reconciliation.R` recomputes via the FULL
+`transform_ntee_code()` on `ntee_code_raw` (with `legacy_mode` per row
+source) — NOT via the helper on `ntee_code_clean`, which is the wrong
+oracle for 5-char legacy rows resolved by the vendored crosswalk. Also
+report, per reprocessed vintage (85 legacy + ~37 historical current-monthly
++ current), the count of rows changed in `nteev2_code`, so the reviewer can
+see the fix landed everywhere and nowhere else. Baseline measured
+2026-08-28 on vintage 2026_08 / git_sha 6a7862c: flagged 313,662 (8.48%);
+additional stale rows 177,374 (Decision #3a); expected changed rows on the
+rebuilt Unified BMF: ~491,036 (exact count from the script). On the
 current published geocoded Unified BMF (`latest/`, record the manifest
 `vintage` and `git_sha`):
 - rows matching invariant C.1 BEFORE: report count and share (expected on
