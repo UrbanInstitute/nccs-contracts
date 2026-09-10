@@ -10,7 +10,8 @@
 # ADR 0048 (Executing 2026-09-10): `nteev2_code` and the composite `nteev2`
 # change VALUES on ~8.5% of rows at the next republish (x00 rule: specialty/
 # common codes 01-19 collapse to x00; org type stays in `nteev2_org_type`).
-# A further ~177k rows correct stale pre-ADR-0032 values (0048 Decision #3a).
+# A further 201,265 rows correct stale pre-ADR-0032 values (0048 Decision
+# #3a); net 488,754 rows change (class-reconciled, criterion D stage 1).
 # No schema, path, row-membership, or subsector/org-type change. Deprecation
 # window waived per ADR 0033 critical-bug clause (recorded in ADR 0048 #5).
 

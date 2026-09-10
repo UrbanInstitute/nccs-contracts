@@ -57,8 +57,9 @@ Externally, by NODC (Jesse Lecy), recorded in
 400,000-row sample of the geocoded Unified BMF (5.5%) carry a 10-19 org-type
 code. Measured on the full local Unified BMF (vintage 2026_08, git_sha
 6a7862c, 3,698,124 rows, 2026-08-28): **313,662 rows (8.48%) carry a
-specialty code in `nteev2_code`**, and a further **177,374 rows carry a
-stale value from a second defect** (see Decision #3a). He patched a private copy
+specialty code in `nteev2_code`**, and a further **201,265 rows carry a
+stale value from a second defect** (see Decision #3a; the initially reported
+177,374 is superseded). He patched a private copy
 (`bmf_unified_geocoded-nteev2fix.csv`) and recomputes with
 `fiscal::get_nteev2()`; the defect was not reported to us. It reached us by
 reading his commit log. The credit belongs in the release note.
@@ -145,8 +146,12 @@ Every published surface that carries `nteev2_code` / `nteev2`, all produced by
 
 3a. **Scope amendment (2026-09-10, from the round-1 review's reconciliation
    check).** The maintainer's changed==flagged rule surfaced a SECOND
-   defect: 177,374 Unified BMF rows carry a stale `nteev2_code` (170,537 of
-   them `Z99`) despite a valid `ntee_code_clean`. 156,840 are
+   defect: Unified BMF rows carrying a stale `nteev2_code` despite a valid
+   cleaned code. Authoritative count (criterion D stage-1 script,
+   2026-09-10): **201,265 stale rows**. (The round-1 figures 177,374 /
+   170,537 Z99 / 156,840 current-source are SUPERSEDED: they came from the
+   helper-on-stored-clean simulation, which the criterion D method note
+   explains was the wrong oracle.) The dominant population is
    `bmf_source = current` rows whose `last_vintage_ym` falls in
    2018-12..2026-05: monthly vintages processed before the ADR 0032 fix
    (2026-06-16) and never reprocessed, because BACKLOG L1's scope was
