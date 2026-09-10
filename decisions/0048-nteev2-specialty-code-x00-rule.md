@@ -90,7 +90,8 @@ propagated the incomplete rule everywhere.
 Consumers keying on `nteev2_subsector` (sector-in-brief, most nccsdata
 users) are unaffected. Consumers keying on `nteev2` or `nteev2_code`
 (NODC `matchdb`/`fiscal`, anyone grouping by V2 code) see a value change
-on ~5% of rows.
+on 8.48% of Unified BMF rows (313,662, measured; plus 201,265 stale rows
+per Decision #3a).
 
 ### Where the wrong values live
 
@@ -113,15 +114,16 @@ Every published surface that carries `nteev2_code` / `nteev2`, all produced by
    ADR 0032 invariant (a function of `ntee_code_clean`, no parallel
    formula) is preserved: this is the same function, completed.
    Implement the rule ONCE as a named, exported-in-spirit helper
-   (e.g. `nteev2_code_from_clean()`) so it can be unit-tested in isolation
-   and reused by the consolidation step in #3.
+   (e.g. `nteev2_code_from_clean()`) so it can be unit-tested in
+   isolation; it is the only site of the rule.
 
 2. **Leave `nteev2_org_type` and `nteev2_subsector` untouched.** Both are
    already correct; changing them widens the blast radius for no gain.
    The legacy 5-char crosswalk path (`.apply_legacy_5char_crosswalk`) is
    already x00-consistent (measured: 0/1,597 contradictions) and its
-   formulaic fallback uses positions 4-5, which are the activity, not the
-   type; it needs no change but is covered by the invariant tests.
+   formulaic fallback for unmatched rows now routes positions 4-5 through
+   the helper so an in-range activity can never reach the slot (a one-line
+   change, covered by a constructed fixture).
 
 3. **Correct published artifacts by a full reprocess through the pipeline,
    not by patching files or by recomputing at the consolidation step.**
@@ -166,8 +168,8 @@ Every published surface that carries `nteev2_code` / `nteev2`, all produced by
    membership, and all other columns are unchanged, and keeping the wrong
    values live prolongs the harm to anyone grouping by V2 code. Same
    posture as the ADR 0032 republish (values corrected in place, same row
-   count). Recorded harm: ~5% of rows carry a V2 code that does not exist
-   in the V2 scheme.
+   count). Recorded harm: 8.48% of rows (313,662, measured) carry a V2 code
+   that does not exist in the V2 scheme, plus 201,265 stale rows (#3a).
 
 6. **Amend ADR 0032** with an Outcome note pointing here ("x00 rule
    omitted; corrected by 0048"). Do not rewrite 0032's text.
@@ -203,16 +205,18 @@ this table verbatim.
 3-character `NTEE` in `data/lookup/ntee_legacy_5char_lookup.csv` (655 rows),
 run the full `transform_ntee_code()` path and compare to the table's
 `NTEE2`, component-wise:
-- **Middle slot and org-type must match exactly for every row. Expected
-  mismatches: 0.** This is the surface this ADR changes; nothing may
-  diverge here.
+- **Population 1 — rows whose code is in the `ntee_code` lookup sheet:
+  middle slot and org-type must match exactly. Expected mismatches: 0.**
+  This is the surface this ADR changes; nothing may diverge here.
 - **Subsector** is compared modulo the UNI/HOS carve-out: rows whose
   cleaned code is in {B40,B41,B42,B43,B50} must yield `UNI` and
   {E20,E21,E22,E24} must yield `HOS` even though the older crosswalk says
   `EDU`/`HEL`; our published spec is authoritative for the carve-out.
-- **Rows whose code is absent from the `ntee_code` lookup sheet** clean to
-  `INVALID` and render `UNU-Z99-RG`; they are reported BY NAME in the test,
-  cross-referenced to BACKLOG Z18, and the pinned list may only shrink.
+- **Population 2 — the rows whose code is absent from the `ntee_code`
+  lookup sheet** (an explicit exception to Population 1's rule): they clean
+  to `INVALID` and must render exactly `UNU-Z99-RG`, are reported BY NAME
+  in the test, cross-referenced to BACKLOG Z18, and the pinned list may
+  only shrink. The test asserts both populations' contracts directly.
 - Any mismatch outside those two defined classes is a failure.
 For every 5-character `NTEE` (942 rows), the full composite must match
 `NTEE2` exactly; expected mismatches: 0.
@@ -228,33 +232,34 @@ additionally re-checks the specialty pattern on the SCD projection):**
 - `nteev2_org_type != "RG"` if and only if the raw code's digits 2-3 are in `{01,02,03,05,11,12,19}` (pre-existing behaviour, now pinned).
 - `nteev2_subsector` and `nteev2_org_type` are byte-identical before and after the change on the same input.
 
-**D. Before/after on the Unified BMF (artifact or LIVE level).** Method:
-`scripts/check_nteev2_reconciliation.R` recomputes via the FULL
-`transform_ntee_code()` on `ntee_code_raw` (with `legacy_mode` per row
-source) — NOT via the helper on `ntee_code_clean`, which is the wrong
-oracle for 5-char legacy rows resolved by the vendored crosswalk. Also
-report, per reprocessed vintage (85 legacy + ~37 historical current-monthly
-+ current), the count of rows changed in `nteev2_code`, so the reviewer can
-see the fix landed everywhere and nowhere else. Baseline measured
-2026-08-28 on vintage 2026_08 / git_sha 6a7862c: flagged 313,662 (8.48%);
-additional stale rows 177,374 (Decision #3a); expected changed rows on the
-rebuilt Unified BMF: ~491,036 (exact count from the script). On the
-current published geocoded Unified BMF (`latest/`, record the manifest
-`vintage` and `git_sha`):
-- rows matching invariant C.1 BEFORE: report count and share (expected on
-  the order of 5%; NODC measured 5.5% on a sample);
-- AFTER: 0;
-- row count unchanged; `ein` set identical;
-- every column other than `nteev2_code` and `nteev2` byte-identical
-  (compare per-column hashes, not a diff).
-- **Reconciliation:** the number of rows whose `nteev2_code` changed must
-  EQUAL the number of rows assessed as defective beforehand (rows matching
-  `^[A-Z](0[1-9]|1[0-9])$` in the BEFORE artifact, identified by `ein`).
-  Report both counts and the delta. A non-zero delta is a finding to
-  investigate before publication, not a rounding note: rows changed but not
-  flagged means the fix touched something outside the rule; rows flagged
-  but not changed means the rule missed a case. Apply the same check per
-  reprocessed vintage.
+**D. Before/after on the Unified BMF (artifact or LIVE level).** Two
+stages, two scripts; all quantities computed from `ntee_code_raw` via the
+FULL `transform_ntee_code()` (never from the artifact's stored
+`ntee_code_clean`, which is itself stale on pre-0032 rows, e.g. raw `B112`
+stored clean `B20`).
+
+*Stage 1 — `scripts/check_nteev2_reconciliation.R` on the Unified BMF.*
+Class definitions: `new_code` (this branch's derivation), `old_code`
+(same cleaning, pre-0048 derivation), `flagged` (specialty pattern in the
+artifact), `stale` (artifact != old_code: pre-existing drift), `x00_moved`
+(old_code != new_code), `changed` (artifact != new_code), `cancelled`
+(in stale-or-x00 but artifact already equals new_code). **Required:**
+`stale UNION x00_moved == changed UNION cancelled`, zero rows outside the
+classes (false positives and false negatives both 0), and `flagged` a
+subset of `changed`. Measured baseline, vintage 2026_08 / git_sha 6a7862c
+(script-reproduced 2026-09-10; supersedes the 2026-08-28 helper-based
+simulation of 491,036/177,374, which used the wrong oracle for the 5-char
+crosswalk path and for rows with stale stored clean codes — attribution in
+`reviews/0048-claude-response-round2.md`): rows 3,698,124; flagged 313,662
+(8.48%); stale 201,265; x00_moved 342,454; changed 488,754; cancelled
+26,159; FP 0; FN 0; set equation HOLDS.
+
+*Stage 2 — `scripts/check_nteev2_vintage_diff.R` per processed vintage
+(85 legacy + ~37 historical current-monthly + current), run at reprocess
+time.* One line per vintage: rows before/after, EIN-set identity, flagged
+before, changed, flagged after (must be 0), and identity of every column
+other than `nteev2_code`/`nteev2`. Non-zero exit on any violation. The
+collected table goes in this ADR's Outcome.
 
 **E. Publication (LIVE level, separate gate).** New `v{YYYY_MM}/` written
 first, verified (manifest `row_count`, per-file sha256, columns), then
@@ -292,9 +297,10 @@ annotated.
 
 ## Consequences
 
-- `nteev2_code` / `nteev2` values change on ~5% of rows across every
-  Unified BMF surface and the NTEE-resolved crosswalk; no schema change,
-  no row-membership change.
+- `nteev2_code` / `nteev2` values change on 488,754 Unified BMF rows
+  (13.2%: the 8.48% x00 class plus pre-existing stale drift) and
+  correspondingly on the geocoded artifact, marts, and NTEE-resolved
+  crosswalk; no schema change, no row-membership change.
 - `nccs-data-bmf` gains a `tests/` directory and a test-run command in its
   instructions; future NTEE changes have a regression harness.
 - The NCCS-published V2 code and NODC's `fiscal` rendering converge, which

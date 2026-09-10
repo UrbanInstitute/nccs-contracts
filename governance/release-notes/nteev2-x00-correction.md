@@ -9,8 +9,10 @@ crosswalk, per-vintage processed BMF files (legacy + current-monthly).
 01-19 encode *organization type*, carried by the suffix; the activity slot is
 `x00`. Our pipeline emitted the type in both slots (`B11` published as
 `EDU-B11-MS` instead of `EDU-B00-MS`) on 313,662 Unified BMF rows (8.48%). A
-second correction fixes 177,374 rows carrying stale pre-June-2026 values from
-monthly vintages that predate the ADR 0032 NTEE cleaner fix. **No columns are
+second correction fixes pre-existing stale values (201,265 rows, largely from
+processed vintages predating the June-2026 ADR 0032 cleaner fix, across both
+current-monthly and legacy files). Net: 488,754 Unified BMF rows change
+(script-verified class reconciliation, ADR 0048 criterion D). **No columns are
 added, renamed, or removed; row membership and `nteev2_subsector` /
 `nteev2_org_type` are unchanged.** Users filtering or grouping by `nteev2_code`
 or full `nteev2` will see corrected group assignments.
