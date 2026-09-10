@@ -2,6 +2,13 @@
 # R/config.R). The contracted surface is the processed CSV
 # (consumed by master_bmf_builder.R); the intermediate parquet is a
 # build artifact, not a consumer-facing contract.
+# ADR 0048 (Executing 2026-09-10): `nteev2_code` and the composite `nteev2`
+# change VALUES on ~8.5% of rows at the next republish (x00 rule: specialty/
+# common codes 01-19 collapse to x00; org type stays in `nteev2_org_type`).
+# (The stale-row population from 0048 Decision #3a lives mainly in the
+# historical current-monthly processed files, not this artifact's vintages.)
+# No schema, path, row-membership, or subsector/org-type change. Deprecation
+# window waived per ADR 0033 critical-bug clause (recorded in ADR 0048 #5).
 
 name: bmf-legacy
 description: >

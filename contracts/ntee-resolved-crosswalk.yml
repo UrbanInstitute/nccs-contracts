@@ -3,6 +3,13 @@
 # R/publish_crosswalk.R). Per ADR 0034: a per-EIN crosswalk recovering NTEE for
 # orgs the IRS later NULLed. Published by the producer, joined by consumers on
 # `ein`; the master is NOT modified (ADR 0016).
+# ADR 0048 (Executing 2026-09-10): the `ntee_current_nteev2`,
+# `ntee_most_recent_nteev2`, and `ntee_modal_nteev2` composites change VALUES
+# at the next rebuild — this artifact re-cleans distinct raw codes through
+# transform_ntee_code(), so it picks the x00 rule up automatically; it does
+# not inherit the Unified BMF's row-level counts. No schema, path, or
+# row-membership change. Deprecation window waived per ADR 0033 critical-bug
+# clause (recorded in ADR 0048 #5).
 
 name: ntee-resolved-crosswalk
 

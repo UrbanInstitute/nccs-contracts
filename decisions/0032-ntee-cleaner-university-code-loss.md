@@ -292,6 +292,21 @@ Completed as BACKLOG L1, folded into the same `nccs-data-bmf` batch as ADR
   during implementation, after the measurement showed the `nteev2_code` defect
   dominated; shipped in the same PR rather than split out.
 
+### Amended by ADR 0048 (2026-08-28)
+
+The "single derivation path" from Decision #2 was correct but the function
+was incomplete: it never applied the NTEE-V2 x00 rule (specialty/common
+codes 01-19 belong in the org-type slot, not the activity slot), so `B11`
+published as `EDU-B11-MS` on ~5% of rows across every surface rebuilt under
+this ADR. Corrected by [[0048-nteev2-specialty-code-x00-rule]], which also
+introduces the repo's first test suite. Found externally by NODC.
+
+Second gap (found 2026-08-28 by ADR 0048's reconciliation check): the L1
+"full legacy reprocess" was legacy-only; the ~37 historical current-monthly
+processed vintages were never reprocessed, so 156,840 Unified BMF rows whose
+last appearance predates 2026-06 still carried the pre-0032 `Z99` collapse.
+ADR 0048 Decision #3/#3a widens the reprocess scope to close this.
+
 ## Follow-up
 
 1. ~~**Run the open measurement.**~~ **Done 2026-06-16** — see the RESOLVED note
