@@ -1,7 +1,7 @@
-# NCCS Release Note — NTEE-V2 code correction (x00 rule) — DRAFT
+# NCCS Release Note — NTEE-V2 code correction (x00 rule)
 
-**Status:** DRAFT — do not publish to the website changelog until the ADR 0048
-republish completes and live verification passes.
+**Status:** FINAL — published 2026-09-15 (Unified BMF vintage 2026_09,
+git_sha `dbf33ae`).
 **Products:** Unified BMF, geocoded Unified BMF, state marts, NTEE-resolved
 crosswalk, per-vintage processed BMF files (legacy + current-monthly).
 
@@ -27,5 +27,18 @@ with `fiscal::get_nteev2()`.
 ADR 0033 critical-bug clause (values corrected in place, same row counts, per
 ADR 0032 precedent).
 
-_(fill at publication: vintage, git_sha, per-vintage changed-row table link,
-manifest hashes)_
+**Published artifacts (2026-09-15):** `s3://nccsdata/unified/bmf/` (3,698,197
+rows), `s3://nccsdata/geocoding/unified-bmf/v2026_09/` and `latest/`,
+state marts, `s3://nccsdata/lookups/bmf/latest/`,
+`s3://nccsdata/crosswalks/ntee-resolved/`, and every per-vintage file under
+`processed/bmf/` and `processed/bmf-legacy/`. Manifests carry git_sha
+`dbf33ae` and vintage `2026_09`. Per-vintage changed-row table: ADR 0048
+Outcome (`vintage_diff.psv`).
+
+**Also in this build:** the 31 current-monthly processed files from 2023-06
+through 2026-05 receive the June-2026 NTEE cleaner correction (ADR 0032) for
+the first time, so on those per-vintage files `ntee_code_clean`,
+`ntee_code_major_group`, `naics_code`, `nteev2_subsector` and the definition
+columns also change, and `nteev2_subsector_definition` is added. The Unified
+BMF already carried those corrections for active EINs. Files for 2024-09 and
+2024-10 are published for the first time.
