@@ -51,6 +51,7 @@ s3:
   #   geocoding/unified-bmf/merged/bmf_unified_geocoded.csv                 — CSV mirror
   #   geocoding/unified-bmf/merged/bmf_unified_geocoded_data_dictionary.csv — column metadata
   #   geocoding/unified-bmf/merged/bmf_unified_geocoded_quality_report.json — match-rate metrics
+  #   geocoding/unified-bmf/latest/bmf_unified_geocoded_quality_report.html — human-readable coverage report rendered from the JSON (added 2026-09-15; latest/ only, not in the vintage folders; nccs-data-bmf R/quality/geocoded_quality_report_template.qmd). The website catalog links it (nccs #98).
   #   geocoding/unified-bmf/merged/_manifest.json                          — ADR 0014 manifest (LIVE 2026-07-02; closes Open item #1)
   # Sibling prefix for in-flight batches:
   #   geocoding/unified-bmf/input/                                    — address-batch CSVs pushed for the external geocoder to process
