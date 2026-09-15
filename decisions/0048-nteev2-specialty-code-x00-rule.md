@@ -106,7 +106,7 @@ Every published surface that carries `nteev2_code` / `nteev2`, all produced by
 - `crosswalks/ntee-resolved/` (`ntee-resolved-crosswalk.yml`): `ntee_current_nteev2`, `ntee_most_recent_nteev2`, `ntee_modal_nteev2`
 - the per-vintage processed CSVs of both pipelines (current monthly + 85 legacy vintages), which are the Unified BMF's inputs
 
-## Decision (proposed)
+## Decision (accepted 2026-08-28; executed 2026-09-15)
 
 1. **Apply the x00 rule inside the single derivation path.** In
    `.nteev2_code_transform()`, `nteev2_code` becomes `paste0(letter, "00")`
@@ -328,8 +328,92 @@ measurement and row.
 
 ## Outcome
 
-_(to be filled at reconcile)_
+Reconciled 2026-09-15 after the reprocess and publish (EC2 m6i.8xlarge
+`i-0648dba0f270a6d3d`, 2026-09-14 19:29 UTC to 2026-09-15 10:55 UTC, terminated).
+Verification logs and the criterion D tables are mirrored at
+`s3://nccsdata/intermediate/tmp/adr0048_scripts/` (`vintage_diff.psv`,
+`dupcheck.psv`, `transitions_2025_05.txt`, `stage2_reconciliation.csv`,
+`stage1.log`, `stage2a.log`, `stage2b.log`, `stage3_*.log`).
 
-### Shipped
+### Published
+
+- **Reprocess (Decision #3/#3a):** 86 legacy data sets (not 85: the prefix also
+  holds 2018_12, 2019_08, 2022_01, 2022_08 as published files) and 35
+  current-monthly data sets (2023_06 to 2026_07; not ~37), all `ok`, 0 failures,
+  JOBS=10, ~6.5 h wall for stage 1 including the per-vintage diffs. Every
+  per-vintage processed file on `processed/bmf-legacy/` and `processed/bmf/`
+  is rewritten.
+- **Criterion D stage 2 (per-vintage, `check_nteev2_vintage_diff.R`):**
+  - 80 legacy files with unique EINs: 10,769,976 specialty-pattern rows
+    before, all changed, 0 after; EIN sets identical; no other column differs.
+  - 6 legacy files with duplicate EINs (1996_06, 2018_12, 2019_08, 2020_04,
+    2022_01, 2022_08). Why this matters: the comparison script lines up the
+    before and after rows by EIN, and when an EIN appears twice that pairing
+    is ambiguous, so the script stops rather than guess (review finding
+    R3-B1). The duplicates come from the source files themselves (the
+    NCCS-era legacy extracts list some EINs more than once) and are unchanged
+    by this work. For these six we instead sorted both files on every column
+    other than the two V2 columns, which pairs rows without relying on the
+    EIN, and repeated the check: same result, 0 specialty codes after, all
+    other columns identical, except 2018_12 (below). Implication: the six
+    files are verified to the same standard as the other 80; nothing was
+    waved through.
+  - 2026_06 and 2026_07 (post-ADR-0032 files): only `nteev2_code`/`nteev2`
+    differ; 171,495 and 172,586 rows changed; 0 after.
+  - 31 pre-ADR-0032 current-monthly files (2023_06 to 2026_05): 0 after, EIN
+    sets identical, but `ntee_code_clean`, `ntee_code_major_group`,
+    `naics_code`, the two definition columns and `nteev2_subsector` ALSO
+    change, and `nteev2_subsector_definition` is a new column. This is the
+    ADR 0032 cleaner fix landing on these files for the first time (the L1
+    gap named in #3a): per file ~1.08M to 1.20M rows move from `Z99` to a
+    real code, plus ~58k rows whose cleaned code changes. Transition table
+    for 2025_05 in `transitions_2025_05.txt`. The stage-2 script reports
+    these as `other_cols_identical=FALSE` and `SCHEMA-DRIFT`; both are the
+    expected 0032 effect, not a 0048 defect.
+- **Criterion D stage 1 on the new Unified BMF** (3,698,197 rows, manifest
+  git_sha `dbf33ae`, data set version 2026_09): flagged 0, stale 342,459, x00_moved
+  342,459, changed 0, cancelled 342,459; set equation HOLDS; false positives
+  and false negatives 0. (Measured on the corrected Unified BMF, so the
+  pre-existing drift now coincides with the fix by construction; the
+  2026_08 pre-fix figures in Decision #3a/#5 stand as the harm record.)
+- **Published 2026-09-15 (Decision #3, ADR 0042 publisher):** `unified/bmf/`
+  (+ `lookups/bmf/latest/`, 17 tables, data set version 2026_09);
+  `geocoding/unified-bmf/v2026_09/` + `latest/` + deprecated aliases
+  `geocoding/unified-bmf/merged/` and `geocoding/bmf-master/merged/`
+  (3,077,405 rows with coordinates = every geocodable row; a 13,702-address
+  delta was geocoded and merged first, run `delta_2026_09_15_005857_thiya`);
+  state marts under both roots; `crosswalks/ntee-resolved/` (3,624,536 rows,
+  0 specialty codes in `ntee_current_nteev2`, `ntee_most_recent_nteev2`,
+  `ntee_modal_nteev2`).
+- **Tests (Decision #4):** 39 tests pass on the reprocess box against the
+  merged commit.
+- Decisions #1, #2, #5, #6, #7: carried out as written (release note finalized
+  in `governance/release-notes/nteev2-x00-correction.md`).
 
 ### Diverged or pending
+
+- **2024_09 and 2024_10 had no processed CSV on S3** (only the dictionary
+  and quality report, dated 2026-01-22), so the prior Unified BMF was built
+  from 33 current vintages. The reprocess publishes them for the first time
+  (`NO-BEFORE` in the diff table). Root cause not investigated here.
+- **Legacy 2018_12** is on `run_all_legacy.sh`'s default skip list
+  (sequence-ID EINs) yet was published on S3 in a pre-ADR-0041 schema. It was
+  reprocessed in scope (maintainer decision 2026-09-15): it gains the eight
+  address columns and 1,399,201 rows change. The skip-list/prefix mismatch is
+  a BACKLOG row.
+- **Stale `unified/bmf/bmf_unified_quality_report.html`** (2026-08-11): the
+  Quarto render failed on the box (CLI error, warning only); the JSON report
+  is current. Re-render next cycle.
+- **State-mart stem** still `bmf_master_{ST}.csv` (contract says
+  `bmf_unified_{ST}.csv`); unchanged by this publish, pending its own
+  decision (BACKLOG).
+- **Ops findings for `nccs-data-bmf`:** CRAN `aws.ec2metadata` (0.2.0) cannot
+  speak IMDSv2, so R had no instance-role credentials on an IMDSv2-required
+  box (403 while the CLI worked); fixed on the box with the GitHub 0.2.2
+  build plus `USE_IMDS_TOKEN=TRUE` exported in the job shell. The
+  `nccs-bmf-batch` role has no access to `geocoding-codestar-prod`, so the
+  delta was submitted from the maintainer's laptop and the ledger updated by
+  hand. `ENABLE_S3_UPLOAD` is assigned unconditionally in three runners
+  (needs `exists()` guards; patched box-locally only).
+- **BEFORE snapshot** (`intermediate/tmp/adr0048_before/`, ~100 GB) retained
+  until this reconcile merges; then delete.
