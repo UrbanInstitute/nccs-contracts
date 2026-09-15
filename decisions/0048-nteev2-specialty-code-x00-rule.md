@@ -335,11 +335,11 @@ Verification logs and the criterion D tables are mirrored at
 `dupcheck.psv`, `transitions_2025_05.txt`, `stage2_reconciliation.csv`,
 `stage1.log`, `stage2a.log`, `stage2b.log`, `stage3_*.log`).
 
-### Shipped
+### Published
 
-- **Reprocess (Decision #3/#3a):** 86 legacy vintages (not 85: the prefix also
+- **Reprocess (Decision #3/#3a):** 86 legacy data sets (not 85: the prefix also
   holds 2018_12, 2019_08, 2022_01, 2022_08 as published files) and 35
-  current-monthly vintages (2023_06 to 2026_07; not ~37), all `ok`, 0 failures,
+  current-monthly data sets (2023_06 to 2026_07; not ~37), all `ok`, 0 failures,
   JOBS=10, ~6.5 h wall for stage 1 including the per-vintage diffs. Every
   per-vintage processed file on `processed/bmf-legacy/` and `processed/bmf/`
   is rewritten.
@@ -347,9 +347,17 @@ Verification logs and the criterion D tables are mirrored at
   - 80 legacy files with unique EINs: 10,769,976 specialty-pattern rows
     before, all changed, 0 after; EIN sets identical; no other column differs.
   - 6 legacy files with duplicate EINs (1996_06, 2018_12, 2019_08, 2020_04,
-    2022_01, 2022_08; the script refuses these by design, R3-B1): rechecked
-    order-independently (sort on all non-V2 columns): same result, 0 after,
-    other columns identical, except 2018_12 (below).
+    2022_01, 2022_08). Why this matters: the comparison script lines up the
+    before and after rows by EIN, and when an EIN appears twice that pairing
+    is ambiguous, so the script stops rather than guess (review finding
+    R3-B1). The duplicates come from the source files themselves (the
+    NCCS-era legacy extracts list some EINs more than once) and are unchanged
+    by this work. For these six we instead sorted both files on every column
+    other than the two V2 columns, which pairs rows without relying on the
+    EIN, and repeated the check: same result, 0 specialty codes after, all
+    other columns identical, except 2018_12 (below). Implication: the six
+    files are verified to the same standard as the other 80; nothing was
+    waved through.
   - 2026_06 and 2026_07 (post-ADR-0032 files): only `nteev2_code`/`nteev2`
     differ; 171,495 and 172,586 rows changed; 0 after.
   - 31 pre-ADR-0032 current-monthly files (2023_06 to 2026_05): 0 after, EIN
@@ -363,13 +371,13 @@ Verification logs and the criterion D tables are mirrored at
     these as `other_cols_identical=FALSE` and `SCHEMA-DRIFT`; both are the
     expected 0032 effect, not a 0048 defect.
 - **Criterion D stage 1 on the new Unified BMF** (3,698,197 rows, manifest
-  git_sha `dbf33ae`, vintage 2026_09): flagged 0, stale 342,459, x00_moved
+  git_sha `dbf33ae`, data set version 2026_09): flagged 0, stale 342,459, x00_moved
   342,459, changed 0, cancelled 342,459; set equation HOLDS; false positives
-  and false negatives 0. (Measured on the corrected artifact, so the
+  and false negatives 0. (Measured on the corrected Unified BMF, so the
   pre-existing drift now coincides with the fix by construction; the
   2026_08 pre-fix figures in Decision #3a/#5 stand as the harm record.)
 - **Published 2026-09-15 (Decision #3, ADR 0042 publisher):** `unified/bmf/`
-  (+ `lookups/bmf/latest/`, 17 tables, vintage 2026_09);
+  (+ `lookups/bmf/latest/`, 17 tables, data set version 2026_09);
   `geocoding/unified-bmf/v2026_09/` + `latest/` + deprecated aliases
   `geocoding/unified-bmf/merged/` and `geocoding/bmf-master/merged/`
   (3,077,405 rows with coordinates = every geocodable row; a 13,702-address
@@ -379,7 +387,7 @@ Verification logs and the criterion D tables are mirrored at
   `ntee_modal_nteev2`).
 - **Tests (Decision #4):** 39 tests pass on the reprocess box against the
   merged commit.
-- Decisions #1, #2, #5, #6, #7: shipped as written (release note finalized
+- Decisions #1, #2, #5, #6, #7: carried out as written (release note finalized
   in `governance/release-notes/nteev2-x00-correction.md`).
 
 ### Diverged or pending
