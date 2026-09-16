@@ -91,8 +91,11 @@ consumers:
       HTTPS (nccsdata PR #25; backlog task Z14). Before the change we
       checked that the new location and the old bmf-master location held
       identical files (the 2026_09 data set) and that the new file can be
-      downloaded without AWS credentials. The local copy is now saved under
-      the new file name, so existing users download it once more.
+      downloaded without AWS credentials. Users who turned on caching and
+      already had a local copy of the file under the old name will need to
+      let the package download the updated file again the first time they
+      run nccs_read(); the old copy stays on their disk unused until they
+      delete it.
   - repo: UrbanInstitute/sector-in-brief-api  # LIVE in staging (slices 1-5.1, 2026-06-09); ADR 0008/0016/0026.
     pin: "latest"  # Since 2026-09-16 the API reads the data file and data dictionary from geocoding/unified-bmf/latest/ each time a query runs (sector-in-brief-api PR #21; backlog task Z14). Note: this repository does not yet run the contract-change check that the other repositories run on every pull request (ADR 0022); adding it is backlog task Z22
     notes: >
