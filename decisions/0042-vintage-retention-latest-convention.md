@@ -113,7 +113,8 @@ artifact's first versioned publish. Nothing else moves or breaks.
   zip-format defect caught pre-publish by the cross-source invariant.
 - **§3 docs automation**: producer CI trigger-widening PRs open
   (nccs-data-bmf #39, nccs-data-core #12).
-- **Pending**: consumer repoints to latest/ (website PR #91 open;
-  nccsdata + sector-in-brief-api unmigrated), flat-alias window clocks
+- **Consumer repoints to latest/ — DONE 2026-09-16** (website PR #91;
+  nccsdata #25 + sector-in-brief-api #21 via BACKLOG Z14).
+- **Pending**: flat-alias window clocks
   start at each artifact's first versioned publish (2026-07-26), Capital
   One reply drafted in nccs-inbox awaiting send.

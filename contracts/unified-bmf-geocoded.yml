@@ -44,15 +44,15 @@ s3:
   # bmf_unified_geocoded.
   key_prefix: geocoding/unified-bmf/latest/  # ADR 0042: stable always-current mirror; merged/ remains the rolling build key and bmf-master the ADR 0039 dual-write alias through their windows
   versioned_template: geocoding/unified-bmf/v{YYYY_MM}/bmf_unified_geocoded.parquet  # ADR 0042: permanent per-build vintages (parquet-only per Decision A); first versioned publish v2026_07 (2026-07-26)
-  latest_template: geocoding/unified-bmf/merged/bmf_unified_geocoded.parquet
+  latest_template: geocoding/unified-bmf/latest/bmf_unified_geocoded.parquet  # corrected 2026-09-16 (Z14 reconcile): latest/ is the consumer read key; merged/ is the rolling build key only
   # Co-located sub-artifacts at the same prefix (written by
   # master_geocoding.R upload_to_s3 calls):
-  #   geocoding/unified-bmf/merged/bmf_unified_geocoded.parquet             — canonical artifact
-  #   geocoding/unified-bmf/merged/bmf_unified_geocoded.csv                 — CSV mirror
-  #   geocoding/unified-bmf/merged/bmf_unified_geocoded_data_dictionary.csv — column metadata
-  #   geocoding/unified-bmf/merged/bmf_unified_geocoded_quality_report.json — match-rate metrics
+  #   geocoding/unified-bmf/latest/bmf_unified_geocoded.parquet             — canonical artifact
+  #   geocoding/unified-bmf/latest/bmf_unified_geocoded.csv                 — CSV mirror
+  #   geocoding/unified-bmf/latest/bmf_unified_geocoded_data_dictionary.csv — column metadata
+  #   geocoding/unified-bmf/latest/bmf_unified_geocoded_quality_report.json — match-rate metrics
   #   geocoding/unified-bmf/latest/bmf_unified_geocoded_quality_report.html — human-readable coverage report rendered from the JSON (added 2026-09-15; latest/ only, not in the vintage folders; nccs-data-bmf R/quality/geocoded_quality_report_template.qmd). The website catalog links it (nccs #98).
-  #   geocoding/unified-bmf/merged/_manifest.json                          — ADR 0014 manifest (LIVE 2026-07-02; closes Open item #1)
+  #   geocoding/unified-bmf/latest/_manifest.json                          — ADR 0014 manifest (LIVE 2026-07-02; closes Open item #1)
   # Sibling prefix for in-flight batches:
   #   geocoding/unified-bmf/input/                                    — address-batch CSVs pushed for the external geocoder to process
   #
@@ -75,15 +75,15 @@ cadence:
     depending on operator availability.
 
 manifest:
-  path: geocoding/unified-bmf/merged/_manifest.json  # LIVE 2026-07-02 (ADR 0039 §5): closes the long-standing "no manifest" Open item #1; verified (vintage 2026_07, git_sha 11380a2, per-file sha256 + row_count)
+  path: geocoding/unified-bmf/latest/_manifest.json  # also written to merged/ and v{YYYY_MM}/; LIVE 2026-07-02 (ADR 0039 §5): closes the long-standing "no manifest" Open item #1; verified (vintage 2026_07, git_sha 11380a2, per-file sha256 + row_count)
   schema_version: 2  # 2 = ADR 0014 standard shape
 
 schema:
-  source: geocoding/unified-bmf/merged/bmf_unified_geocoded_data_dictionary.csv  # co-located dictionary regenerated each run (master_geocoding.R)
+  source: geocoding/unified-bmf/latest/bmf_unified_geocoded_data_dictionary.csv  # co-located dictionary regenerated each run (master_geocoding.R)
 
 consumers:
   - repo: UrbanInstitute/nccsdata
-    pin: "latest"  # no vintage subdirectories yet; consumer reads the unversioned `latest` path. Re-pin to a vintage tag once Open item #2 (vintage migration) lands.
+    pin: "latest"  # reads the ADR 0042 always-current latest/ mirror; per-build vintages exist at v{YYYY_MM}/ (since v2026_07) if a consumer ever needs a fixed pin
     notes: >
       REPOINTED 2026-09-16 (nccsdata PR #25, BACKLOG Z14 / G2): nccs_read()
       reads geocoding/unified-bmf/latest/bmf_unified_geocoded.parquet (S3
@@ -251,12 +251,11 @@ notes: |
   1. **No `_manifest.json` — RESOLVED 2026-07-02.** [[unified-bmf]] closed
      its gap 2026-06-30 (ADR 0037, via `R/manifest.R`); this geocoded
      extension now emits the same ADR 0014 shape (verified live).
-  2. **No vintage subdirectories.** Producer overwrites
-     `geocoding/unified-bmf/merged/bmf_unified_geocoded.parquet` on
-     each run. Migrate to `geocoding/unified-bmf/merged/YYYY_MM/...`
-     + a `latest/` mirror in lockstep with the [[unified-bmf]]
-     vintage migration so consumer pins stay coherent across
-     both contracts.
+  2. **No vintage subdirectories — RESOLVED 2026-07-26 (ADR 0042).**
+     Producer writes `geocoding/unified-bmf/v{YYYY_MM}/` per build plus
+     the `latest/` mirror (first versioned publish v2026_07); `merged/`
+     remains the rolling build key. Consumers repointed to `latest/`
+     2026-09-16 (Z14).
   3. **Schema delta not locked.** This contract extends the Unified BMF
      with geocoder-added columns (lat, lon, match_quality, geo_*
      taxonomy). The exact column list isn't recorded here — it's
