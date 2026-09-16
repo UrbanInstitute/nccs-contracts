@@ -192,11 +192,10 @@ already open):
   Decision: finish the rename rather than amend the contract, so nothing
   under the Unified BMF folder keeps the retired "master" name. Plan: the
   pipeline writes both names (nccs-data-bmf PR #51), and the 63 live files
-  get a one-time copy to the new name; that copy is still pending as of
-  this note. From the copy date both names are available through
-  2026-12-15, and from 2026-12-16 only the new name is written (the
-  standard 90-day window, ADR 0033; the end date moves if the copy lands
-  after 2026-09-16). The same PR also stops writing the old
+  were copied to the new name on 2026-09-16 (each new file checked for
+  public download and size; three sampled for identical contents). Both
+  names are available through 2026-12-15, and from 2026-12-16 only the new
+  name is written (the standard 90-day window, ADR 0033). The same PR also stops writing the old
   `master/bmf/state_marts/` folder after 2026-09-30, its own 90-day date
   (this ADR gave it a fresh clock from 2026-07-02). No repository of ours
   reads these files by name; the website catalog lists them and will be

@@ -62,11 +62,11 @@ s3:
   #   s3://nccsdata/unified/bmf/state_marts/parquet/state={ST}/part-0.parquet  — Hive-partitioned
   #   s3://nccsdata/unified/bmf/state_marts/csv/bmf_unified_{ST}.csv           — one CSV per state. NOTE (Z19, 2026-09-16): until 2026-09-16 the pipeline
   #     published these files as bmf_master_{ST}.csv, so this contract described a file name that did
-  #     not exist. Decided 2026-09-16: keep the contract name and finish the rename. PENDING: the 63
-  #     live files still need a one-time copy to the new name (nccs-data-bmf PR #51 writes both names
-  #     from the next build). Once that copy is verified, both names are published through 2026-12-15
-  #     (90 days, ADR 0033) and from 2026-12-16 only bmf_unified_{ST}.csv; if the copy lands after
-  #     2026-09-16, the end date moves to 90 days after the copy date and is recorded here.
+  #     not exist. Decided 2026-09-16: keep the contract name and finish the rename. DONE 2026-09-16:
+  #     all 63 files copied to the new name (checked: each new file downloads without credentials,
+  #     same size as the old file, and three sampled files have identical contents). The pipeline
+  #     writes both names from its next build (nccs-data-bmf PR #51). Both names are published
+  #     through 2026-12-15 (90 days, ADR 0033); from 2026-12-16 only bmf_unified_{ST}.csv.
   #
   # NON-SILENT SUPERSESSION (ADR 0039 §3): both this new prefix and the old
   # geocoding/bmf-master/ (+ old state marts under master/bmf/state_marts/)
