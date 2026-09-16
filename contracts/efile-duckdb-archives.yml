@@ -56,9 +56,9 @@ consumers:
     pin: "efile_v2_2"  # R/source.R default since 2026-09-02 (checked 2026-09-16)
     notes: "Builds the NODC 990 panels from these archives."
   - repo: UrbanInstitute/nccs
-    pin: "efile_v2_2"
-    surface: catalogs/
-    notes: "The public catalog lists the archives (v2_2 since the September 2026 catalog refresh)."
+    pin: "efile_v2_1"  # corrected 2026-09-16: the data set page links the v2_1 catalog page, and the catalog file list still holds v2_0 files; v2_2 is not listed yet (backlog Z24)
+    surface: catalogs/catalog-efile-v2_1.qmd
+    notes: "The public catalog page for these archives. Needs a v2_2 update (Z24)."
 
 drift_detection:
   trigger: cron
