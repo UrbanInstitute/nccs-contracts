@@ -44,9 +44,13 @@ Registry additions made 2026-09-16 under "register, don't ask"
   `unified-bmf` contract: existing column names are not renamed or
   removed without the standard 90-day notice, because outside packages
   write our column names into their code.
-- **panel990 moved off the retiring geocoded folder on 2026-09-02** —
-  closes the August action "JL to swap". Recorded as a consumer on the
-  `unified-bmf-geocoded` contract. One old file name remains in its
-  per-state fallback (`bmf_master_XX.csv`, which stops being written
-  after 2026-12-15).
+- **August action "JL to swap panel990 to the new geocoded folder": done.**
+  Jesse made the change on 2026-09-02; panel990 now reads
+  `geocoding/unified-bmf/latest/`. Recorded as a consumer on the
+  `unified-bmf-geocoded` contract.
+- **New small item for Jesse:** panel990's fallback for downloading a
+  single state's file still uses the old file name `bmf_master_XX.csv`.
+  That name keeps working until 2026-12-15 (the per-state files were
+  renamed to `bmf_unified_XX.csv` in September; see Z19). He will need
+  to update it before then. Not urgent; a note to him is enough.
 
