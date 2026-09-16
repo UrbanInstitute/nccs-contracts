@@ -44,11 +44,11 @@ s3:
   # bmf_unified_geocoded.
   key_prefix: geocoding/unified-bmf/latest/  # ADR 0042: stable always-current mirror; merged/ remains the rolling build key and bmf-master the ADR 0039 dual-write alias through their windows
   versioned_template: geocoding/unified-bmf/v{YYYY_MM}/bmf_unified_geocoded.parquet  # ADR 0042: permanent per-build vintages (parquet-only per Decision A); first versioned publish v2026_07 (2026-07-26)
-  latest_template: geocoding/unified-bmf/latest/bmf_unified_geocoded.parquet  # corrected 2026-09-16 (Z14 reconcile): latest/ is the consumer read key; merged/ is the rolling build key only
+  latest_template: geocoding/unified-bmf/latest/bmf_unified_geocoded.parquet  # corrected 2026-09-16: latest/ is the folder readers should use. merged/ is the working folder the pipeline writes to while it builds; it is not meant for readers
   # Co-located sub-artifacts at the same prefix (written by
   # master_geocoding.R upload_to_s3 calls):
-  #   geocoding/unified-bmf/latest/bmf_unified_geocoded.parquet             — canonical artifact
-  #   geocoding/unified-bmf/latest/bmf_unified_geocoded.csv                 — CSV mirror
+  #   geocoding/unified-bmf/latest/bmf_unified_geocoded.parquet             — the main data file
+  #   geocoding/unified-bmf/latest/bmf_unified_geocoded.csv                 — the same data as a CSV
   #   geocoding/unified-bmf/latest/bmf_unified_geocoded_data_dictionary.csv — column metadata
   #   geocoding/unified-bmf/latest/bmf_unified_geocoded_quality_report.json — match-rate metrics
   #   geocoding/unified-bmf/latest/bmf_unified_geocoded_quality_report.html — human-readable coverage report rendered from the JSON (added 2026-09-15; latest/ only, not in the vintage folders; nccs-data-bmf R/quality/geocoded_quality_report_template.qmd). The website catalog links it (nccs #98).
@@ -75,24 +75,26 @@ cadence:
     depending on operator availability.
 
 manifest:
-  path: geocoding/unified-bmf/latest/_manifest.json  # also written to merged/ and v{YYYY_MM}/; LIVE 2026-07-02 (ADR 0039 §5): closes the long-standing "no manifest" Open item #1; verified (vintage 2026_07, git_sha 11380a2, per-file sha256 + row_count)
+  path: geocoding/unified-bmf/latest/_manifest.json  # a copy is also saved in merged/ and in each dated v{YYYY_MM}/ folder. Published 2026-07-02 (ADR 0039 §5), which closed open item #1 below; checked against the file (data set 2026_07, git commit 11380a2, per-file checksums and row counts)
   schema_version: 2  # 2 = ADR 0014 standard shape
 
 schema:
-  source: geocoding/unified-bmf/latest/bmf_unified_geocoded_data_dictionary.csv  # co-located dictionary regenerated each run (master_geocoding.R)
+  source: geocoding/unified-bmf/latest/bmf_unified_geocoded_data_dictionary.csv  # the data dictionary is a CSV saved in the same folder as the data file; the pipeline rewrites it on every run (master_geocoding.R)
 
 consumers:
   - repo: UrbanInstitute/nccsdata
-    pin: "latest"  # reads the ADR 0042 always-current latest/ mirror; per-build vintages exist at v{YYYY_MM}/ (since v2026_07) if a consumer ever needs a fixed pin
+    pin: "latest"  # reads the latest/ folder, which always holds the newest data set (ADR 0042). A dated copy of every data set is also kept at v{YYYY_MM}/ (since v2026_07) for anyone who needs a fixed release
     notes: >
-      REPOINTED 2026-09-16 (nccsdata PR #25, BACKLOG Z14 / G2): nccs_read()
-      reads geocoding/unified-bmf/latest/bmf_unified_geocoded.parquet (S3
-      URI and the HTTPS cache-download mirror, R/nccs_read.R). Verified before
-      the PR: latest/ and the old bmf-master path carried byte-identical
-      objects (vintage 2026_09) and anonymous HTTPS GET returns the full
-      object. Local cache filename follows the new stem.
+      Since 2026-09-16 nccs_read() reads the data from
+      geocoding/unified-bmf/latest/bmf_unified_geocoded.parquet, both when
+      it reads directly from S3 and when it downloads a local copy over
+      HTTPS (nccsdata PR #25; backlog task Z14). Before the change we
+      checked that the new location and the old bmf-master location held
+      identical files (the 2026_09 data set) and that the new file can be
+      downloaded without AWS credentials. The local copy is now saved under
+      the new file name, so existing users download it once more.
   - repo: UrbanInstitute/sector-in-brief-api  # LIVE in staging (slices 1-5.1, 2026-06-09); ADR 0008/0016/0026.
-    pin: "latest"  # REPOINTED 2026-09-16 (sector-in-brief-api PR #21, BACKLOG Z14 / G3): query/query.py reads geocoding/unified-bmf/latest/ parquet + data dictionary via DuckDB at query time. Note: that repo has no contracts-guard workflow (only test + deploy); guard coverage is a follow-up.
+    pin: "latest"  # Since 2026-09-16 the API reads the data file and data dictionary from geocoding/unified-bmf/latest/ each time a query runs (sector-in-brief-api PR #21; backlog task Z14). Note: this repository does not yet run the contract-change check that the other repositories run on every pull request (ADR 0022); adding it is backlog task Z22
     notes: >
       The modernized data-download API opens DuckDB over this parquet and joins
       it to the requested CORE tiers on lowercase `ein` at query time (ADR 0016,
@@ -251,11 +253,11 @@ notes: |
   1. **No `_manifest.json` — RESOLVED 2026-07-02.** [[unified-bmf]] closed
      its gap 2026-06-30 (ADR 0037, via `R/manifest.R`); this geocoded
      extension now emits the same ADR 0014 shape (verified live).
-  2. **No vintage subdirectories — RESOLVED 2026-07-26 (ADR 0042).**
-     Producer writes `geocoding/unified-bmf/v{YYYY_MM}/` per build plus
-     the `latest/` mirror (first versioned publish v2026_07); `merged/`
-     remains the rolling build key. Consumers repointed to `latest/`
-     2026-09-16 (Z14).
+  2. **No dated copies of each data set — RESOLVED 2026-07-26 (ADR 0042).**
+     Every run now saves a dated copy under `geocoding/unified-bmf/v{YYYY_MM}/`
+     and refreshes the `latest/` folder (the first dated copy is v2026_07).
+     `merged/` is the pipeline's working folder and is not meant for
+     readers. Both consumers switched to `latest/` on 2026-09-16 (Z14).
   3. **Schema delta not locked.** This contract extends the Unified BMF
      with geocoder-added columns (lat, lon, match_quality, geo_*
      taxonomy). The exact column list isn't recorded here — it's
