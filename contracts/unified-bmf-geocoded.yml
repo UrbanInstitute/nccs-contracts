@@ -85,14 +85,14 @@ consumers:
   - repo: UrbanInstitute/nccsdata
     pin: "latest"  # no vintage subdirectories yet; consumer reads the unversioned `latest` path. Re-pin to a vintage tag once Open item #2 (vintage migration) lands.
     notes: >
-      nccs_read() currently reads bmf_master_geocoded.parquet at the OLD path
-      (R/nccs_read.R:401, :407 HTTPS mirror). The new path is LIVE as of
-      2026-07-02 (verified) — a follow-up PR (BACKLOG G2) is owed in nccsdata
-      to repoint to geocoding/unified-bmf/merged/bmf_unified_geocoded.parquet.
-      Not urgent: the old path stays live and fresh through the 90-day
-      dual-live window, so this can land whenever convenient.
+      REPOINTED 2026-09-16 (nccsdata PR #25, BACKLOG Z14 / G2): nccs_read()
+      reads geocoding/unified-bmf/latest/bmf_unified_geocoded.parquet (S3
+      URI and the HTTPS cache-download mirror, R/nccs_read.R). Verified before
+      the PR: latest/ and the old bmf-master path carried byte-identical
+      objects (vintage 2026_09) and anonymous HTTPS GET returns the full
+      object. Local cache filename follows the new stem.
   - repo: UrbanInstitute/sector-in-brief-api  # LIVE in staging (slices 1-5.1, 2026-06-09); ADR 0008/0016/0026.
-    pin: "latest"  # reads bmf_master_geocoded.parquet via DuckDB at query time; follow-up PR owed to repoint (BACKLOG G3), new path LIVE 2026-07-02 (same as nccsdata)
+    pin: "latest"  # REPOINTED 2026-09-16 (sector-in-brief-api PR #21, BACKLOG Z14 / G3): query/query.py reads geocoding/unified-bmf/latest/ parquet + data dictionary via DuckDB at query time. Note: that repo has no contracts-guard workflow (only test + deploy); guard coverage is a follow-up.
     notes: >
       The modernized data-download API opens DuckDB over this parquet and joins
       it to the requested CORE tiers on lowercase `ein` at query time (ADR 0016,

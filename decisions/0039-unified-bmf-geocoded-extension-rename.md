@@ -177,6 +177,9 @@ already open):
   `geocoding/unified-bmf/merged/bmf_unified_geocoded.parquet` path — the
   old path stays live through the window, so this isn't urgent, but it's
   no longer gated on anything upstream.
+  **Done 2026-09-16:** both consumers repointed to `geocoding/unified-bmf/latest/`
+  (the ADR 0042 always-current mirror rather than `merged/`): nccsdata PR #25,
+  sector-in-brief-api PR #21. BACKLOG Z14 records the verification.
 - **`nccs-data-bmf` PR #28 is open, checks green, awaiting merge** — see
   BACKLOG for the merge-timing note (bundle the whole batch, don't merge
   piecemeal).
