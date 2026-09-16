@@ -23,3 +23,28 @@ Deferred by the committee (2026-08-12), queued for future meetings:
    "NCCS-verified").
 6. **SOI-harmonization concordance direction** — producer intent
    question outstanding (relates to decision record 0046).
+
+## Recorded for the September 2026 meeting (no decision needed)
+
+Registry additions made 2026-09-16 under "register, don't ask"
+(backlog Z17). To be read into the minutes as **recorded**:
+
+- **`npmatch-sources`** — the folder `s3://nccsdata/crosswalks/npmatch/`
+  that NODC's npmatch package reads its pinned source files from
+  (copies of our BMF files, a SAM extract, training pairs; 10 files,
+  6.2 GB). Owner NODC; NCCS hosts it and will give 90 days' notice
+  before touching it.
+- **`efile-duckdb-archives`** — the per-year DuckDB files under
+  `s3://nccs-efile/duckdb/` built by NODC's ef2 package (three
+  versions, about 800 GB in total). Owner NODC; NCCS hosts them.
+  **Chair's decision 2026-09-16:** these are not an NCCS product,
+  because NCCS does not own the process that makes them; NCCS intends
+  to bring that process in-house at some point (backlog Z23, no date).
+- **Column stability for the Unified BMF** — a statement added to the
+  `unified-bmf` contract: existing column names are not renamed or
+  removed without the standard 90-day notice, because outside packages
+  write our column names into their code.
+- **panel990 still reads the retiring geocoded folder** — recorded as a
+  consumer on the `unified-bmf-geocoded` contract with the 2026-09-30
+  date; the August action "JL to swap" is still open.
+

@@ -1,0 +1,86 @@
+# Recorded 2026-09-16 (backlog Z17). This file describes a folder that the
+# Nonprofit Open Data Collective (NODC, Jesse Lecy) publishes into our
+# bucket. NCCS did not design it and does not build it; we record it so
+# that nobody on our side moves or deletes it without knowing what depends
+# on it. Written from a direct listing of the folder on 2026-09-16.
+# "Register, don't ask": this describes the folder as it is, and accepts
+# the producer's own conventions as they are.
+
+name: npmatch-sources
+description: >
+  Pinned source files for NODC's npmatch package, which links nonprofits
+  in the IRS Business Master File to entities in the federal SAM
+  contractor registry. The folder holds the exact input files the
+  published crosswalk was built from (a copy of our January 2026 BMF,
+  a copy of our geocoded Unified BMF, a SAM public extract, and the
+  model-training pairs) so that the package's results can be reproduced.
+  Owner: NODC. Hosted by NCCS.
+
+producer:
+  repo: Nonprofit-Open-Data-Collective/npmatch
+  publish_path: R/fetch.R  # np_source_urls() lists these files; uploads are done by hand by the producer
+  interim_note: >
+    NODC is the producer and owner. NCCS hosts the folder in its bucket.
+    There is no plan for NCCS to take over this folder.
+
+format: csv  # mixed: CSV, one fixed-width .dat extract, one .xlsx layout file
+partitioned: false
+
+s3:
+  bucket: nccsdata
+  key_prefix: crosswalks/npmatch/
+  # Flat folder, no version subfolders. Files present 2026-09-16 (10 files, 6.2 GB):
+  #   ALL-NONPROFITS.CSV                                          91 MB   nonprofit list used by the matcher
+  #   bmf_2026_01_processed.csv                                  1.6 GB   COPY of our processed/bmf/2026_01/ file
+  #   bmf_2026_01_data_dictionary.csv                             7 KB    COPY of its dictionary
+  #   bmf_unified_geocoded.csv                                   3.3 GB   COPY of our geocoded Unified BMF (as of 2026-08-06)
+  #   SAM_PUBLIC_MONTHLY_V2_20251102.dat                         508 MB   SAM public monthly extract, November 2025
+  #   SAM Master Extract Mapping v6.1 Public File V2 Layout.xlsx  40 KB   SAM file layout
+  #   TRAINING-PAIRS-1502.csv                                     20 MB   model-training pairs (304k pairs, core features)
+  #   TRAINING-PAIRS-FULL-1502.csv                               274 MB   the same pairs with full context columns
+  #   DATA-DICTIONARY-TRAINING-PAIRS-FULL.csv                     20 KB   dictionary for the training pairs
+  # Three of these are copies of NCCS files pinned at a point in time. They
+  # will not change when we republish the originals; that is the point of
+  # the copies.
+
+cadence:
+  type: on-change
+  notes: "Uploaded by the producer when the package is rebuilt. Last change 2026-08-07."
+
+manifest:
+  path: none  # no manifest file; the package's np_source_urls() is the list of record
+  schema_version: 0  # 0 = no manifest
+
+schema:
+  source: none  # each file carries its own layout (dictionary CSVs and the SAM layout workbook)
+
+consumers:
+  - repo: Nonprofit-Open-Data-Collective/npmatch
+    pin: "file names"  # R/fetch.R builds the URLs from the fixed file names above
+    notes: "np_fetch() downloads these files over public HTTPS. Renaming or removing any of them breaks the package."
+
+drift_detection:
+  trigger: cron
+  schedule: "0 8 * * MON"
+  event: ""
+
+deprecation_window_days: 90  # applies to NCCS: we give the producer 90 days' notice before touching the folder
+
+notes: |
+  What NCCS commits to: leave the folder alone, and give the producer
+  90 days' notice before any change on our side that would affect it
+  (bucket policy, folder moves, clean-ups).
+
+  What NCCS does not commit to: the content. The files are not
+  validated, versioned, or described by NCCS. Questions about them go
+  to the producer.
+
+  Background: the copies of our BMF files inside this folder are an
+  older snapshot of our data (January 2026 monthly file; geocoded
+  Unified BMF as of August 2026, before the NTEE correction of
+  September 2026). Anyone wanting current BMF data should read our
+  contracted locations (unified-bmf, unified-bmf-geocoded), not these.
+
+  The committee's pending item "npmatch independent validation"
+  (governance/decisions-pending.md) is about the package's match
+  results, not this folder.

@@ -102,6 +102,13 @@ consumers:
       let the package download the updated file again the first time they
       run nccs_read(); the old copy stays on their disk unused until they
       delete it.
+  - repo: Nonprofit-Open-Data-Collective/panel990  # recorded 2026-09-16 (Z17)
+    pin: "geocoding/bmf-master/merged/"
+    notes: >
+      R/bmf.R (checked 2026-08-28) still reads bmf_master_geocoded.csv from
+      the OLD folder, which stops being written after 2026-09-30. The August
+      2026 committee minutes recorded that the producer would switch it to
+      latest/; not done as of 2026-09-16. Notice owed (open thread).
   - repo: UrbanInstitute/sector-in-brief-api  # LIVE in staging (slices 1-5.1, 2026-06-09); ADR 0008/0016/0026.
     pin: "latest"  # Since 2026-09-16 the API reads the data file and data dictionary from geocoding/unified-bmf/latest/ each time a query runs (sector-in-brief-api PR #21; backlog task Z14). Note: this repository does not yet run the contract-change check that the other repositories run on every pull request (ADR 0022); adding it is backlog task Z22
     notes: >
