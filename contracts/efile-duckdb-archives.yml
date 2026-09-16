@@ -1,0 +1,88 @@
+# Recorded 2026-09-16 (backlog Z17). This file describes database archives
+# that the Nonprofit Open Data Collective (NODC, Jesse Lecy) publishes into
+# the nccs-efile bucket. NCCS did not design the build and does not run it.
+# Decision 2026-09-16 (maintainer): these archives are an NODC product that
+# NCCS hosts, not an NCCS product, because NCCS does not own the process
+# that makes them. NCCS intends to bring that process in-house at some
+# point (backlog Z23); until then this file only records what is there.
+# Written from a direct listing of the bucket on 2026-09-16.
+
+name: efile-duckdb-archives
+description: >
+  One DuckDB database file per filing year (2009 to 2024) holding the
+  parsed Form 990 e-file data produced by NODC's ef2 package. Users
+  attach a file remotely from DuckDB or download it. Three versions of
+  the set exist side by side. Owner: NODC. Hosted by NCCS. Not an NCCS
+  product: NCCS does not build, validate, or version these files.
+
+producer:
+  repo: Nonprofit-Open-Data-Collective/ef2
+  interim_note: >
+    NODC is the producer and owner. NCCS hosts the files. Maintainer
+    decision 2026-09-16: NCCS should plan to take the process in-house
+    (backlog Z23); no date set.
+
+format: duckdb  # single-file DuckDB databases
+partitioned: true  # one file per filing year
+
+s3:
+  bucket: nccs-efile
+  key_prefix: duckdb/
+  versioned_template: "duckdb/efile_v{major}_{minor}/EFILE{YEAR}.duckdb"
+  # Versions present 2026-09-16 (files, total size, last written):
+  #   duckdb/efile_v2_0/   15 files (2009-2023)   251 GB   2025-11-03
+  #   duckdb/efile_v2_1/   16 files (2009-2024)   266 GB   2025-10-28
+  #   duckdb/efile_v2_2/   16 files (2009-2024)   282 GB   2026-08-11   <- current
+  # Individual files run from 2.8 GB (2009) to 25.5 GB (2023).
+  # There is no "latest" pointer; readers name the version in the path.
+  # The bucket allows anonymous reads (GetObject on nccs-efile/*).
+
+cadence:
+  type: on-change
+  notes: "Rebuilt by the producer when ef2 changes. v2_2 written 2026-08-11."
+
+manifest:
+  path: null  # no manifest; version and year are carried in the path
+  schema_version: 0  # 0 = no manifest
+
+schema:
+  source: null  # table layouts are defined inside each database and documented in the ef2 repository
+
+consumers:
+  - repo: Nonprofit-Open-Data-Collective/ef2
+    pin: "efile_v2_1"  # the package README still points readers at v2_1 (checked 2026-09-16) although v2_2 is the newest set
+    notes: "README shows how to attach a file remotely from DuckDB."
+  - repo: Nonprofit-Open-Data-Collective/panel990
+    pin: "efile_v2_2"  # R/source.R default since 2026-09-02 (checked 2026-09-16)
+    notes: "Builds the NODC 990 panels from these archives."
+  - repo: UrbanInstitute/nccs
+    pin: "efile_v2_2"
+    surface: catalogs/
+    notes: "The public catalog lists the archives (v2_2 since the September 2026 catalog refresh)."
+
+drift_detection:
+  trigger: cron
+  schedule: "0 8 * * MON"
+  event: ""
+
+deprecation_window_days: 90  # applies to NCCS: 90 days' notice before any change on our side to the bucket or the folder
+
+notes: |
+  What NCCS commits to: keep hosting the files, keep the bucket
+  readable, and give the producer 90 days' notice before any change
+  on our side.
+
+  What NCCS does not commit to: the content, its correctness, its
+  versioning, or its continuity. These are the producer's. NCCS does
+  not answer for the data in these files and does not cite them as
+  an NCCS product.
+
+  Relationship to NCCS's own e-file work: the contract `efile`
+  describes the NCCS-owned extraction (nccs-data-efile). The two are
+  built by different code from the same IRS source. The producer's
+  own defect register for these archives lives in the ef2 repository
+  (dev/UPSTREAM-ISSUES.md).
+
+  Storage note: the three versions together are about 800 GB. Whether
+  older versions are kept is the producer's call, but the cost is
+  NCCS's; worth raising with the producer when v2_3 appears.

@@ -110,10 +110,33 @@ schema:
   # ein_raw's lossy reality), not retype — so the contracted shape of ein_raw
   # holds. See conventions/ein-format.md.
 
+# COLUMN STABILITY (recorded 2026-09-16, backlog Z17). Outside consumers
+# write our column names into their code. Known cases: NODC's npmatch
+# (pinned copies of this file and the monthly file), matchdb (an augmented
+# BMF directory built on our columns), and the affiliates_bmf() helper in
+# the NODC packages. So: existing column names in this data set are not
+# renamed or removed without the standard 90-day notice
+# (deprecation_window_days below) and a note to the consumers listed here.
+# New columns may be added at any time. Column meaning changes that keep
+# the name are announced the same way as a rename.
+
 consumers:
   - repo: UrbanInstitute/nccs-data-bmf
     pin: "n/a"
     notes: "Internal: feeds the geocoding workflow (unified-bmf-geocoded, ADR 0039)."
+  - repo: Nonprofit-Open-Data-Collective/npmatch  # recorded 2026-09-16 (Z17)
+    pin: "copy"
+    notes: >
+      Keeps its own pinned copies of the January 2026 monthly file and the
+      geocoded Unified BMF under crosswalks/npmatch/ (see contract
+      npmatch-sources). Reads column names from those copies; a column
+      rename here reaches it when the producer next refreshes the copies.
+  - repo: Nonprofit-Open-Data-Collective/matchdb  # recorded 2026-09-16 (Z17)
+    pin: "column names"
+    notes: >
+      Builds a nonprofit directory on top of this data set and the
+      ntee-resolved crosswalk; hardcodes our column names (design stage
+      as of 2026-08-27).
   - repo: UrbanInstitute/nccs  # RECONCILED 2026-07-01 — closes Open item #4 (website notify-list)
     pin: "flat-prefix"          # pins unified/bmf/ (flat); no vintage subdir yet, per this contract's INTERIM layout
     surface: catalogs/catalog-bmf.qmd
