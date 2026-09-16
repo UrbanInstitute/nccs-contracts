@@ -184,3 +184,14 @@ already open):
 - **`nccs-data-bmf` PR #28 is open, checks green, awaiting merge** — see
   BACKLOG for the merge-timing note (bundle the whole batch, don't merge
   piecemeal).
+- **Per-state CSV file name (found 2026-09-15, decided 2026-09-16, backlog Z19).**
+  This ADR renamed the state-mart folder but said nothing about the file
+  name inside it. The contract written with this ADR named the files
+  `bmf_unified_{ST}.csv`; the pipeline kept writing `bmf_master_{ST}.csv`,
+  so for ten weeks the contract described files that did not exist.
+  Decision: finish the rename rather than amend the contract, so nothing
+  under the Unified BMF folder keeps the retired "master" name. Both file
+  names are published from 2026-09-16; the old name stops being written
+  after 2026-12-15 (the standard 90-day window, ADR 0033). No repository
+  of ours reads these files by name; the website catalog lists them and
+  will be re-rendered. Executed in nccs-data-bmf (Z19).
