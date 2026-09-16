@@ -23,7 +23,7 @@ producer:
     NODC is the producer and owner. NCCS hosts the folder in its bucket.
     There is no plan for NCCS to take over this folder.
 
-format: csv  # mixed: CSV, one fixed-width .dat extract, one .xlsx layout file
+format: mixed  # CSV files, one fixed-width .dat extract (SAM), one .xlsx layout workbook
 partitioned: false
 
 s3:
@@ -48,11 +48,11 @@ cadence:
   notes: "Uploaded by the producer when the package is rebuilt. Last change 2026-08-07."
 
 manifest:
-  path: none  # no manifest file; the package's np_source_urls() is the list of record
+  path: null  # no manifest file; the package's np_source_urls() is the list of record
   schema_version: 0  # 0 = no manifest
 
 schema:
-  source: none  # each file carries its own layout (dictionary CSVs and the SAM layout workbook)
+  source: null  # each file carries its own layout (dictionary CSVs and the SAM layout workbook)
 
 consumers:
   - repo: Nonprofit-Open-Data-Collective/npmatch

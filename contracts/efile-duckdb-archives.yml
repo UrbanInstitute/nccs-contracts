@@ -42,18 +42,18 @@ cadence:
   notes: "Rebuilt by the producer when ef2 changes. v2_2 written 2026-08-11."
 
 manifest:
-  path: none  # no manifest; version and year are carried in the path
+  path: null  # no manifest; version and year are carried in the path
   schema_version: 0  # 0 = no manifest
 
 schema:
-  source: none  # table layouts are defined inside each database and documented in the ef2 repository
+  source: null  # table layouts are defined inside each database and documented in the ef2 repository
 
 consumers:
   - repo: Nonprofit-Open-Data-Collective/ef2
     pin: "efile_v2_1"  # the package README still points readers at v2_1 (checked 2026-09-16) although v2_2 is the newest set
     notes: "README shows how to attach a file remotely from DuckDB."
   - repo: Nonprofit-Open-Data-Collective/panel990
-    pin: "efile_v2_1"  # R/source.R (checked 2026-08-28)
+    pin: "efile_v2_2"  # R/source.R default since 2026-09-02 (checked 2026-09-16)
     notes: "Builds the NODC 990 panels from these archives."
   - repo: UrbanInstitute/nccs
     pin: "efile_v2_2"
