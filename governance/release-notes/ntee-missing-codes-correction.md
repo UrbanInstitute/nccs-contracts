@@ -1,0 +1,50 @@
+# NCCS Release Note — 12 NTEE codes restored (lookup gap)
+
+**Status:** DRAFT — reprocess in progress 2026-09-17; numbers marked
+[pending] are filled in from the run's verification output before this is
+marked FINAL.
+**Products:** Unified BMF, geocoded Unified BMF, state marts, NTEE-resolved
+crosswalk, lookup tables, per-vintage processed BMF files (legacy +
+current-monthly).
+
+**What changes:** organizations whose IRS NTEE code is one of B29 (charter
+schools), E6A, F31, K2A, K2B, K2C, L4A, L4B, M99, P76, P7A or P83 were
+published as "unknown" (`Z99`, `UNU-Z99-RG`) in every NTEE column, because
+those 12 codes were missing from the NCCS lookup sheet the pipeline uses to
+validate raw codes. All 12 are in the IRS's own code list (Instructions for
+Form 1023, Appendix D, revised 12/2024). After this build they resolve to
+their real codes. Affected columns: `ntee_code_clean`, `ntee_code_definition`,
+`naics_code`, `nteev2`, `nteev2_code`, `nteev2_subsector`,
+`nteev2_subsector_definition`. **No columns are added, renamed, or removed;
+row membership is unchanged.**
+
+**How many rows:** in the July 2026 monthly file, 5,332 organizations (0.27%);
+across all 121 published monthly files, about 511,000 row-observations. B29
+charter schools account for more than half. Unified BMF rows changed:
+[pending]. Per-file changed-row counts: [pending, `vintage_diff.psv`].
+
+**History:** four of the codes have been in the IRS data since 1989 (B29, F31,
+M99, P83), P76 since 2008, and the other seven were added by the IRS in 2021
+and appear from January 2022. The gap was found during the ADR 0048
+acceptance tests (2026-08-28) and measured on 2026-09-17.
+
+**For users:** any count or grouping by NTEE code that treated these
+organizations as unclassified will move them into their proper groups, most
+visibly education (B) and human services (M, P, K, L). Numbers previously
+published for the `Z99` group will fall accordingly.
+
+**Also in this build:** the IRS code list is now kept in the producer repo
+(`data/lookup/irs_ntee_codes.csv`) and checked against the IRS every January
+(BACKLOG Z25).
+
+**Details:** nccs-data-bmf PR #54; BACKLOG Z18; ADR 0048 side finding.
+Deprecation window waived under the ADR 0033 critical-bug clause (values
+corrected in place, same row counts, same precedent as the ADR 0032 and ADR
+0048 corrections).
+
+**Published data sets ([pending date]):** `s3://nccsdata/unified/bmf/`
+([pending] rows), `s3://nccsdata/geocoding/unified-bmf/v[pending]/` and
+`latest/`, state marts, `s3://nccsdata/lookups/bmf/latest/`,
+`s3://nccsdata/crosswalks/ntee-resolved/`, and every monthly and legacy file
+under `processed/bmf/` and `processed/bmf-legacy/`. Manifests carry git_sha
+`1b1f8a9`.
