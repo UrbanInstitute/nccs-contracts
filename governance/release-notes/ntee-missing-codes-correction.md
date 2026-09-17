@@ -18,10 +18,15 @@ their real codes. Affected columns: `ntee_code_clean`, `ntee_code_definition`,
 `nteev2_subsector_definition`. **No columns are added, renamed, or removed;
 row membership is unchanged.**
 
-**How many rows:** in the July 2026 monthly file, 5,332 organizations (0.27%);
-across all 121 published monthly files, about 511,000 row-observations. B29
-charter schools account for more than half. Unified BMF rows changed:
-[pending]. Per-file changed-row counts: [pending, `vintage_diff.psv`].
+**How many rows:** 379,258 rows changed across the 121 published monthly
+files (208,458 in the 86 legacy files, 170,800 in the 35 current-monthly
+files), verified file by file against a snapshot taken before the rerun: same
+rows and EINs, only NTEE-derived columns changed, every changed row carries
+one of the 12 codes, every such row was Z99 before and resolves correctly
+after. In the July 2026 file 5,521 rows changed (0.28%). B29 charter schools
+account for more than half. Unified BMF rows changed: [pending]. (An earlier
+estimate of about 511,000 double-counted current months whose working folder
+held two files; see BACKLOG Z28.)
 
 **History:** four of the codes have been in the IRS data since 1989 (B29, F31,
 M99, P83), P76 since 2008, and the other seven were added by the IRS in 2021
