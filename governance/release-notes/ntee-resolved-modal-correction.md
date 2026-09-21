@@ -1,6 +1,6 @@
 # NCCS Release Note — NTEE-resolved crosswalk: modal view corrected
 
-**Status:** DRAFT (2026-09-21); FINAL once the corrected files are published.
+**Status:** FINAL. Corrected files published 2026-09-21 17:27 UTC (vintage 2026_09, git_sha 9d10275, 3,624,536 rows).
 **Product:** NTEE-resolved crosswalk (`s3://nccsdata/crosswalks/ntee-resolved/`).
 
 **What was wrong.** The crosswalk build read every parquet file under
