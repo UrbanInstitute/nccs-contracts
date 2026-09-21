@@ -78,14 +78,48 @@ deprecation_window_days: 90
 notes: |
   ## Bucket CORS (2026-09-21, ADR 0049)
 
-  `nccsdata` carries a read-only CORS rule so website pages can read
-  files from the browser: AllowedOrigins https://nccs.urban.org,
-  https://urbaninstitute.github.io, http://localhost:*, http://127.0.0.1:*;
-  AllowedMethods GET, HEAD; MaxAgeSeconds 3600. Applied with
-  `aws s3api put-bucket-cors`. It exposes nothing new (the bucket is
-  public); it only lets browser JavaScript read what curl already can.
-  If it is ever removed, the website NTEE table falls back to a
-  download link.
+  ### What CORS is
+
+  CORS stands for Cross-Origin Resource Sharing. Web browsers enforce a
+  safety rule: JavaScript running on a page from one site (an "origin",
+  meaning scheme + host + port, for example https://nccs.urban.org) may
+  not read the contents of a file fetched from a different site unless
+  that second site says it is allowed. The rule exists so that a
+  malicious page cannot quietly read data from other sites a person is
+  logged in to. It applies to public files too, because the browser
+  cannot tell public from private.
+
+  The permission is given by the site holding the file. When a page's
+  script fetches a file, the browser adds a header saying which origin
+  the page came from. The file's server checks that origin against its
+  CORS rule and, if it is allowed, adds a header to the response saying
+  so. The browser then hands the file to the script. If the header is
+  missing, the browser discards the response and the script gets an
+  error. Direct downloads (address bar, curl, R, Python) never go
+  through this check; CORS only governs scripts on web pages.
+
+  ### How it is applied here
+
+  The website's NTEE crosswalk page
+  (`nccs/widgets/ntee_tables/ntee-naics_table.html`) fetches
+  `ntee_code.csv`, `ntee_code_major_group.csv` and `_manifest.json` from
+  this contract's `latest/` prefix when it is opened, so it always shows
+  the current vintage without anyone re-rendering it. For that fetch to
+  work, `nccsdata` carries a read-only CORS rule:
+
+  - AllowedOrigins: https://nccs.urban.org, https://urbaninstitute.github.io,
+    http://localhost:*, http://127.0.0.1:* (the last two for local preview)
+  - AllowedMethods: GET, HEAD (read only; no writes)
+  - MaxAgeSeconds: 3600 (the browser may cache the permission for an hour)
+
+  Applied with `aws s3api put-bucket-cors --bucket nccsdata`; read back
+  with `get-bucket-cors`. It exposes nothing new: the bucket is already
+  public and anyone can download the files directly. It only lets
+  scripts on the listed sites read what curl already can. A page on any
+  other site gets no permission header and cannot read the files from
+  script. If the rule is ever removed, the website NTEE table shows a
+  download link instead of the table. Any future website page that
+  reads bucket files in the browser relies on the same rule.
 
   Producer also writes the same files to a vintage prefix
   s3://nccsdata/lookups/bmf/{YYYY_MM}/. Consumers pin `latest/` for
