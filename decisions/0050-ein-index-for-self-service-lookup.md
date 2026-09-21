@@ -93,12 +93,13 @@ to know which small file to fetch.
 
 ## Outcome (2026-09-21)
 
-Shipped in one day. Producer: `R/build_ein_index.R` with EIN validation,
-deterministic shards (two real builds hash-identical; a rerun uploads
-nothing) and checked uploads. Index: 4,420 shards, 3,698,197 organizations,
-140 MB, largest shard 1.3 MB, median 5 KB. Website: `/datasets/ntee/lookup/`
-live, linked from the NTEE guide ("Find your code") and the dataset page.
-Review findings addressed before merge: vintage retention per ADR 0042,
-EIN validation, build time out of shards, upload results checked,
-superseded lookups ignored on the page. Deferred: name search (API, ADR
-0026).
+Completed in one day. Producer: `R/build_ein_index.R` checks every EIN
+before writing, produces the same files every time from the same source
+(two runs against the live data gave identical hashes, so a repeat publish
+uploads nothing), and stops on any failed upload. Index: 4,420 shards,
+3,698,197 organizations, 140 MB, largest shard 1.3 MB, median 5 KB.
+Website: `/datasets/ntee/lookup/` live, linked from the NTEE guide ("Find
+your code") and the dataset page. Review findings addressed before merge:
+vintage retention per ADR 0042, EIN validation, no timestamp inside the
+shards, upload results checked, superseded lookups ignored on the page.
+Deferred: search by organization name (API, ADR 0026).
