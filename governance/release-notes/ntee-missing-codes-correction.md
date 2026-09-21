@@ -1,8 +1,7 @@
 # NCCS Release Note — 12 NTEE codes restored (lookup gap)
 
-**Status:** DRAFT — reprocess in progress 2026-09-17; numbers marked
-[pending] are filled in from the run's verification output before this is
-marked FINAL.
+**Status:** FINAL. Reprocessed 2026-09-17, published 2026-09-21 (vintage
+2026_09). Numbers below come from the run's per-file check and manifests.
 **Products:** Unified BMF, geocoded Unified BMF, state marts, NTEE-resolved
 crosswalk, lookup tables, per-vintage processed BMF files (legacy +
 current-monthly).
@@ -18,10 +17,22 @@ their real codes. Affected columns: `ntee_code_clean`, `ntee_code_definition`,
 `nteev2_subsector_definition`. **No columns are added, renamed, or removed;
 row membership is unchanged.**
 
-**How many rows:** in the July 2026 monthly file, 5,332 organizations (0.27%);
-across all 121 published monthly files, about 511,000 row-observations. B29
-charter schools account for more than half. Unified BMF rows changed:
-[pending]. Per-file changed-row counts: [pending, `vintage_diff.psv`].
+**How many rows:** in the July 2026 monthly file, 5,521 organizations (0.28%)
+got a real NTEE code instead of "unknown". Counting every organization in
+every one of the 121 monthly files, 379,258 rows changed (208,458 in the
+1989-2011 legacy files, 170,800 in the 2012-2026 monthly files). The same
+organization appears in many monthly files, so this is a count of rows, not
+of distinct organizations. B29 charter schools account for more than half.
+In the Unified BMF (one row per organization), 8,184 rows changed: every one
+of them was "unknown" (`Z99`) before and has a real code now, so the share of
+organizations with an unknown code fell from 19.03% to 18.81%. The changed-row
+count for each monthly file is in
+`s3://nccsdata/intermediate/tmp/z18_scripts/vintage_diff.psv`.
+
+An earlier estimate of about 511,000 changed rows, quoted in the draft of this
+note and in BACKLOG Z18, was too high: the folder holding each month's working
+files contained two copies of the data, an old one from January 2026 and the
+current one, and the measurement counted both (BACKLOG Z28).
 
 **History:** four of the codes have been in the IRS data since 1989 (B29, F31,
 M99, P83), P76 since 2008, and the other seven were added by the IRS in 2021
@@ -42,9 +53,9 @@ Deprecation window waived under the ADR 0033 critical-bug clause (values
 corrected in place, same row counts, same precedent as the ADR 0032 and ADR
 0048 corrections).
 
-**Published data sets ([pending date]):** `s3://nccsdata/unified/bmf/`
-([pending] rows), `s3://nccsdata/geocoding/unified-bmf/v[pending]/` and
-`latest/`, state marts, `s3://nccsdata/lookups/bmf/latest/`,
+**Published data sets (2026-09-21):** `s3://nccsdata/unified/bmf/`
+(3,698,197 rows), `s3://nccsdata/geocoding/unified-bmf/v2026_09/` and
+`latest/` (3,698,197 rows, 3,077,405 with coordinates), 63 state marts, `s3://nccsdata/lookups/bmf/latest/`,
 `s3://nccsdata/crosswalks/ntee-resolved/`, and every monthly and legacy file
 under `processed/bmf/` and `processed/bmf-legacy/`. Manifests carry git_sha
 `1b1f8a9`.
