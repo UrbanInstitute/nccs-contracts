@@ -17,14 +17,22 @@ their real codes. Affected columns: `ntee_code_clean`, `ntee_code_definition`,
 `nteev2_subsector_definition`. **No columns are added, renamed, or removed;
 row membership is unchanged.**
 
-**How many rows:** in the July 2026 monthly file, 5,521 organizations (0.28%).
-Across all 121 published monthly files, 379,258 row-observations changed
-(208,458 in legacy vintages, 170,800 in current-monthly vintages). An earlier
-estimate of about 511,000 double-counted a stale second parquet per vintage
-(BACKLOG Z28). B29 charter schools account for more than half. In the Unified
-BMF, 8,184 rows changed: every one was `Z99` before and none is after, so the
-`Z99` share fell from 19.03% to 18.81%. Per-file changed-row counts are in
+**How many rows:** in the July 2026 monthly file, 5,521 organizations (0.28%)
+got a real NTEE code instead of "unknown". Counting every organization in
+every one of the 121 monthly files, 379,258 rows changed (208,458 in the
+1989-2011 legacy files, 170,800 in the 2012-2026 monthly files). The same
+organization appears in many monthly files, so this is a count of rows, not
+of distinct organizations. B29 charter schools account for more than half.
+In the Unified BMF (one row per organization), 8,184 rows changed: every one
+of them was "unknown" (`Z99`) before and has a real code now, so the share of
+organizations with an unknown code fell from 19.03% to 18.81%. The changed-row
+count for each monthly file is in
 `s3://nccsdata/intermediate/tmp/z18_scripts/vintage_diff.psv`.
+
+An earlier estimate of about 511,000 changed rows, quoted in the draft of this
+note and in BACKLOG Z18, was too high: the folder holding each month's working
+files contained two copies of the data, an old one from January 2026 and the
+current one, and the measurement counted both (BACKLOG Z28).
 
 **History:** four of the codes have been in the IRS data since 1989 (B29, F31,
 M99, P83), P76 since 2008, and the other seven were added by the IRS in 2021
