@@ -17,14 +17,15 @@ partitioned: true  # one file per EIN prefix
 s3:
   bucket: nccsdata
   key_prefix: unified/bmf/ein-index/
-  versioned_template: "unified/bmf/ein-index/latest/{prefix}.json"  # rolling; no per-vintage copies (ADR 0050 §3)
+  versioned_template: "unified/bmf/ein-index/v{YYYY_MM}/{prefix}.json"  # retained permanently (ADR 0042)
   latest_template: "unified/bmf/ein-index/latest/{prefix}.json"
 
 cadence:
   type: monthly
   notes: >
     Rebuilt at the end of every Unified BMF build (after the geocoded merge).
-    Unchanged shards are skipped on upload (sha256 in the manifest).
+    Published to v{YYYY_MM}/ and mirrored to latest/; unchanged shards are
+    skipped on upload (sha256 in the manifest).
 
 manifest:
   path: unified/bmf/ein-index/latest/_manifest.json
@@ -33,7 +34,7 @@ manifest:
 schema:
   source: inline
   notes: >
-    Each shard is {vintage, built_at, prefix, fields[], records[][]};
+    Each shard is {vintage, prefix, fields[], records[][]};
     records are arrays in the order of fields[]. Column meanings are the
     Unified BMF data dictionary's.
   columns:

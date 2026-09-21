@@ -28,7 +28,7 @@ EIN now, and leave name search to the API later.
    compressed), the 99th percentile 154 KB and the median 5 KB; 140 MB
    in all. Three digits would have left the largest shard at 6 MB. Plus
    `_manifest.json` (ADR 0014 shape, one entry per shard).
-2. **Shard shape.** A small JSON object: `vintage`, `built_at`, `prefix`,
+2. **Shard shape.** A small JSON object: `vintage`, `prefix`,
    `fields` (column names, once) and `records` (an array of arrays in that
    column order). Columns: `ein`, `org_name_display`, `org_addr_city`,
    `org_addr_state`, `org_addr_zip5`, `ntee_code_clean`,
@@ -36,10 +36,13 @@ EIN now, and leave name search to the API later.
    `exempt_organization_type`, `status_code_definition`,
    `first_vintage_ym`, `last_vintage_ym`. All values as they appear in the
    Unified BMF; no new derivations.
-3. **Rolling, `latest/` only.** The index is derived and reproducible from
-   the Unified BMF, so no per-vintage copies are kept; the manifest records
-   which vintage it came from. Consumers wanting history use the Unified
-   BMF itself.
+3. **Retention follows ADR 0042.** Every build is published twice: to
+   `unified/bmf/ein-index/v{YYYY_MM}/` (retained permanently, never
+   deleted) and mirrored to `unified/bmf/ein-index/latest/`. Consumers
+   read `latest/`; anyone reproducing a past lookup pins a vintage folder.
+   At about 140 MB per build this costs under 2 GB a year. (An earlier
+   draft of this ADR kept `latest/` only; review on 2026-09-21 pointed out
+   the conflict with the retention rule, and the rule wins.)
 4. **The website page** `/datasets/ntee/lookup/` takes an EIN in any common
    form (with or without the hyphen), fetches the one shard, and shows the
    record with the IRS wording for the code, the NTEE version 2 form, and
@@ -55,7 +58,8 @@ EIN now, and leave name search to the API later.
 - One lookup costs one request, typically a few KB and at most
   1.3 MB compressed (S3 serves the gzip bytes with
   `Content-Encoding: gzip`, which the producer sets on upload).
-- A full Unified rebuild republishes up to about 4,500 small objects; uploads are
+- A full Unified rebuild writes up to about 4,500 objects to the vintage
+  folder and the same to `latest/`; uploads are
   sha256-idempotent so an unchanged shard is skipped.
 - `nccsdata`, the API and the dashboard are unaffected.
 - The producer's monthly cycle gains one step after the geocoded merge and
@@ -73,6 +77,10 @@ EIN now, and leave name search to the API later.
 
 - `unified/bmf/ein-index/latest/_manifest.json` lists N shard files whose
   `row_count`s sum to the Unified BMF row count, with `vintage` equal to
-  the Unified manifest's.
+  the Unified manifest's; `v{vintage}/` holds the same files.
+- The builder stops, rather than publishing, if any source EIN is not
+  `XX-XXXXXXX`, if any EIN repeats, or if the shard rows do not sum to
+  the source rows.
+- Building twice from the same source yields identical shard hashes.
 - Typing `52-0880375` (Urban Institute) on the lookup page returns the
   organization with its NTEE code and the current vintage.
