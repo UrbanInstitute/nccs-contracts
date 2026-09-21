@@ -1,5 +1,5 @@
 name: bmf-ein-index
-status: deferred  # planned by ADR 0050 (2026-09-21); flips to active when the producer publishes
+# status: active (first publish 2026-09-21, vintage 2026_09: 4,420 shards, 3,698,197 organizations)
 description: >
   A copy of the Unified BMF cut into small pieces ("shards") so that a web
   page can find one organization without downloading the whole file. Each
