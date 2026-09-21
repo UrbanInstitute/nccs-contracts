@@ -24,9 +24,9 @@ EIN now, and leave name search to the API later.
    `s3://nccsdata/unified/bmf/ein-index/latest/{prefix}.json`, one file per
    four-digit EIN prefix (the first four digits of the nine-digit number).
    EINs cluster heavily by prefix: the first build (vintage 2026_09) gave
-   4,420 shards, the largest 48,000 organizations (about 1.7 MB
-   compressed), the 99th percentile about 160 KB and the median about
-   4 KB. Three digits would have left the largest shard at 6 MB. Plus
+   4,420 shards, the largest 48,000 organizations (1.3 MB
+   compressed), the 99th percentile 154 KB and the median 5 KB; 140 MB
+   in all. Three digits would have left the largest shard at 6 MB. Plus
    `_manifest.json` (ADR 0014 shape, one entry per shard).
 2. **Shard shape.** A small JSON object: `vintage`, `built_at`, `prefix`,
    `fields` (column names, once) and `records` (an array of arrays in that
@@ -52,8 +52,8 @@ EIN now, and leave name search to the API later.
 
 ## Consequences
 
-- One lookup costs one request, typically a few KB and at most about
-  1.7 MB compressed (S3 serves the gzip bytes with
+- One lookup costs one request, typically a few KB and at most
+  1.3 MB compressed (S3 serves the gzip bytes with
   `Content-Encoding: gzip`, which the producer sets on upload).
 - A full Unified rebuild republishes up to about 4,500 small objects; uploads are
   sha256-idempotent so an unchanged shard is skipped.
