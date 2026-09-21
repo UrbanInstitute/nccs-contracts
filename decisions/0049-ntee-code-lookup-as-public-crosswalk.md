@@ -1,6 +1,6 @@
 # 0049 — The `ntee_code` lookup is the public NTEE-NAICS crosswalk: add long descriptions, fill NAICS, website reads it
 
-- **Status:** Proposed (2026-09-21)
+- **Status:** Accepted, executing (2026-09-21): producer half shipped (nccs-data-bmf #56 merged, lookups vintage 2026_09 published 2026-09-21 with the new column and 17 NAICS values); website half in nccs #102
 - **Date:** 2026-09-21
 - **Deciders:** sole maintainer
 - **Relates:** [[bmf-lookups]] contract, ADR 0014 (manifests), ADR 0033 (deprecation window; not triggered, change is additive), ADR 0016 (no code dependencies between repos), BACKLOG Z18 / Z25 / Z26 / Z29
