@@ -65,6 +65,9 @@ schema:
       type: string
       description: 4-digit GEOID (state FIPS + district) for the Congress in congress_session.
       nullable: true
+    - name: geo_match_addr
+      type: string
+      description: The address the geocoder matched, so a consumer can see what the coordinates stand for.
     - name: geo_addr_type
       type: string
       description: Geocoder precision tier; blocks assigned only for PointAddress, Subaddress, StreetAddress, StreetAddressExt, StreetInt.
