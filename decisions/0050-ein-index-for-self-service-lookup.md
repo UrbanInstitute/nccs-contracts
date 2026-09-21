@@ -22,8 +22,11 @@ EIN now, and leave name search to the API later.
 1. **New contracted artifact `bmf-ein-index`**, produced by nccs-data-bmf
    from the geocoded Unified BMF at the end of every Unified build:
    `s3://nccsdata/unified/bmf/ein-index/latest/{prefix}.json`, one file per
-   three-digit EIN prefix (the first three digits of the nine-digit number,
-   so at most 1,000 files, about 3,700 organizations each), plus
+   four-digit EIN prefix (the first four digits of the nine-digit number).
+   EINs cluster heavily by prefix: the first build (vintage 2026_09) gave
+   4,420 shards, the largest 48,000 organizations (about 1.7 MB
+   compressed), the 99th percentile about 160 KB and the median about
+   4 KB. Three digits would have left the largest shard at 6 MB. Plus
    `_manifest.json` (ADR 0014 shape, one entry per shard).
 2. **Shard shape.** A small JSON object: `vintage`, `built_at`, `prefix`,
    `fields` (column names, once) and `records` (an array of arrays in that
@@ -49,10 +52,10 @@ EIN now, and leave name search to the API later.
 
 ## Consequences
 
-- One lookup costs one request of roughly 500 KB uncompressed (about
-  100 KB with gzip, which S3 serves when the object is uploaded with
-  `Content-Encoding: gzip`; the producer does so).
-- A full Unified rebuild republishes up to 1,000 small objects; uploads are
+- One lookup costs one request, typically a few KB and at most about
+  1.7 MB compressed (S3 serves the gzip bytes with
+  `Content-Encoding: gzip`, which the producer sets on upload).
+- A full Unified rebuild republishes up to about 4,500 small objects; uploads are
   sha256-idempotent so an unchanged shard is skipped.
 - `nccsdata`, the API and the dashboard are unaffected.
 - The producer's monthly cycle gains one step after the geocoded merge and
@@ -71,5 +74,5 @@ EIN now, and leave name search to the API later.
 - `unified/bmf/ein-index/latest/_manifest.json` lists N shard files whose
   `row_count`s sum to the Unified BMF row count, with `vintage` equal to
   the Unified manifest's.
-- Typing `53-0196572` (Urban Institute) on the lookup page returns the
-  organization with NTEE `T50`-family code and the current vintage.
+- Typing `52-0880375` (Urban Institute) on the lookup page returns the
+  organization with its NTEE code and the current vintage.
