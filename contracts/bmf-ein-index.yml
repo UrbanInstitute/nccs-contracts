@@ -1,0 +1,88 @@
+name: bmf-ein-index
+status: deferred  # planned by ADR 0050 (2026-09-21); flips to active when the producer publishes
+description: >
+  A copy of the Unified BMF cut into small pieces ("shards") so that a web
+  page can find one organization without downloading the whole file. Each
+  shard is a JSON file holding every organization whose EIN starts with the
+  same four digits (the shard's "prefix"); the page works out the prefix
+  from the EIN typed in and fetches that one file. Any organization in the
+  Unified BMF can be looked up this way. Identity, NTEE and status columns
+  only.
+
+producer:
+  repo: UrbanInstitute/nccs-data-bmf
+  publish_path: R/build_ein_index.R
+
+format: json
+compression: gzip  # objects uploaded with Content-Encoding: gzip
+partitioned: true  # one file per EIN prefix
+
+s3:
+  bucket: nccsdata
+  key_prefix: unified/bmf/ein-index/
+  versioned_template: "unified/bmf/ein-index/v{YYYY_MM}/{prefix}.json"  # retained permanently (ADR 0042)
+  latest_template: "unified/bmf/ein-index/latest/{prefix}.json"
+
+cadence:
+  type: monthly
+  notes: >
+    Rebuilt at the end of every Unified BMF build (after the geocoded merge).
+    Published to v{YYYY_MM}/ and mirrored to latest/; unchanged shards are
+    skipped on upload (sha256 in the manifest).
+
+manifest:
+  path: unified/bmf/ein-index/latest/_manifest.json
+  schema_version: 2
+
+schema:
+  source: inline
+  notes: >
+    Each shard is {vintage, prefix, fields[], records[][]};
+    records are arrays in the order of fields[]. Column meanings are the
+    Unified BMF data dictionary's.
+  columns:
+    - name: ein
+      type: string
+      description: XX-XXXXXXX (ADR 0036 canonical form)
+    - name: org_name_display
+      type: string
+    - name: org_addr_city
+      type: string
+    - name: org_addr_state
+      type: string
+    - name: org_addr_zip5
+      type: string
+    - name: ntee_code_clean
+      type: string
+    - name: ntee_code_definition
+      type: string
+    - name: nteev2
+      type: string
+    - name: ruling_date
+      type: string
+    - name: subsection_code
+      type: string
+    - name: exempt_organization_type
+      type: string
+    - name: status_code_definition
+      type: string
+    - name: first_vintage_ym
+      type: string
+    - name: last_vintage_ym
+      type: string
+
+consumers:
+  - repo: UrbanInstitute/nccs
+    pin: "latest"
+    notes: "/datasets/ntee/lookup/ fetches one shard per lookup in the browser (bucket CORS per ADR 0049)."
+
+drift_detection:
+  trigger: cron
+  schedule: "0 8 * * MON"
+  event: ""
+
+deprecation_window_days: 90
+
+notes: |
+  Decided in ADR 0050. Name search and richer queries are deferred to the
+  download API (ADR 0026).
