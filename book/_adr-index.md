@@ -47,4 +47,4 @@
 | [0047](https://github.com/UrbanInstitute/nccs-contracts/blob/main/decisions/0047-branch-protection-baseline.md) | Org-wide branch-protection baseline (require PRs + review; guard check where it exists) | Accepted |
 | [0048](https://github.com/UrbanInstitute/nccs-contracts/blob/main/decisions/0048-nteev2-specialty-code-x00-rule.md) | Apply the NTEE-V2 x00 rule: specialty/common codes 01-19 must not appear in the activity slot | Executing |
 | [0049](https://github.com/UrbanInstitute/nccs-contracts/blob/main/decisions/0049-ntee-code-lookup-as-public-crosswalk.md) | The `ntee_code` lookup is the public NTEE-NAICS crosswalk: long descriptions, NAICS filled, website reads it | Proposed |
-| [0050](https://github.com/UrbanInstitute/nccs-contracts/blob/main/decisions/0050-ein-index-for-self-service-lookup.md) | EIN index: sharded JSON so the website can look up one organization without a server | Executing |
+| [0050](https://github.com/UrbanInstitute/nccs-contracts/blob/main/decisions/0050-ein-index-for-self-service-lookup.md) | EIN index: sharded JSON so the website can look up one organization without a server | Reconciled |

@@ -1,6 +1,6 @@
 # 0050 — EIN index: sharded JSON so the website can look up one organization without a server
 
-- **Status:** Executing (Accepted 2026-09-21 at merge of nccs-contracts #95; producer shipped nccs-data-bmf #58 and first publish 2026-09-21, vintage 2026_09, `v2026_09/` + `latest/`; website page nccs #107 pending)
+- **Status:** Reconciled (2026-09-21). Accepted at merge of nccs-contracts #95; producer nccs-data-bmf #58 merged and index published the same day (vintage 2026_09, 4,420 shards, 3,698,197 organizations, `v2026_09/` + `latest/`); website page nccs #107 merged; contract active (#96).
 - **Date:** 2026-09-21
 - **Deciders:** sole maintainer
 - **Relates:** [[unified-bmf-geocoded]] (source), [[bmf-lookups]] and ADR 0049 (the website already reads bucket files in the browser; bucket CORS), ADR 0026 (API rewrite; the long-term home for richer queries), ADR 0014 (manifests), ADR 0016 (no code dependencies between repos), ADR 0036 (EIN forms)
@@ -90,3 +90,15 @@ to know which small file to fetch.
 - Building twice from the same source yields identical shard hashes.
 - Typing `52-0880375` (Urban Institute) on the lookup page returns the
   organization with its NTEE code and the current vintage.
+
+## Outcome (2026-09-21)
+
+Shipped in one day. Producer: `R/build_ein_index.R` with EIN validation,
+deterministic shards (two real builds hash-identical; a rerun uploads
+nothing) and checked uploads. Index: 4,420 shards, 3,698,197 organizations,
+140 MB, largest shard 1.3 MB, median 5 KB. Website: `/datasets/ntee/lookup/`
+live, linked from the NTEE guide ("Find your code") and the dataset page.
+Review findings addressed before merge: vintage retention per ADR 0042,
+EIN validation, build time out of shards, upload results checked,
+superseded lookups ignored on the page. Deferred: name search (API, ADR
+0026).
