@@ -63,7 +63,7 @@ schema:
 consumers:
   - repo: UrbanInstitute/nccs
     pin: "latest"
-    notes: "Website NTEE dataset page + crosswalk widget read ntee_code.csv and ntee_code_major_group.csv at render time and link ntee_code.csv as the download (ADR 0049, 2026-09-21)."
+    notes: "Website NTEE dataset page links ntee_code.csv as the download; the crosswalk page (widgets/ntee_tables/ntee-naics_table.html) fetches ntee_code.csv, ntee_code_major_group.csv and _manifest.json in the browser each time it opens, so it always shows the current vintage (ADR 0049, 2026-09-21). Depends on the bucket CORS rule below."
   - repo: UrbanInstitute/nccsdata
     pin: "latest"  # bundled into R/sysdata.rda at package-build time; pin a specific vintage for reproducibility
     notes: "Bundled into R/sysdata.rda by data-raw/build_lookups.R; consumed by nccs_catalog(labels = TRUE)."
@@ -76,6 +76,17 @@ drift_detection:
 deprecation_window_days: 90
 
 notes: |
+  ## Bucket CORS (2026-09-21, ADR 0049)
+
+  `nccsdata` carries a read-only CORS rule so website pages can read
+  files from the browser: AllowedOrigins https://nccs.urban.org,
+  https://urbaninstitute.github.io, http://localhost:*, http://127.0.0.1:*;
+  AllowedMethods GET, HEAD; MaxAgeSeconds 3600. Applied with
+  `aws s3api put-bucket-cors`. It exposes nothing new (the bucket is
+  public); it only lets browser JavaScript read what curl already can.
+  If it is ever removed, the website NTEE table falls back to a
+  download link.
+
   Producer also writes the same files to a vintage prefix
   s3://nccsdata/lookups/bmf/{YYYY_MM}/. Consumers pin `latest/` for
   convenience; pin to a specific vintage for reproducibility.

@@ -73,8 +73,11 @@ tied it to the pipeline's list.
   not one of them, so nothing there changes.
 - The producer republishes `lookups/bmf/` as vintage 2026_09 (or the
   month of publish); only `ntee_code.csv` and the manifests change.
-- Website render still happens locally (Quarto); a refresh of the widget
-  after each lookup publish is a manual step, recorded in the runbook.
+- The website table fetches the lookup in the browser each time it opens
+  (maintainer review of nccs #102, 2026-09-21), so no re-render follows a
+  lookup publish. This needed a read-only CORS rule on the `nccsdata`
+  bucket (GET/HEAD from the site's origins), recorded in the
+  [[bmf-lookups]] contract notes.
 
 ## Execution
 
