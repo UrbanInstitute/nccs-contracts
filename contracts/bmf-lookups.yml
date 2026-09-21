@@ -54,10 +54,16 @@ schema:
   #   deductibility_code.csv, filing_requirement_code.csv,
   #   foundation_code.csv, income_code.csv, ntee_code.csv,
   #   ntee_code_major_group.csv, ntee_common_code.csv,
+  # ADR 0049 (2026-09-21): ntee_code.csv gains an additive column
+  #   ntee_code_description (long text) and its UNDEFINED naics_code values
+  #   are filled except Z99.
   #   ntee_legacy_5char.csv, nteev2_subsector.csv,
   #   organization_code.csv, parent_organization.csv, status_code.csv
 
 consumers:
+  - repo: UrbanInstitute/nccs
+    pin: "latest"
+    notes: "Website NTEE dataset page + crosswalk widget read ntee_code.csv and ntee_code_major_group.csv at render time and link ntee_code.csv as the download (ADR 0049, 2026-09-21)."
   - repo: UrbanInstitute/nccsdata
     pin: "latest"  # bundled into R/sysdata.rda at package-build time; pin a specific vintage for reproducibility
     notes: "Bundled into R/sysdata.rda by data-raw/build_lookups.R; consumed by nccs_catalog(labels = TRUE)."
