@@ -14,13 +14,19 @@ but the published file is 640 MB as parquet and 3.6 GB as CSV, so a web page
 cannot read it, and the download API that could serve one row is decided but
 not built (ADR 0026).
 
-The maintainer chose on 2026-09-21: give the website a serverless lookup by
-EIN now, and leave name search to the API later.
+The maintainer chose on 2026-09-21: give the website a lookup that works
+for every organization in the Unified BMF, keyed by EIN, with no server
+behind it. Only searching by organization *name* is left to the API later,
+because a name search needs a query engine, while an EIN lookup only needs
+to know which small file to fetch.
 
 ## Decision
 
 1. **New contracted artifact `bmf-ein-index`**, produced by nccs-data-bmf
-   from the geocoded Unified BMF at the end of every Unified build:
+   from the geocoded Unified BMF at the end of every Unified build. It is
+   the Unified BMF cut into small pieces ("shards"): each shard holds every
+   organization whose EIN starts with the same four digits, so the page can
+   fetch just the piece that could contain the EIN typed in. Layout:
    `s3://nccsdata/unified/bmf/ein-index/latest/{prefix}.json`, one file per
    four-digit EIN prefix (the first four digits of the nine-digit number).
    EINs cluster heavily by prefix: the first build (vintage 2026_09) gave

@@ -1,10 +1,13 @@
 name: bmf-ein-index
 status: deferred  # planned by ADR 0050 (2026-09-21); flips to active when the producer publishes
 description: >
-  Sharded JSON index of the Unified BMF, one small file per four-digit EIN
-  prefix, so a web page can look up one organization by EIN without a
-  server. Derived from the geocoded Unified BMF; identity, NTEE and status
-  columns only.
+  A copy of the Unified BMF cut into small pieces ("shards") so that a web
+  page can find one organization without downloading the whole file. Each
+  shard is a JSON file holding every organization whose EIN starts with the
+  same four digits (the shard's "prefix"); the page works out the prefix
+  from the EIN typed in and fetches that one file. Any organization in the
+  Unified BMF can be looked up this way. Identity, NTEE and status columns
+  only.
 
 producer:
   repo: UrbanInstitute/nccs-data-bmf
