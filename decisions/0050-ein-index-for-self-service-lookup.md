@@ -1,6 +1,6 @@
 # 0050 — EIN index: sharded JSON so the website can look up one organization without a server
 
-- **Status:** Proposed (2026-09-21)
+- **Status:** Executing (Accepted 2026-09-21 at merge of nccs-contracts #95; producer shipped nccs-data-bmf #58 and first publish 2026-09-21, vintage 2026_09, `v2026_09/` + `latest/`; website page nccs #107 pending)
 - **Date:** 2026-09-21
 - **Deciders:** sole maintainer
 - **Relates:** [[unified-bmf-geocoded]] (source), [[bmf-lookups]] and ADR 0049 (the website already reads bucket files in the browser; bucket CORS), ADR 0026 (API rewrite; the long-term home for richer queries), ADR 0014 (manifests), ADR 0016 (no code dependencies between repos), ADR 0036 (EIN forms)
