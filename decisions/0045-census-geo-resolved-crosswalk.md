@@ -1,6 +1,6 @@
 # 0045 — Census-Geo-Resolved Crosswalk (per-EIN tract/block assignment)
 
-- **Status:** Proposed
+- **Status:** Executing (built 2026-09-21, nccs-data-bmf #61; publish pending maintainer go)
 - **Date:** 2026-07-29
 - **Deciders:** sole maintainer
 - **Related:** [[0034]] (ntee-resolved; the per-EIN resolved-artifact pattern this copies), [[0041-legacy-street-recovery-address-resolved-crosswalk]] (address-resolved crosswalk; source of the spell grain a future extension would use), [[0016-no-canonical-cross-dataset-merge]] (geography stays a join, not master columns), [[0023]] (county-fips crosswalk precedent, CT planning-region handling), [[0042-vintage-retention-latest-convention]] (publish layout), [[0044-legacy-zip-leading-zero-restoration]] (Z1 rebuild this sequences behind)
