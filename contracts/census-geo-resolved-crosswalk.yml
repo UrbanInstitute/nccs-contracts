@@ -1,0 +1,101 @@
+name: census-geo-resolved-crosswalk
+status: deferred  # ADR 0045; flips to active at first publish
+description: >
+  Per-EIN census geography for the geocoded Unified BMF: the census block
+  the organization's address falls in (2020 and 2010 boundaries), its 2020
+  ZIP Code Tabulation Area and its congressional district. Tract, block
+  group, county and state are prefixes of the block GEOID and are derived
+  by the consumer. Address-level geocodes only; other rows carry NA. A
+  join layer keyed on ein, in the pattern of the NTEE-resolved crosswalk
+  (ADR 0016: geography stays a join, not master columns).
+  See [[0045-census-geo-resolved-crosswalk]].
+
+producer:
+  repo: UrbanInstitute/nccs-data-bmf
+  publish_path: R/publish_census_geo_resolved_crosswalk.R  # built by scripts/build_census_geo_resolved_crosswalk.R (sf + tigris point-in-polygon, state by state)
+
+format: parquet  # CSV mirror and data dictionary in latest/ only
+compression: zstd
+partitioned: false
+
+s3:
+  bucket: nccsdata
+  key_prefix: crosswalks/census-geo-resolved/
+  versioned_template: "crosswalks/census-geo-resolved/v{YYYY_MM}/census_geo_resolved_crosswalk.parquet"  # retained (ADR 0042)
+  latest_template: "crosswalks/census-geo-resolved/latest/census_geo_resolved_crosswalk.parquet"
+
+cadence:
+  type: on-change
+  notes: >
+    Rebuilt after each geocoded Unified BMF publish (new and re-geocoded
+    organizations) and when a boundary vintage is added or a Congress
+    changes. The manifest pins the TIGER/Line vintages used. Idempotent
+    upload via manifest sha256.
+
+manifest:
+  path: crosswalks/census-geo-resolved/latest/_manifest.json  # ADR 0014 shape; vintage = source Unified BMF vintage (YYYY_MM); inputs[] record the geocoded source, the county-fips crosswalk (gate only) and the TIGER vintages
+  schema_version: 2
+
+schema:
+  source: inline
+  columns:
+    - name: ein
+      type: string
+      description: XX-XXXXXXX, one row per EIN in the geocoded Unified BMF.
+      nullable: false
+    - name: ein_prefixed
+      type: string
+      description: ein-XX-XXXXXXX (ADR 0036).
+    - name: EIN2
+      type: string
+      description: EIN-XX-XXXXXXX (ADR 0036).
+    - name: block_geoid_2020
+      type: string
+      description: 15-digit block GEOID, 2020 boundaries. Tract = first 11, block group = first 12, county = first 5, state = first 2. NA unless address-level geocode.
+      nullable: true
+    - name: block_geoid_2010
+      type: string
+      description: 15-digit block GEOID, 2010 boundaries; same prefix rules.
+      nullable: true
+    - name: zcta_2020
+      type: string
+      description: 5-digit ZIP Code Tabulation Area, 2020 boundaries.
+      nullable: true
+    - name: congressional_district
+      type: string
+      description: 4-digit GEOID (state FIPS + district) for the Congress in congress_session.
+      nullable: true
+    - name: geo_addr_type
+      type: string
+      description: Geocoder precision tier; blocks assigned only for PointAddress, Subaddress, StreetAddress, StreetAddressExt, StreetInt.
+    - name: geo_score
+      type: number
+      description: Geocoder match confidence 0 to 100.
+    - name: org_addr_is_po_box
+      type: boolean
+      description: TRUE when the geocode is a post office, not the organization.
+    - name: tiger_year_2020
+      type: integer
+    - name: tiger_year_2010
+      type: integer
+    - name: congress_session
+      type: integer
+    - name: source_vintage
+      type: string
+      description: Vintage of the geocoded Unified BMF the coordinates came from.
+
+consumers: []  # candidates: nccsdata (join helper), sector-in-brief-api, nccs-data-requests
+
+drift_detection:
+  trigger: cron
+  schedule: "0 8 * * MON"
+  event: ""
+
+deprecation_window_days: 90
+
+notes: |
+  CBSA is deliberately not a column: derive the county FIPS from the block
+  GEOID and join [[cbsa-crosswalk]] (one authoritative county-to-CBSA
+  surface). Quality gate: the build stops if more than 1% of assigned
+  blocks sit in a different county than the geocoder named; disagreements
+  are written to an audit CSV next to the local build.
