@@ -27,9 +27,10 @@ the Z18 decision). Two gaps keep it from replacing the website's file:
    maintainer). `Z99` is also UNDEFINED and stays so.
 2. **It has no long description.** The website table shows a paragraph
    per code (NODC's `definition` column, up to 736 characters). NODC
-   has a paragraph for 631 of the 655 codes in the sheet; the 24 codes
+   has a paragraph for 640 of the 655 codes in the sheet; 15 of the codes
    the IRS added in 2021 have none (the NODC table holds the word
-   `NULL` there), so those stay blank until someone writes the text.
+   `NULL` there: E6A, K2A-K2C, K6A-K6F, L4A, L4B, N2A, N2B, P7A), so
+   those stay blank until someone writes the text.
 
 Keeping two copies (producer sheet and website CSV) is the kind of drift
 Z18 was about: the website list went stale for five years because nothing
@@ -41,7 +42,7 @@ tied it to the pipeline's list.
    text, NODC wording, vendored into the `ntee_code` sheet of
    `data/lookup/bmf_code_lookup.xlsx`). Additive: no column is renamed,
    removed, or reordered ahead of it; row count unchanged. Blank for the
-   24 codes without NODC text. The ADR 0033 deprecation window does not
+   15 codes without NODC text. The ADR 0033 deprecation window does not
    apply.
 2. **The 17 UNDEFINED NAICS values are filled** with the NAICS 2022 codes
    from the website's `naics_for_newer_irs_codes.csv` (nccs #101). Their
