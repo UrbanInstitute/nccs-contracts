@@ -1,6 +1,6 @@
 # 0045 — Census-Geo-Resolved Crosswalk (per-EIN tract/block assignment)
 
-- **Status:** Executing (built 2026-09-21, nccs-data-bmf #61; publish pending maintainer go)
+- **Status:** Reconciled (2026-09-21). Built and published the same day (nccs-data-bmf #61; contract nccs-contracts #102, active).
 - **Date:** 2026-07-29
 - **Deciders:** sole maintainer
 - **Related:** [[0034]] (ntee-resolved; the per-EIN resolved-artifact pattern this copies), [[0041-legacy-street-recovery-address-resolved-crosswalk]] (address-resolved crosswalk; source of the spell grain a future extension would use), [[0016-no-canonical-cross-dataset-merge]] (geography stays a join, not master columns), [[0023]] (county-fips crosswalk precedent, CT planning-region handling), [[0042-vintage-retention-latest-convention]] (publish layout), [[0044-legacy-zip-leading-zero-restoration]] (Z1 rebuild this sequences behind)
@@ -95,7 +95,36 @@ contract-guarded change.
   org: both are documented consumer caveats, not fixable here.
 - TIGER/Line vintage used for each boundary set is pinned in the manifest.
 
-## Outcome
+## Outcome (2026-09-21)
 
-_To be filled at reconcile: artifact path, row/coverage counts by match
-tier, county-consistency gate results, contract YAML population._
+**Artifact:** `s3://nccsdata/crosswalks/census-geo-resolved/v2026_09/` (parquet,
+retained) and `latest/` (parquet, CSV, data dictionary), ADR 0014 manifests
+pinning TIGER/Line 2020 and 2010 blocks, ZCTA 2020, congressional districts
+from TIGER 2024 (119th Congress). Contract `census-geo-resolved-crosswalk.yml`
+active. Built by `scripts/build_census_geo_resolved_crosswalk.R` on a laptop
+(45 minutes cold, 11 minutes with TIGER cached); no EC2 was needed.
+
+**Coverage, source vintage 2026_09:** 3,698,197 rows (one per EIN);
+3,077,405 geocoded; 2,420,990 address-level (PointAddress, Subaddress,
+StreetAddress, StreetAddressExt, StreetInt) and eligible for a block;
+2,420,942 with a 2020 block, 2,420,937 with a 2010 block, 2,420,917 with a
+ZCTA, 2,420,990 with a district. The 48 eligible points without a block lie
+outside every polygon (shoreline, water). The 656,415 ZIP-centroid, street,
+place and point-of-interest matches carry NA by the §3 gate.
+
+**County-consistency gate (§4):** 707 disagreements in 2,392,335 comparable
+rows, 0.03% against a 1% limit; written to an audit CSV. The gate is
+implemented as a hard stop above the limit.
+
+**Decisions taken at build time:** the tier cut above; `geo_match_addr`
+(the geocoder's matched address) added as a column at the maintainer's
+request so consumers can see what the coordinates stand for; the shared
+crosswalk publisher now checks every upload before writing a manifest.
+
+**Incident during the day:** a two-state trial file was published first by
+mistake (the corrective rebuild had died after the script was edited while
+running); it was replaced by the national build about two hours later,
+before the contract was made active and before any consumer read the path.
+
+**Next:** Z15, tract identifiers on the address-history spells (a new ADR),
+now unblocked.

@@ -1,5 +1,5 @@
 name: census-geo-resolved-crosswalk
-status: deferred  # ADR 0045; flips to active at first publish
+# status: active (first publish 2026-09-21, vintage 2026_09: 3,698,197 rows, 2,420,942 with a 2020 block)
 description: >
   Per-EIN census geography for the geocoded Unified BMF: the census block
   the organization's address falls in (2020 and 2010 boundaries), its 2020
