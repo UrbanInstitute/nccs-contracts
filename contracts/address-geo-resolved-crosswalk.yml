@@ -4,8 +4,8 @@ name: address-geo-resolved-crosswalk
 status: deferred
 description: >
   Census geography for every address in the address history. One row per
-  (EIN, address spell), the same rows as the address-resolved crosswalk of
-  the same month (joined on spell_id), carrying the census block the address falls in (2020 and
+  (EIN, address spell), the same rows as the address-resolved crosswalk it
+  was built from (joined on spell_id), carrying the census block the address falls in (2020 and
   2010 boundaries), its 2020 ZIP Code Tabulation Area, its congressional
   district and the coordinates. Tract, block group, county and state are
   prefixes of the block GEOID and are derived by the consumer. Address-level
@@ -28,11 +28,14 @@ s3:
   latest_template: "crosswalks/address-geo-resolved/latest/address_geo_resolved_crosswalk.parquet"
 
 cadence:
-  type: monthly
+  type: on-change
   notes: >
-    Rebuilt and published together with the address-resolved crosswalk,
-    from the same month's file. After the first round only addresses never
-    seen before are sent to the geocoder.
+    Rebuilt after a geocoded Unified BMF publish that adds newly geocoded
+    addresses, about once a quarter, not every month: the address history
+    gains only a few thousand new spells a month and the file is 11 million
+    rows. Between rebuilds, new spells in the address history go unmatched
+    on spell_id, never mismatched. Each rebuild is from the address-resolved
+    file current at that time, whose sha256 the manifest records.
 
 manifest:
   path: crosswalks/address-geo-resolved/latest/_manifest.json  # ADR 0014 shape; inputs[] record the address-resolved crosswalk (sha256), the census-geo-resolved crosswalk, the TIGER vintages and the Congress number
@@ -110,9 +113,9 @@ deprecation_window_days: 90
 
 notes: |
   Join to [[address-resolved-crosswalk]] on spell_id. spell_rank is not
-  carried here because it is renumbered between months. For reproducible
-  work pin both tables to the same v{YYYY_MM}/ folder; across months a
-  spell missing from one file goes unmatched, never mismatched.
+  carried here because it is renumbered between builds. For reproducible
+  work pin both tables to the folders named in this manifest; across builds
+  a spell missing from one file goes unmatched, never mismatched.
   Current-address rows are copied from [[census-geo-resolved-crosswalk]]
   and checked equal at build.
   The geocoder places past addresses on today's street network. ZIP-level

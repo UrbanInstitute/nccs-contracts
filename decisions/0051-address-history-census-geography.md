@@ -45,12 +45,12 @@ The maintainer decided two things on 2026-09-30:
 
 **1. New published table: `crosswalks/address-geo-resolved/`**, produced by
 `nccs-data-bmf`. It is published the usual way (ADR 0042): a permanent
-folder for each month, `v{YYYY_MM}/`, and a `latest/` copy, with a manifest
+folder for each build, `v{YYYY_MM}/`, and a `latest/` copy, with a manifest
 (ADR 0014), a CSV copy, a data dictionary and a 10,000-row sample file for
 reviewers.
 
 **2. One row per spell, every spell.** The table has exactly the same rows as
-the address-resolved crosswalk of the same month, including each
+the address-resolved crosswalk it was built from, including each
 organization's current address. A user joins the two tables and gets the
 full address history with geography in one step. Spells that could not be
 placed are present with empty geography columns, so a missing row never has
@@ -164,8 +164,12 @@ already written for ADR 0045, run on a laptop.
 ## Consequences
 
 - Tract history becomes one join for any user of the address history.
-- The table is rebuilt every month with the address history. After the first
-  round the monthly geocoding load is small.
+- The table is rebuilt about once a quarter, after a geocoded Unified BMF
+  publish that adds newly geocoded addresses, not every month (review
+  2026-09-30: monthly was too frequent for an 11 million row file that
+  gains a few thousand spells a month). Between rebuilds, new spells in the
+  address history go unmatched on `spell_id`, never mismatched. After the
+  first round each rebuild sends only addresses never seen before.
 - The first round puts about 2.98 million addresses through the shared
   geocoder, roughly one ordinary cycle. It must not overlap with the monthly
   Unified BMF geocoding.
@@ -221,3 +225,4 @@ Changed after review of the first draft, before merge:
 - Status is `Accepted`, not "Proposed until merged", since the file's
   status line does not change by itself at merge.
 - Section 4 defines the columns directly and no longer leans on Z30.
+- Cadence changed from monthly to about quarterly (maintainer review).
