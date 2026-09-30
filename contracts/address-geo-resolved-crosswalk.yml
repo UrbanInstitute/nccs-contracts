@@ -1,0 +1,123 @@
+name: address-geo-resolved-crosswalk
+# Decided in ADR 0051 (2026-09-30), not yet published. Columns and paths
+# below are the decided shape; row counts are filled in at first publish.
+status: deferred
+description: >
+  Census geography for every address in the address history. One row per
+  (EIN, address spell), the same rows as the address-resolved crosswalk it
+  was built from (joined on spell_id), carrying the census block the address falls in (2020 and
+  2010 boundaries), its 2020 ZIP Code Tabulation Area, its congressional
+  district and the coordinates. Tract, block group, county and state are
+  prefixes of the block GEOID and are derived by the consumer. Address-level
+  geocodes only receive a block. Spells with no street (first seen before
+  2009) are listed with empty geography. A join layer beside the address
+  history (ADR 0016). See [[0051-address-history-census-geography]].
+
+producer:
+  repo: UrbanInstitute/nccs-data-bmf
+  publish_path: TBD  # set at first publish; reuses R/publish_crosswalk.R and the ADR 0045 point-in-polygon code
+
+format: parquet  # CSV copy, data dictionary and a 10,000-row sample in latest/
+compression: zstd
+partitioned: false
+
+s3:
+  bucket: nccsdata
+  key_prefix: crosswalks/address-geo-resolved/
+  versioned_template: "crosswalks/address-geo-resolved/v{YYYY_MM}/address_geo_resolved_crosswalk.parquet"  # retained (ADR 0042)
+  latest_template: "crosswalks/address-geo-resolved/latest/address_geo_resolved_crosswalk.parquet"
+
+cadence:
+  type: on-change
+  notes: >
+    Rebuilt after a geocoded Unified BMF publish that adds newly geocoded
+    addresses, about once a quarter, not every month: the address history
+    gains only a few thousand new spells a month and the file is 11 million
+    rows. Between rebuilds, new spells in the address history go unmatched
+    on spell_id, never mismatched. Each rebuild is from the address-resolved
+    file current at that time, whose sha256 the manifest records.
+
+manifest:
+  path: crosswalks/address-geo-resolved/latest/_manifest.json  # ADR 0014 shape; inputs[] record the address-resolved crosswalk (sha256), the census-geo-resolved crosswalk, the TIGER vintages and the Congress number
+  schema_version: 2
+
+schema:
+  source: inline
+  columns:
+    - name: spell_id
+      type: string
+      description: Join key. 16 hexadecimal characters, the start of the SHA-256 of EIN2, street, city, state and zip5 joined with "|" (missing value = empty string). The same value is published as spell_id in the address-resolved crosswalk and does not change from month to month.
+      nullable: false
+    - name: EIN2
+      type: string
+      description: EIN-XX-XXXXXXX (ADR 0036).
+      nullable: false
+    - name: ein
+      type: string
+      description: XX-XXXXXXX.
+      nullable: false
+    - name: ein_prefixed
+      type: string
+      description: ein-XX-XXXXXXX (ADR 0036).
+    - name: block_geoid_2020
+      type: string
+      description: 15-digit block GEOID, 2020 boundaries. Tract = first 11, block group = first 12, county = first 5, state = first 2. Empty unless address-level geocode.
+      nullable: true
+    - name: block_geoid_2010
+      type: string
+      description: 15-digit block GEOID, 2010 boundaries; same prefix rules.
+      nullable: true
+    - name: zcta_2020
+      type: string
+      description: 5-digit ZIP Code Tabulation Area, 2020 boundaries.
+      nullable: true
+    - name: congressional_district_119
+      type: string
+      description: 4-digit GEOID (state FIPS + district), 119th Congress.
+      nullable: true
+    - name: latitude
+      type: number
+      nullable: true
+    - name: longitude
+      type: number
+      nullable: true
+    - name: geo_match_level
+      type: string
+      description: address, po_box, zip, city, other, no_match (sent to the geocoder, no match or error), or not_geocoded (spell has no street, not sent). Only address rows carry a block, ZCTA and district.
+      nullable: false
+    - name: geo_addr_type
+      type: string
+      description: Geocoder precision tier; blocks assigned only for PointAddress, Subaddress, StreetAddress, StreetAddressExt, StreetInt.
+      nullable: true
+    - name: geo_score
+      type: number
+      description: Geocoder match confidence 0 to 100.
+      nullable: true
+    - name: geo_match_addr
+      type: string
+      description: The address the geocoder matched, so users can see what the coordinates stand for.
+      nullable: true
+    - name: org_addr_is_po_box
+      type: boolean
+      description: TRUE when the geocode is a post office, not the organization.
+      nullable: true
+
+consumers: []  # requested by an external doctoral researcher (tract history for New York organizations); candidates: nccsdata (join helper), nccs catalog
+
+drift_detection:
+  trigger: event
+  schedule: ""
+  event: "publish-crosswalks"
+
+deprecation_window_days: 90
+
+notes: |
+  Join to [[address-resolved-crosswalk]] on spell_id. spell_rank is not
+  carried here because it is renumbered between builds. For reproducible
+  work pin both tables to the folders named in this manifest; across builds
+  a spell missing from one file goes unmatched, never mismatched.
+  Current-address rows are copied from [[census-geo-resolved-crosswalk]]
+  and checked equal at build.
+  The geocoder places past addresses on today's street network. ZIP-level
+  placement for spells with no street is deferred (needs a ZIP-to-ZCTA
+  lookup).
