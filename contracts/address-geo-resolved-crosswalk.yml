@@ -1,9 +1,11 @@
 name: address-geo-resolved-crosswalk
-# status: planned (ADR 0051, Proposed 2026-09-30). Not yet published. Columns and paths below are the decided shape; row counts are filled in at first publish.
+# Decided in ADR 0051 (2026-09-30), not yet published. Columns and paths
+# below are the decided shape; row counts are filled in at first publish.
+status: deferred
 description: >
   Census geography for every address in the address history. One row per
   (EIN, address spell), the same rows as the address-resolved crosswalk of
-  the same month, carrying the census block the address falls in (2020 and
+  the same month (joined on spell_id), carrying the census block the address falls in (2020 and
   2010 boundaries), its 2020 ZIP Code Tabulation Area, its congressional
   district and the coordinates. Tract, block group, county and state are
   prefixes of the block GEOID and are derived by the consumer. Address-level
@@ -39,9 +41,13 @@ manifest:
 schema:
   source: inline
   columns:
+    - name: spell_id
+      type: string
+      description: Join key. 16 hexadecimal characters, the start of the SHA-256 of EIN2, street, city, state and zip5 joined with "|" (missing value = empty string). The same value is published as spell_id in the address-resolved crosswalk and does not change from month to month.
+      nullable: false
     - name: EIN2
       type: string
-      description: EIN-XX-XXXXXXX (ADR 0036). Join key, with spell_rank.
+      description: EIN-XX-XXXXXXX (ADR 0036).
       nullable: false
     - name: ein
       type: string
@@ -50,10 +56,6 @@ schema:
     - name: ein_prefixed
       type: string
       description: ein-XX-XXXXXXX (ADR 0036).
-    - name: spell_rank
-      type: integer
-      description: 0 = most recent address. Matches spell_rank in the address-resolved crosswalk OF THE SAME MONTH ONLY; ranks are renumbered when an organization gains an address.
-      nullable: false
     - name: block_geoid_2020
       type: string
       description: 15-digit block GEOID, 2020 boundaries. Tract = first 11, block group = first 12, county = first 5, state = first 2. Empty unless address-level geocode.
@@ -78,7 +80,7 @@ schema:
       nullable: true
     - name: geo_match_level
       type: string
-      description: address, po_box, zip, city, or not_geocoded (spell has no street).
+      description: address, po_box, zip, city, other, no_match (sent to the geocoder, no match or error), or not_geocoded (spell has no street, not sent). Only address rows carry a block, ZCTA and district.
       nullable: false
     - name: geo_addr_type
       type: string
@@ -107,9 +109,12 @@ drift_detection:
 deprecation_window_days: 90
 
 notes: |
-  Join to [[address-resolved-crosswalk]] on (EIN2, spell_rank), latest/ to
-  latest/ or one v{YYYY_MM}/ folder to the same folder. Rank-0 rows are
-  copied from [[census-geo-resolved-crosswalk]] and checked equal at build.
+  Join to [[address-resolved-crosswalk]] on spell_id. spell_rank is not
+  carried here because it is renumbered between months. For reproducible
+  work pin both tables to the same v{YYYY_MM}/ folder; across months a
+  spell missing from one file goes unmatched, never mismatched.
+  Current-address rows are copied from [[census-geo-resolved-crosswalk]]
+  and checked equal at build.
   The geocoder places past addresses on today's street network. ZIP-level
   placement for spells with no street is deferred (needs a ZIP-to-ZCTA
   lookup).

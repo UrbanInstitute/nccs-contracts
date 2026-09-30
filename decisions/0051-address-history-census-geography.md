@@ -1,6 +1,6 @@
 # 0051: Census geography for the address history (a companion table to the address-resolved crosswalk)
 
-- **Status:** Proposed (2026-09-30). Becomes Accepted when this pull request is merged.
+- **Status:** Accepted (2026-09-30). The maintainer made the scope and shape decisions on this date; merging nccs-contracts #105 authorizes the work in `nccs-data-bmf`.
 - **Date:** 2026-09-30
 - **Deciders:** sole maintainer
 - **Related:** [[0045-census-geo-resolved-crosswalk]] (census geography for each organization's current address; its section 5 deferred this work), [[0041-legacy-street-recovery-address-resolved-crosswalk]] (the address history this table sits beside), [[0016-no-canonical-cross-dataset-merge]] (geography stays a join), [[0042-vintage-retention-latest-convention]] (publish layout), [[0036]] (EIN forms), [[0014]] (manifests), backlog rows Z15 (this work), Z30 (column revisions to the census crosswalk after Jesse Lecy's review)
@@ -9,9 +9,9 @@
 
 The address-resolved crosswalk (ADR 0041) lists every mailing address an
 organization has had in the Business Master File since 1989. Each row is one
-"spell": one stretch of time during which an organization was listed at one
-address. `spell_rank` 0 is the most recent address; higher ranks are earlier
-ones.
+"spell": one distinct address for one organization, with the first and last
+month it was seen. `spell_rank` 0 is the most recent address; higher ranks
+are earlier ones.
 
 The census-geo-resolved crosswalk (ADR 0045) gives the census block, ZIP Code
 Tabulation Area and congressional district for each organization's current
@@ -38,8 +38,8 @@ The maintainer decided two things on 2026-09-30:
 
 1. **Scope:** geocode every earlier address that has a street. ZIP-level
    placement for the spells with no street is left for a later round.
-2. **Shape:** a separate companion table, not new columns on the address
-   history.
+2. **Shape:** a separate companion table, not geography columns on the
+   address history.
 
 ## Decision
 
@@ -50,45 +50,86 @@ folder for each month, `v{YYYY_MM}/`, and a `latest/` copy, with a manifest
 reviewers.
 
 **2. One row per spell, every spell.** The table has exactly the same rows as
-the address-resolved crosswalk of the same month, identified by
-(`EIN2`, `spell_rank`), including rank 0. A user joins the two tables on
-those two columns and gets the full address history with geography in one
-step. Spells that could not be placed are present with empty geography
-columns, so a missing row never has to be interpreted.
+the address-resolved crosswalk of the same month, including each
+organization's current address. A user joins the two tables and gets the
+full address history with geography in one step. Spells that could not be
+placed are present with empty geography columns, so a missing row never has
+to be interpreted.
 
-**3. The two tables must be from the same month.** `spell_rank` is renumbered
-whenever an organization gains a new address, so rank 2 in one month may be
-rank 3 in the next. The companion table is therefore always built from, and
-published together with, the address-resolved crosswalk of the same month,
-and its manifest records that file's checksum. The dictionary says plainly:
-join `latest/` to `latest/`, or one `v{YYYY_MM}/` folder to the same
-`v{YYYY_MM}/` folder, never across months.
+**3. A stable identifier for each spell, `spell_id`, in both tables.**
+`spell_rank` cannot be the join key. It is renumbered whenever an
+organization gains a new address, so rank 2 in one month may be rank 3 in
+the next, and a join on rank between files from different months would
+match the wrong addresses without any error. Publication to S3 is not
+atomic, so even a reader who takes both `latest/` files can receive one
+from before a monthly update and one from after.
 
-**4. Columns.** Names follow the revisions agreed for the census crosswalk
-after review (backlog Z30): every geography column carries its boundary year
-or Congress number in its name, and values that are the same on every row
-live in the manifest, not in a column.
+A spell is one organization at one address, and that pair does not change
+from month to month. So:
 
-- `EIN2`, `ein`, `ein_prefixed` (ADR 0036), `spell_rank`.
-- `block_geoid_2020`, `block_geoid_2010`: the 15-digit census block under
-  each set of boundaries. Tract, block group, county and state are the
-  leading digits, as in ADR 0045.
-- `zcta_2020`, `congressional_district_119`.
-- `latitude`, `longitude`.
-- `geo_match_level`: `address`, `po_box`, `zip`, `city`, or
-  `not_geocoded` for spells with no street.
-- `geo_addr_type`, `geo_score`, `geo_match_addr`, `org_addr_is_po_box`:
-  carried from the geocoder so users can filter on quality.
+- `spell_id` is the first 16 hexadecimal characters of the SHA-256 of
+  `EIN2`, street, city, state and 5-digit ZIP, in their normalized
+  published form, joined with `|`, with a missing value written as an empty
+  string. The build checks that it is unique.
+- The companion table is keyed on `spell_id`. It does not carry
+  `spell_rank`, so the unsafe join is not available.
+- **The address-resolved crosswalk gains one added column, `spell_id`.**
+  This is the only change to an existing table. It is additive: no column
+  is renamed or removed and no row changes, so no current reader is
+  affected. Its contract is updated when the column is first published.
 
-**5. Same placement rule as ADR 0045.** Only address-level geocodes receive a
-block. ZIP-centre and city-level matches keep their coordinates and their
+With this key, joining files from different months cannot produce a wrong
+match. The only effect is that a spell present in one file and not yet in
+the other goes unmatched. For reproducible work, users should still pin
+both tables to the same `v{YYYY_MM}/` folder. The manifest records the
+checksum of the address-resolved file the table was built from, for anyone
+who wants to verify the pairing.
+
+**4. Columns.** This section defines the columns on its own terms. It does
+not depend on the Z30 revisions to the census crosswalk, which are not yet
+decided. The names chosen here match what Z30 proposes (boundary year or
+Congress number in the name; values that are the same on every row live in
+the manifest), so the two tables agree if Z30 is adopted as written.
+
+| Column | Source |
+|---|---|
+| `spell_id` | Section 3. |
+| `EIN2`, `ein`, `ein_prefixed` | From the address history (ADR 0036). |
+| `block_geoid_2020`, `block_geoid_2010` | Point-in-polygon against TIGER/Line blocks, the ADR 0045 code. Tract, block group, county and state are the leading digits. |
+| `zcta_2020` | Point-in-polygon, 2020 ZIP Code Tabulation Areas. |
+| `congressional_district_119` | Point-in-polygon, districts of the 119th Congress. The same values the census crosswalk publishes today under the name `congressional_district`. |
+| `latitude`, `longitude` | The geocoder's returned coordinates. |
+| `geo_match_level` | Derived from the geocoder's result, see below. Never empty. |
+| `geo_addr_type`, `geo_score`, `geo_match_addr`, `org_addr_is_po_box` | Carried from the geocoder so users can filter on quality. |
+
+`geo_match_level` takes one of these values:
+
+- `address`: the geocoder matched a specific address (tiers PointAddress,
+  Subaddress, StreetAddress, StreetAddressExt, StreetInt, the ADR 0045 cut).
+- `po_box`: the match is a post office box.
+- `zip`: matched to a ZIP code centre only.
+- `city`: matched to a city or place only.
+- `other`: any other result, such as a street name without a number or a
+  point of interest.
+- `no_match`: the address was sent to the geocoder and came back with no
+  match or an error.
+- `not_geocoded`: the spell has no street and was not sent.
+
+The geocoder tiers that fall under `zip`, `city` and `other` are fixed at
+build time and listed in the dictionary.
+
+**5. Same placement rule as ADR 0045.** Only `address` rows receive a block,
+ZCTA and district. Other matched rows keep their coordinates and their
 `geo_match_level` but carry no block, because a wrong block that looks
-plausible is worse than a missing one.
+plausible is worse than a missing one. `no_match` and `not_geocoded` rows
+have every geography column empty.
 
-**6. Rank 0 is copied, not recomputed.** For current addresses the geography
-comes from the census-geo-resolved crosswalk of the same month (operating
-rule 6: read what is already published). A check in the build compares the
-two and stops on any difference.
+**6. Current addresses are copied, not recomputed.** For each organization's
+current address the geography comes from the census-geo-resolved crosswalk
+(operating rule 6: read what is already published). The build compares
+`block_geoid_2020`, `block_geoid_2010`, `zcta_2020` and the district
+(`congressional_district` there, `congressional_district_119` here) and
+stops on any difference.
 
 **7. Geocoding.** Earlier addresses are reduced to distinct
 (street, city, state, 5-digit ZIP) combinations before anything is sent, so
@@ -113,10 +154,12 @@ already written for ADR 0045, run on a laptop.
 
 ## Contract impact
 
-Additive. A new contract file, `contracts/address-geo-resolved-crosswalk.yml`,
-is added with this decision as `planned` and made `active` at first publish.
-The address-resolved crosswalk and the census-geo-resolved crosswalk do not
-change. No consumer is affected.
+- A new contract file, `contracts/address-geo-resolved-crosswalk.yml`, is
+  added with `status: deferred` (the template's state for a table that is
+  decided but not yet published) and made active at first publish.
+- `contracts/address-resolved-crosswalk.yml` gains the `spell_id` column
+  when it is first published. Additive; no reader is affected.
+- The census-geo-resolved crosswalk does not change.
 
 ## Consequences
 
@@ -130,18 +173,17 @@ change. No consumer is affected.
   files. Earlier spells are listed but not placed.
 - Post office boxes locate the post office, not the organization, and are
   flagged, as in ADR 0045.
-- A user who joins across different months gets wrong matches without any
-  error. The same-month rule in section 3, the manifest checksum and the
-  dictionary are the protection against this.
+- The address history grows by one 16-character column on about 11 million
+  rows.
 
 ## Execution
 
 | Step | Repo | Work |
 |---|---|---|
-| 1 | nccs-contracts | This decision, the planned contract, backlog row Z15. |
-| 2 | nccs-data-bmf | Reduce earlier spells to distinct addresses; separate those already geocoded; submit the rest under a new run identifier; keep the geocoded-address working file. |
-| 3 | nccs-data-bmf | Assign blocks, ZCTA and district with the ADR 0045 code; assemble one row per spell; copy rank 0 from the census crosswalk; run the checks below; publish with dictionary, CSV and sample. Breadcrumb `ADR 0051`. |
-| 4 | nccs-contracts | Contract to `active`, Outcome section, release note in `governance/release-notes/`. |
+| 1 | nccs-contracts | This decision, the deferred contract, backlog row Z15. |
+| 2 | nccs-data-bmf | Add `spell_id` to the address history build and its checks. Reduce earlier spells to distinct addresses; separate those already geocoded; submit the rest under a new run identifier; keep the geocoded-address working file. |
+| 3 | nccs-data-bmf | Assign blocks, ZCTA and district with the ADR 0045 code; assemble one row per spell; copy current addresses from the census crosswalk; run the checks below; publish both tables with dictionary, CSV and sample. Breadcrumb `ADR 0051`. |
+| 4 | nccs-contracts | New contract to active; `spell_id` added to the address-resolved contract; Outcome section; release note in `governance/release-notes/`. |
 | 5 | nccs | Catalog row and a short join example on the BMF page. |
 | 6 | maintainer | Tell the requesting researcher it is available. |
 
@@ -149,16 +191,33 @@ change. No consumer is affected.
 
 The build stops before publishing unless all of these hold:
 
-- The row count equals the row count of the address-resolved crosswalk of
-  the same month, and (`EIN2`, `spell_rank`) is unique and matches that
-  table exactly.
-- Every rank-0 row carries the same blocks, ZCTA and district as the
-  census-geo-resolved crosswalk of the same month.
-- Every spell with no street has `geo_match_level = not_geocoded` and empty
-  geography.
+- `spell_id` is unique in both tables, and the set of `spell_id` values in
+  the companion table is exactly the set in the address-resolved crosswalk
+  it was built from.
+- Every current-address row carries the same blocks, ZCTA and district as
+  the census-geo-resolved crosswalk.
+- `geo_match_level` is never empty. Every spell with no street is
+  `not_geocoded`; every spell with a street is one of the other six values.
+- Every `no_match` and `not_geocoded` row has empty geography, and only
+  `address` rows have a block.
 - The state in the first two digits of each assigned block agrees with the
   spell's state for at least 99 percent of placed rows; disagreements are
   written to an audit file.
 - Every distinct address submitted to the geocoder is accounted for in the
   progress record as returned or as failed, with none missing.
 - Building twice from the same inputs gives identical files.
+
+## Review changes (2026-09-30)
+
+Changed after review of the first draft, before merge:
+
+- The join key is a stable `spell_id` in both tables, not `spell_rank`. The
+  draft told users to join `latest/` to `latest/`, which is not safe because
+  the two files are not published in one atomic step.
+- `geo_match_level` gained `no_match` (sent and not matched) and `other`.
+  The draft had no value for a street address the geocoder could not place.
+- The contract file carries `status: deferred`. The draft wrote the status
+  as a comment, which the template reads as active.
+- Status is `Accepted`, not "Proposed until merged", since the file's
+  status line does not change by itself at merge.
+- Section 4 defines the columns directly and no longer leans on Z30.
