@@ -36,7 +36,7 @@ ADR_RE='ADR[ -]?[0-9]{3,4}'
 paths_regex_for() {
   case "$1" in
     nccs-data-bmf)
-      echo '^(R/publish_.*\.R|R/run_.*\.R|R/master_.*\.R|R/config\.R|R/manifest\.R|scripts/build_.*\.R)$' ;;
+      echo '^(R/publish_.*\.R|R/run_.*\.R|R/master_.*\.R|R/unified_.*\.R|R/config\.R|R/manifest\.R|scripts/build_.*\.R)$' ;;
     sector-in-brief-data)
       echo '^(R/publish\.R|R/config\.R|R/manifest\.R|R/build_.*\.R|R/data_dictionary_curation\.R|R/panel_.*\.R|R/read_.*\.R|config\.yml)$' ;;
     *)
