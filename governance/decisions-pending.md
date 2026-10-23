@@ -23,6 +23,19 @@ Deferred by the committee (2026-08-12), queued for future meetings:
    "NCCS-verified").
 6. **SOI-harmonization concordance direction** — producer intent
    question outstanding (relates to decision record 0046).
+7. **Immutability of announced NODC e-file releases** (added
+   2026-10-23 from the efile_v3_1 review). Case: all 1,792 `efile_v2_2`
+   CSV files were rewritten in place on 2026-09-23, six weeks after the
+   release was announced; 254 tables changed size, and the file named as
+   the v2_2 count sheet is the v2_1 sheet. The August files survive only
+   because S3 versioning is on. Proposed rule, for the producer's
+   agreement: an announced release is immutable at its prefix;
+   corrections go to a new prefix with its own count sheet and release
+   note; noncurrent versions are retained. Wording in
+   `contracts/efile-nodc-panels.yml` under "guarantees needing the
+   producer's agreement". Raise with the producer together with the
+   other review items (log in the review record), then bring to the
+   committee.
 
 ## Recorded for the September 2026 meeting (no decision needed)
 
@@ -34,6 +47,14 @@ Registry additions made 2026-09-16 under "register, don't ask"
   (copies of our BMF files, a SAM extract, training pairs; 10 files,
   6.2 GB). Owner NODC; NCCS hosts it and will give 90 days' notice
   before touching it.
+- **`efile-nodc-panels`** (added 2026-10-23) — the per-table CSV and
+  parquet releases under `s3://nccs-efile/public/efile*_v*/` built by
+  NODC's ef2 package and catalogued on the NCCS website; the charter's
+  "E-file panels (v2_x; NODC-produced, NCCS-distributed)" entry, which
+  the 2026-08-12 meeting agreed to register and which had not been.
+  Owner NODC; NCCS hosts and catalogs. The file separates observed
+  practice from guarantees that still need the producer's agreement
+  (pending decision 7).
 - **`efile-duckdb-archives`** — the per-year DuckDB files under
   `s3://nccs-efile/duckdb/` built by NODC's ef2 package (three
   versions, about 800 GB in total). Owner NODC; NCCS hosts them.

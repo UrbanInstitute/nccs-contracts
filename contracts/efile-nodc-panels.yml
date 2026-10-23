@@ -1,0 +1,158 @@
+# Recorded 2026-10-23 from the efile_v3_1 review (nccs-workspace/reviews/
+# 2026-10-21-efile-audit). This file describes the per-table CSV and parquet
+# releases that the Nonprofit Open Data Collective (NODC, Jesse Lecy)
+# publishes into the nccs-efile bucket from its ef2 package. These are the
+# "E-file panels (v2_x; NODC-produced, NCCS-distributed)" the charter lists
+# as a separate registry entry (charter, Included datasets, 2026-08-12).
+# NCCS did not design the build and does not run it. Like the DuckDB
+# archives (contract efile-duckdb-archives), these are an NODC product that
+# NCCS hosts and catalogs. Written from direct listings of the bucket and
+# the producer's count sheets; every number below was checked against the
+# files on 2026-10-21 to 2026-10-23.
+#
+# Two kinds of statement are kept apart in this file: OBSERVED PRACTICE
+# (what the producer has done so far) and GUARANTEES (what the producer
+# would have to agree to). Nothing under "guarantees needing agreement" is
+# in force until the producer confirms it.
+
+name: efile-nodc-panels
+description: >
+  One CSV and one parquet file per table and tax year (2009 to 2025) of
+  parsed Form 990, 990-EZ and 990-PF e-file data produced by NODC's ef2
+  package and labelled with NODC's concordance990. Several releases sit
+  side by side under their own prefixes. The NCCS website catalogs them.
+  Owner: NODC. Hosted and catalogued by NCCS. Not an NCCS product: NCCS
+  does not build or validate these files.
+
+producer:
+  repo: Nonprofit-Open-Data-Collective/ef2
+  publish_path: v31_publish.sh  # producer's own publish script for v3_1 (ef2 repository)
+  interim_note: >
+    NODC is the producer and owner. NCCS hosts and catalogs the files.
+    The producer keeps a defect register at ef2 dev/UPSTREAM-ISSUES.md.
+    Bringing the process in-house is tracked as backlog Z23 (DuckDB
+    archives); the same decision would cover these files.
+
+format: csv  # every table-year is published twice: CSV and parquet (same rows)
+partitioned: true  # one file per table and tax year
+
+s3:
+  bucket: nccs-efile
+  key_prefix: public/
+  versioned_template: "public/efile{pf}_v{major}_{minor}/{TABLE}-{YEAR}.{CSV|parquet}"
+  # Releases present 2026-10-23 (form; status on the NCCS catalog; published;
+  # tables x years with data; filings in the header table):
+  #   parsed/                 990     Archived   2023-03-21   (v1, older layout)
+  #   public/efile_v2_0/      990     Archived   2025-03-22
+  #   public/efile_v2_1/      990     Archived   2025-10-28   5,675,704 filings
+  #   public/efile_v2_2/      990     Interim    2026-08-11   112 tables, 1,792 table-years, 5,675,704 filings per its count sheet (see notes)
+  #   public/efile_v2_3/      990     Interim    2026-10-07   5,981,036 filings (never announced)
+  #   public/efile_v3_1/      990     Current    2026-10-09   136 tables, 2,312 table-years (186 empty), 6,307,836 filings
+  #   public/efilepf_v2_3/    990-PF  Interim    2026-10-07   84 tables (no count sheet)
+  #   public/efilepf_v3_1/    990-PF  Current    2026-10-09   83 tables, 1,411 table-years, 1,234,785 filings
+  # There is no "latest" pointer; readers name the release in the path.
+  # The bucket allows anonymous reads. S3 versioning is ENABLED on the
+  # bucket (checked 2026-10-21), so overwritten objects keep their
+  # earlier versions as noncurrent versions.
+  #
+  # Files published beside the tables in each release:
+  #   COUNT-OF-ROWS-BY-TABLE-AND-FORMTYPE-EFILE{PF}_V{major}_{minor}.CSV
+  #     one row per table-year: year, table, rows per form type, rows_tot.
+  #     This is what the NCCS catalog pages read.
+  #   RELEASE-NOTES-EFILE{PF}_V{major}_{minor}.md   (v3_1 only so far)
+  # Source XML for filings the GivingTuesday index skipped (producer defect
+  # EF2-18): xml2/v2_3_patch/{ObjectId}_public.xml with
+  # xml2/v2_3_patch/PATCH-INDEX-v2_3-2026-10-07.csv (184,165 filings).
+
+cadence:
+  type: on-change
+  notes: >
+    Rebuilt by the producer when ef2 or concordance990 changes, or when
+    the IRS publishes filings the index had missed. v3_1 written
+    2026-10-09. No schedule.
+
+manifest:
+  path: null  # no manifest; the count sheet is the only per-release inventory
+  schema_version: 0  # 0 = no manifest
+
+schema:
+  source: null
+  # Table layouts come from NODC's concordance990 (one table per form part;
+  # T00 tables are one row per filing, T01 and higher one row per repeated
+  # item). The concordance990 git ref each release was labelled with is
+  # recorded on the website in catalogs/R/efile_helpers.R
+  # (EFILE_RELEASES$concordance_ref) and frozen per release in
+  # catalogs/efile/TABLE-META-<id>.csv:
+  #   v1 to v2_2        v2.0.0-baseline (the frozen version 1 concordance)
+  #   v2_3, pf_v2_3     v2.0.0
+  #   v3_1, pf_v3_1     02de916 (concordance990 2.0.1, ef2 build commit)
+  # Key columns present in every table:
+  #   OBJECTID   "OID-" + the 18-digit IRS object id. Stable across
+  #              releases; the join key between releases.
+  #   ORG_EIN    9 digits, no hyphen.   EIN2  canonical XX-XXXXXXX form.
+  #   TAX_YEAR, RETURN_TYPE, URL (source XML), VERSION (schema version)
+  #   TABLE_ID   repeated-item tables only. "TID-00000" up to v2_2;
+  #              fixed-width "TID-000-000-001" from v2_3. Assigned per
+  #              build; NOT stable across releases.
+  # Column names changed between the version 1 concordance (v2_2) and
+  # version 2 (v2_3 on): 27 xpaths renamed for a reason of meaning, 350
+  # moved table. Release note governance/release-notes/efile-v3_1.md.
+
+consumers:
+  - repo: UrbanInstitute/nccs
+    pin: "efile_v3_1, efilepf_v3_1"  # EFILE_RELEASES status Current (nccs PR #108, 2026-10-16)
+    surface: catalogs/catalog-efile-v3_1.qmd, catalogs/catalog-efilepf-v3_1.qmd, _datasets/efile.md
+    notes: >
+      Catalog pages per release (archive pages for v2_2, v2_3, pf_v2_3;
+      superseded banners on v1 to v2_1). Pages read the count sheet at
+      render time and the frozen table metadata from the repo.
+  - repo: Nonprofit-Open-Data-Collective/panel990
+    pin: "efile_v3_1"  # package default since 2.0 (checked 2026-10-21)
+    notes: "Builds the NODC 990 panels from these tables."
+  - repo: UrbanInstitute/nccs-data-requests
+    pin: "efilepf_v2_3, efile_v3_1"  # ad hoc reads in request folders (Nashville funder map, Tepper); every use pinned
+    notes: "Exception-path reads; not a production consumer."
+
+drift_detection:
+  trigger: cron
+  schedule: "0 8 * * MON"
+  event: ""
+
+deprecation_window_days: 90  # applies to NCCS: 90 days' notice before any change on our side to the bucket or the folders
+
+notes: |
+  What NCCS commits to: keep hosting the files, keep the bucket readable,
+  keep S3 versioning on, and give the producer 90 days' notice before any
+  change on our side. NCCS catalogs each release the producer announces.
+
+  What NCCS does not commit to: the content, its correctness, its
+  versioning, or its continuity. These are the producer's.
+
+  OBSERVED PRACTICE (what has happened so far, not a guarantee):
+  - Releases stay at their prefix after publication, except as noted below.
+  - Each 990 release carries a count sheet; the 990-PF interim release did not.
+  - Interim releases (v2_3, pf_v2_3) were published without announcement.
+  - Corrections have been applied in place: all 1,792 efile_v2_2 CSV files
+    were rewritten on 2026-09-23 (parquet added the same day), and 254 of
+    them changed size. The August versions survive as S3 noncurrent
+    versions. The file named as the v2_2 count sheet is the v2_1 count
+    sheet (same bytes; copied to the v2_2 name 2026-10-09).
+  - Ten filings from the patch index are absent from v3_1 (ef2 issue 31).
+
+  GUARANTEES NEEDING THE PRODUCER'S AGREEMENT (proposed; see
+  governance/decisions-pending.md):
+  1. An announced release is immutable at its prefix. Corrections go to a
+     new prefix with its own count sheet and release note.
+  2. Every release ships a count sheet generated from the files it
+     describes, and a release note naming the previous announced release
+     and the IRS batch the release is complete through.
+  3. Noncurrent S3 versions of announced releases are retained; no
+     lifecycle rule expires them without the committee's agreement.
+  4. Column renames and table moves between releases are listed in the
+     release note with the concordance990 ref on each side.
+
+  Relationship to other contracts: `efile` is the NCCS-owned extraction
+  (nccs-data-efile), built by different code from the same IRS source.
+  `efile-duckdb-archives` is the per-year DuckDB form of the same NODC
+  build. The ten-filing omission and the skipped IRS batches (EF2-18)
+  affected the NCCS Phase 0 build too; see nccs-data-efile PR #17.
