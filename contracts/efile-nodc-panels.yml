@@ -89,7 +89,11 @@ schema:
   # Key columns present in every table:
   #   OBJECTID   "OID-" + the 18-digit IRS object id. Stable across
   #              releases; the join key between releases.
-  #   ORG_EIN    9 digits, no hyphen.   EIN2  canonical XX-XXXXXXX form.
+  #   ORG_EIN    9 digits, no hyphen.
+  #   EIN2       "EIN-" + XX-XXXXXXX (for example EIN-01-0017496): the
+  #              producer's prefixed form, NOT the NCCS canonical
+  #              XX-XXXXXXX (ADR 0036). Strip the "EIN-" prefix to join
+  #              to NCCS artifacts.
   #   TAX_YEAR, RETURN_TYPE, URL (source XML), VERSION (schema version)
   #   TABLE_ID   repeated-item tables only. "TID-00000" up to v2_2;
   #              fixed-width "TID-000-000-001" from v2_3. Assigned per
@@ -156,3 +160,6 @@ notes: |
   `efile-duckdb-archives` is the per-year DuckDB form of the same NODC
   build. The ten-filing omission and the skipped IRS batches (EF2-18)
   affected the NCCS Phase 0 build too; see nccs-data-efile PR #17.
+
+  Correction 2026-10-23: EIN2 format restated from the files (it was
+  given as the NCCS canonical form in the first version of this file).

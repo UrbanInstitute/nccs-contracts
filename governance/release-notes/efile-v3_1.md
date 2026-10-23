@@ -75,8 +75,12 @@ today. Analyses built on v2_2 should be checked against this list.
 
 **Coverage.**
 - 184,165 filings that the GivingTuesday index never listed were
-  fetched from the IRS and added (EF2-18). TY2024 gains about
-  112,000 full-990 filings; TY2025 appears for the first time.
+  fetched from the IRS and added (EF2-18). TY2024 header rows go
+  from 456,170 in the retained v2_2 file to 568,736 in v3_1: Form 990
+  from 277,302 (v2_3) to 360,911, Form 990-EZ from 178,868 to 207,825.
+  Against the retained v2_2 file the combined gain is 112,566; the
+  v2_2 count sheet cannot be used as the baseline (Part 1 item 3).
+  TY2025 appears for the first time.
 - Ten of those filings are missing from v3_1 because of a namespace
   prefix bug in the producer's patch reader (ef2 #31). They will
   arrive in a later version.
