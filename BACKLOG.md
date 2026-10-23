@@ -175,7 +175,7 @@ Origin: `nccs-workspace/reviews/2026-10-21-efile-audit/assessment.md` (seven-ste
 | # | Task | Where | Notes |
 |---|------|-------|-------|
 | Z31 | Manifest-shape addition `inputs.index_coverage` from the batch coverage gate | `nccs-contracts` | ADR 0014 shape update; ADR 0017 covers the gate itself. Field is written by nccs-data-efile #17. |
-| Z32 | Decide whether to rebuild Phase 0 against a complete index | `nccs-data-efile` | v2026.06 lacks 69,465 in-scope filings from the producer's patch index, 59,092 of them from IRS batches published before the build. Gate (#17) prevents a repeat; rebuild is a separate call. |
+| Z32 | Decide whether to rebuild Phase 0 against a complete index | `nccs-data-efile` | v2026.06 lacks 69,465 in-scope filings from the producer's patch index, 37,211 of them (batches 2025_09A and 2025_10A) published by the IRS before the build; the rest postdate it. Gate (#17) prevents a repeat; rebuild is a separate call. |
 | Z33 | August-to-September row delta for the 254 rewritten `efile_v2_2` tables | `nccs-data-efile` (EC2) | Read the S3 noncurrent versions (bucket versioning is on), record August rows, September rows and the ef2 defect id per table. Feeds flags-log item 4 and the release note. Not on the laptop: files up to several hundred MB each. |
 | Z34 | Automated concordance report between pinned release snapshots | `nccs` or `nccs-contracts` | Deferred from Step 7 until governance sets review categories and an owner. Basis: the xpath diff behind assessment.md Appendix B. |
 
