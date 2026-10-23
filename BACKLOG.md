@@ -13,7 +13,7 @@ open-loop ADR (`Accepted`/`Executing`) should map to a row here. Run
 `/reconcile-status` at boot to cross-check the board against downstream PRs and
 catch reconcile lag.
 
-_Last updated: 2026-09-16._
+_Last updated: 2026-10-24._
 
 ---
 
@@ -147,6 +147,37 @@ retaining the Unified BMF name"; ADR 0022 consumer-notification obligation satis
 | 9 | Update harmonized datasets from the new CORE (convert columns via crosswalk) so the parallel surface keeps functioning | `nccs-data-core` + contracts | ⚠️ **This is a NEW ongoing "compatibility shim" surface, distinct from the FROZEN run-1 files (ADR 0035).** Needs its own ADR (new producer pattern) + interacts with #15. Decide *whether* to build before building. |
 | 10 | ~~Branch protection on all core repos~~ **DONE 2026-08-11** | core repos | **ADR 0047 ratified + applied** (contracts #76): `branch-protection-baseline` ruleset ACTIVE on all 7 maintainer-admin repos — PRs required for every role (admin bypass = pull_request mode: self-merge yes, direct push no), 1 review for non-admins, contracts-guard required where the caller exists (6/7), force-push/deletion blocked. Approver policy decided: 'self' (revisit on second committer). Absorbs ADR 0022 step-4. Follow-up: `nccs` repo excluded (maintainer lacks admin; external collaborator holds it) — org-owner ask or admin-applied. |
 | 11 | New ADR correcting ADR 0015's "retired/never-written" description + record the retained-frozen decision + contract | nccs-contracts | **✅ DONE via ADR 0035** (PR #41) — corrects 0015's "phantom/never-written" claim + records retained-frozen + the contract YAML. Note: ADR 0035 *corrects* (not supersedes) 0015 — 0015's retirement of the *intermediate* tier stands. **→ close this item.** |
+
+## E-file upstream currency: GivingTuesday lag and IRS batch coverage (found 2026-10-24)
+
+Origin: internal data request (`nccs-data-requests/requests/2026-10-tepper-foundation-grants`).
+A return on ProPublica was absent from `efilepf_v3_1`. Batch-by-batch join of the IRS
+`index_2026.csv` to the v3_1 header object IDs: batches 2026_TEOS_XML_01A to 08A complete,
+filing for filing; 09A (IRS release 2026-10-21) absent because it postdates the 2026-10-09
+build. Batch 08A (IRS 2026-09-16) is still not in the GivingTuesday lake and reached v3_1
+only through Jesse's direct-IRS patch store; 05A was split between the two sources. Evidence:
+`nccs-workspace/reviews/2026-10-21-efile-audit/evidence/batch-09a-coverage.md`; log item 7 in
+`jesse-flags-log.md`. Jesse, Laura, and Catherine notified 2026-10-24.
+
+| # | Task | Where | Notes |
+|---|------|-------|-------|
+| U1 | Monthly IRS-batch coverage check: join the IRS year index to the v3_1 (990 and PF) header object IDs, report per-batch counts and XML source (GivingTuesday vs patch), run after each IRS release | `nccs-data-efile` (script + small published CSV next to the tables) | Method proven in the scratch `batch.R` behind the evidence note; a few minutes over HTTPS with DuckDB. Reporting addition only, no contract-shape change. First run: confirm 09A lands in Jesse's next build. |
+| U2 | Governance note for the next committee meeting: the check (U1), the release-note cutoff line, and the dependency question (U3) | `governance/` | Plain language. Add the "complete through IRS batch NNN" line to the release-note template once Jesse agrees. |
+| U3 | Re-evaluate the GivingTuesday raw-XML dependency in 2027: read IRS releases directly (as the patch store and ProPublica do) versus keep GivingTuesday plus patch | nccs-contracts | **ADR-NEEDED, not before 2027.** Decide with one year of U1 counts in hand. Interacts with #15/#16 (e-file deprecation, parallel build). |
+| U4 | Jesse reply on the cutoff line and 09A | *waiting* | Email sent 2026-10-24 (item 7 only; flags-log items 2 to 6 still held until the review ends). |
+| U5 | Single-filing fetch between builds | `nccs-data-requests` | `fetch-irs-xml-from-zip.py` (HTTP range read of one file from an IRS zip, no 200 MB download) lives in the Tepper request folder; exception path only, every use pinned. Promote to `nccsdata` or `request_read.R` on second use (ADR 0024 rule). |
+| U6 | Commit the Tepper request folder | `nccs-data-requests` | Untracked as of 2026-10-24; CSVs and `_private.md` stay out by gitignore. |
+
+## efile_v3_1 review follow-ups (2026-10-23)
+
+Origin: `nccs-workspace/reviews/2026-10-21-efile-audit/assessment.md` (seven-step plan, all steps done). PRs: nccs-contracts #109 (release note), #110 (contract `efile-nodc-panels`); nccs #109 (frozen catalog metadata), #110 (guard regex); nccs-data-efile #17 (IRS batch coverage gate).
+
+| # | Task | Where | Notes |
+|---|------|-------|-------|
+| Z31 | Manifest-shape addition `inputs.index_coverage` from the batch coverage gate | `nccs-contracts` | ADR 0014 shape update; ADR 0017 covers the gate itself. Field is written by nccs-data-efile #17. |
+| Z32 | Decide whether to rebuild Phase 0 against a complete index | `nccs-data-efile` | v2026.06 lacks 69,465 in-scope filings from the producer's patch index, 37,211 of them (batches 2025_09A and 2025_10A) published by the IRS before the build; the rest postdate it. Gate (#17) prevents a repeat; rebuild is a separate call. |
+| Z33 | August-to-September row delta for the 254 rewritten `efile_v2_2` tables | `nccs-data-efile` (EC2) | Read the S3 noncurrent versions (bucket versioning is on), record August rows, September rows and the ef2 defect id per table. Feeds flags-log item 4 and the release note. Not on the laptop: files up to several hundred MB each. |
+| Z34 | Automated concordance report between pinned release snapshots | `nccs` or `nccs-contracts` | Deferred from Step 7 until governance sets review categories and an owner. Basis: the xpath diff behind assessment.md Appendix B. |
 
 ## Held until Jesse replies
 
