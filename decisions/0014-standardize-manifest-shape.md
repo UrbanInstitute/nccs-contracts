@@ -1,6 +1,6 @@
 # 0014 — Standardize Manifest Shape Across Producers
 
-- **Status:** Accepted (partially executed 2026-06-03 — see Outcome)
+- **Status:** Accepted (partially executed 2026-06-03 — see Outcome; amended 2026-10-26 for `inputs.index_coverage`)
 - **Date:** 2026-05-21
 - **Deciders:** sole maintainer
 - **Related:** [[0001-s3-as-contract-surface]], [[0004-cadence-aware-drift-detection]], [[0013-versioned-producer-outputs]]
@@ -298,6 +298,80 @@ nccs-data-bmf PR #14 (merged 2026-06-03, merge commit `5248ae4`):
 replication of `R/manifest.R`); `core-990`, `core-legacy`, `core-panel`
 (still quality-report-only). `sector-in-brief-data` already emitted a
 compatible `_manifest.json` pre-ADR and is the shape's other origin.
+
+## Amendment 2026-10-26: `inputs.index_coverage` (e-file Phase 0)
+
+**Why.** The e-file Phase 0 build reads its filing index from a mirror
+(the GivingTuesday data lake) rather than from the IRS. In 2026 the
+mirror skipped whole IRS monthly batches and the June vintage was built
+short by 37,211 in-scope filings without any record of it. The producer
+now runs a coverage gate before extraction (nccs-data-efile #17 added
+the check, #18 wired it into the build): it compares the build index,
+batch by batch, against the IRS annual index files, and stops the build
+if a batch the IRS had already published is more than 5 percent absent.
+The manifest has to say that the check ran, against which IRS files, and
+what it saw, or a consumer cannot tell a checked vintage from an
+unchecked one.
+
+**Decision.** The `inputs` block may carry, beside the per-input
+provenance entries, one named object per upstream verification that
+conditions what the build consumed. The first is `index_coverage`:
+
+```json
+"inputs": {
+  "index_coverage": {
+    "enabled": true,
+    "passed": true,
+    "as_of": "2026-10-09",
+    "max_missing_share": 0.05,
+    "min_batch_filings": 100,
+    "irs_index_files": [
+      {"url": "https://apps.irs.gov/pub/epostcard/990/xml/2026/index_2026.csv",
+       "retrieved_at_utc": "2026-10-09T14:02:11Z", "bytes": 41873362,
+       "sha256": "...", "rows": 512404}
+    ],
+    "batches": [
+      {"xml_batch_id": "2026_TEOS_XML_08A", "published": "2026-09-16",
+       "n_irs": 31204, "n_ambiguous": 0, "n_in_index": 31204,
+       "missing_share": 0, "status": "ok"}
+    ],
+    "failed": []
+  }
+}
+```
+
+- `enabled`: bool. When `false` the object carries only `reason`
+  (`"opted out in config"`); the opt-out is recorded, never silent.
+- `passed`: bool. Always `true` in a written manifest: the gate is
+  strict, so a failed build writes nothing.
+- `as_of`: date of the build index snapshot. Batches the IRS
+  published after it are reported with status `after_snapshot`, not
+  failed, so the field is also the vintage's IRS cutoff.
+- `max_missing_share`, `min_batch_filings`: the thresholds in force.
+- `irs_index_files[]`: provenance of each IRS index file read:
+  `url`, `retrieved_at_utc`, `bytes`, `sha256`, `rows`.
+- `batches[]`: one row per IRS batch in scope: `xml_batch_id`,
+  `published` (from the batch ZIP's `Last-Modified` header; `null`
+  when the server gave none), `n_irs`, `n_ambiguous` (short-year
+  returns at the scope boundary, excluded from the denominator),
+  `n_in_index`, `missing_share`, `status` (`ok`, `missing`, `small`,
+  `after_snapshot`, `no_batch_id`, with ` (date_unknown)` appended
+  when no publication date was available).
+- `failed[]`: batch ids under the threshold; empty in a written
+  manifest.
+
+**Scope note.** The e-file producer's `inputs` is an object keyed by
+input name (`nodc_concordance_sha`, `gt_lake_snapshot_timestamp_utc`,
+and so on), not the `inputs[]` array this ADR specifies. That
+pre-existing deviation is recorded in `contracts/efile.yml` and is
+not changed here. Other producers that verify an upstream before
+consuming it should add a sibling object under the same rule rather
+than a top-level field: the manifest records what was built from, and
+a coverage check is a statement about an input.
+
+**Related.** [[0017-efile-phase-0-vertical-slice]] (the gate itself,
+Outcome addendum of the same date); backlog Z31, Z32; governance
+release-note cutoff line (backlog U2).
 
 ## Consequences
 

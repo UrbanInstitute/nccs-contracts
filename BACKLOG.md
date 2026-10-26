@@ -13,7 +13,7 @@ open-loop ADR (`Accepted`/`Executing`) should map to a row here. Run
 `/reconcile-status` at boot to cross-check the board against downstream PRs and
 catch reconcile lag.
 
-_Last updated: 2026-10-24._
+_Last updated: 2026-10-26._
 
 ---
 
@@ -164,7 +164,7 @@ only through Jesse's direct-IRS patch store; 05A was split between the two sourc
 | U1 | Monthly IRS-batch coverage check: join the IRS year index to the v3_1 (990 and PF) header object IDs, report per-batch counts and XML source (GivingTuesday vs patch), run after each IRS release | `nccs-data-efile` (script + small published CSV next to the tables) | Method proven in the scratch `batch.R` behind the evidence note; a few minutes over HTTPS with DuckDB. Reporting addition only, no contract-shape change. First run: confirm 09A lands in Jesse's next build. |
 | U2 | Governance note for the next committee meeting: the check (U1), the release-note cutoff line, and the dependency question (U3) | `governance/` | Plain language. Add the "complete through IRS batch NNN" line to the release-note template once Jesse agrees. |
 | U3 | Re-evaluate the GivingTuesday raw-XML dependency in 2027: read IRS releases directly (as the patch store and ProPublica do) versus keep GivingTuesday plus patch | nccs-contracts | **ADR-NEEDED, not before 2027.** Decide with one year of U1 counts in hand. Interacts with #15/#16 (e-file deprecation, parallel build). |
-| U4 | Jesse reply on the cutoff line and 09A | *waiting* | Email sent 2026-10-24 (item 7 only; flags-log items 2 to 6 still held until the review ends). |
+| U4 | Jesse reply on the cutoff line and 09A | *waiting* | Email sent 2026-10-24 (item 7). Jesse replied 2026-10-26 (three emails, in `nccs-inbox/threads/2026-10-jesse-planning-update/`); combined reply with flags-log items 2, 3, 6, 8 sent 2026-10-26. Waiting on his answer, then the planning discussion with Laura. |
 | U5 | Single-filing fetch between builds | `nccs-data-requests` | `fetch-irs-xml-from-zip.py` (HTTP range read of one file from an IRS zip, no 200 MB download) lives in the Tepper request folder; exception path only, every use pinned. Promote to `nccsdata` or `request_read.R` on second use (ADR 0024 rule). |
 | U6 | Commit the Tepper request folder | `nccs-data-requests` | Untracked as of 2026-10-24; CSVs and `_private.md` stay out by gitignore. |
 
@@ -174,7 +174,7 @@ Origin: `nccs-workspace/reviews/2026-10-21-efile-audit/assessment.md` (seven-ste
 
 | # | Task | Where | Notes |
 |---|------|-------|-------|
-| Z31 | Manifest-shape addition `inputs.index_coverage` from the batch coverage gate | `nccs-contracts` | ADR 0014 shape update; ADR 0017 covers the gate itself. Field is written by nccs-data-efile #17. |
+| Z31 | ~~Manifest-shape addition `inputs.index_coverage` from the batch coverage gate~~ | `nccs-contracts` | **DONE 2026-10-26.** ADR 0014 amendment + ADR 0017 Outcome addendum + `contracts/efile.yml` manifest notes. Found on the way: #17 had merged the gate functions but `run_phase0()` never called them and nothing was written to the manifest; nccs-data-efile #18 wires the gate in and records the field (gate on by default, opt-out recorded). First real manifest with the field comes from the next Phase 0 build (Z32). |
 | Z32 | Decide whether to rebuild Phase 0 against a complete index | `nccs-data-efile` | v2026.06 lacks 69,465 in-scope filings from the producer's patch index, 37,211 of them (batches 2025_09A and 2025_10A) published by the IRS before the build; the rest postdate it. Gate (#17) prevents a repeat; rebuild is a separate call. |
 | Z33 | August-to-September row delta for the 254 rewritten `efile_v2_2` tables | `nccs-data-efile` (EC2) | Read the S3 noncurrent versions (bucket versioning is on), record August rows, September rows and the ef2 defect id per table. Feeds flags-log item 4 and the release note. Not on the laptop: files up to several hundred MB each. |
 | Z34 | Automated concordance report between pinned release snapshots | `nccs` or `nccs-contracts` | Deferred from Step 7 until governance sets review categories and an owner. Basis: the xpath diff behind assessment.md Appendix B. |

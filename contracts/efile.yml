@@ -145,6 +145,16 @@ manifest:
   #     nodc_concordance_s3_prefix  string   # S3 mirror prefix of the vendored file
   #     gt_lake_snapshot_timestamp_utc string # ISO8601 of the GT lake read window
   #     irs_xsd_cache_prefix        string   # S3 mirror prefix of the XSD cache
+  #     index_coverage:                      # IRS batch coverage gate (ADR 0014 amendment 2026-10-26;
+  #                                          # producer PR #18; absent from v2026.06, first written by the next build)
+  #       enabled                   bool     # false = opted out in config; then only `reason` follows
+  #       passed                    bool     # always true in a written manifest (strict gate)
+  #       as_of                     date     # build index snapshot date = the vintage's IRS batch cutoff
+  #       max_missing_share         number
+  #       min_batch_filings         int
+  #       irs_index_files[] { url, retrieved_at_utc, bytes, sha256, rows }
+  #       batches[]  { xml_batch_id, published, n_irs, n_ambiguous, n_in_index, missing_share, status }
+  #       failed[]                  string
   #   files[]       { name, sha256, row_count, bytes }
   #   xsd_verification:
   #     passed                      bool     # overall gate result
