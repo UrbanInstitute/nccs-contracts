@@ -99,27 +99,76 @@ decision 7). What changes is that the inputs to his build become an NCCS
 surface with a record, so a short release can be seen before it is
 published.
 
-### 3. The archive build itself: decide in 2027, with a year of coverage counts
+### 3. Who parses the XML into tables: decide in early 2027, with a year of evidence
 
-Of Z23's three options, (c) leaving the archives an external product is
-how things stay for now, with step 2 making it safe. Options (a) and (b)
-are deferred, together with U3, to the first quarter of 2027, when the
-monthly coverage check has run through a full cycle and ADR 0028's
-relational extraction has either run at scale or not. The choice between
-running ef2 ourselves and building from our own extraction is a choice
-about the parsing layer, and it should be made against a year of evidence
-on how often the mirror and the producer's build disagree, not now.
+The chain has three layers. First, the raw XML the IRS publishes each
+month. Second, the parsing: turning that XML into tables with named
+columns. Today ef2 does this with Jesse's concordance; our own extractor
+from ADR 0028 would do it with our dictionary, but it has never been run
+across all filings. Third, the published files: the per-table CSVs and
+the per-year DuckDB archives, which are just the parsed tables written to
+disk. Z23 asked who should build the third layer. Whoever parses owns the
+archives, so the real question is who parses.
+
+Z23 listed three answers:
+
+- (a) NCCS runs ef2 itself. We would be answerable for a parser we did
+  not write and have not reviewed line by line, while its author is
+  reorganizing his packages.
+- (b) NCCS builds the same files from its own extractor (ADR 0028). The
+  code exists, but we do not yet know whether it gives the same answers
+  as ef2, how long a full run takes, or what it costs.
+- (c) The archives stay Jesse's product, hosted by NCCS. This is the
+  status quo. Its weakness was that his inputs came from a third party's
+  copy with silent gaps, and nobody could see a short release before it
+  went out.
+
+Step 2 removes that weakness without changing ownership. So (c) is how
+things stay for now, and (a) against (b) is decided in the first quarter
+of 2027, together with U3, on two kinds of evidence we do not have today:
+
+- A year of the monthly check, showing release by release whether
+  Jesse's tables hold what the IRS listed. A clean year makes the case
+  for taking over the parsing weak; repeated gaps or rewrites make it
+  strong, with numbers rather than an impression.
+- Whether ADR 0028's extractor has run at scale by then. If it has, its
+  output can be compared with ef2's on the same filings, value by value,
+  which is the only honest basis for choosing (b). If it has not, (b) is
+  not yet a real option and the choice is between (a) and (c).
+
+U3 (whether to keep reading GivingTuesday at all) collapses into the same
+question: the mirror makes the lake unnecessary for both builds, so in
+2027 there is one decision, not two. The risk of deferring is drift. The
+record pins the decision to a quarter and to this evidence so it comes
+back on its own, which works only if the monthly check runs every month
+and someone reads it.
 
 ## Rejected for now
 
-- **Reading the GivingTuesday lake with a coverage gate, and no mirror.**
-  The gate (ADR 0017 Outcome, `nccs-data-efile` #17 and #18) stops a short
-  build; it does not fill the gap. Every gap so far was filled from the
-  IRS directly, by the producer, by hand. A mirror makes that the normal
-  path and gives it a record.
-- **A public mirror from day one.** Cheap to host, but it would make NCCS
-  the origin for third-party applications serving raw XML, which is the
-  question Jesse raised and which no one has decided. Private first.
+- **Doing nothing beyond this week's check.** Our Phase 0 build still
+  takes its list of filings from the GivingTuesday lake. Since
+  `nccs-data-efile` #17 and #18 it compares that list with the IRS's own
+  list before it starts, and stops if an IRS release is missing. Stopping
+  is all it does. The missing filings are still missing and nothing in
+  our pipeline goes to get them. Every gap so far was closed by Jesse
+  fetching the releases from the IRS himself, by hand, into his patch
+  store; our June build has no patch store and is still short. With a
+  mirror, fetching from the IRS becomes the ordinary way filings arrive,
+  for both builds, and every fetch is logged by IRS release number. The
+  check tells you that you are short; the mirror is what makes you not
+  short.
+- **A mirror anyone on the internet can read.** The nccs-efile bucket
+  allows reads without logging in, which is how the website links and
+  the DuckDB users reach Jesse's files. If the XML copy worked the same
+  way, anyone could point a program at it and pull every filing,
+  repeatedly, at our expense. That is the concern Jesse raised: a site
+  like ProPublica could serve raw XML straight from our bucket, so the
+  traffic and the bill land on NCCS while the product is someone else's.
+  The IRS serves the same files, so nothing would be leaked, but NCCS
+  would become the origin for other people's applications. The mirror
+  therefore starts private: readable by NCCS roles and by the role
+  Jesse's build runs under. Opening it to the public is a separate
+  decision for the committee, with the cost question answered first.
 - **Taking over the ef2 build now (option a).** It would make NCCS
   responsible for a parser it has not reviewed, during the same quarter
   in which the producer is reorganizing his packages. Step 2 gets the
