@@ -572,6 +572,27 @@ republish Layer 1 to S3 to include the `2023v6.0` cell added after the last
 publish (a freshness fix — the build's gate rebuilds the inventory and is
 unaffected).
 
+### IRS batch coverage gate (2026-10-23 / 2026-10-26)
+
+The v2026.06 vintage was built on 2026-06-08 from the GivingTuesday
+index, which had skipped IRS batches 2025_09A and 2025_10A (both
+published by 2025-11-19). 37,211 in-scope filings the IRS had already
+released are absent from the vintage; a further 32,250 are from batches
+published after the build (2026_05A, 2026_08A). Found during the
+efile_v3_1 review (`nccs-workspace/reviews/2026-10-21-efile-audit`).
+
+Producer response: a build gate that compares the build index against
+the IRS annual index files batch by batch, using each batch ZIP's
+`Last-Modified` date as its publication date, and stops the build when
+a published batch is more than 5 percent absent (nccs-data-efile #17,
+merged 2026-10-23, added the check; #18 wired it into `run_phase0()`
+and records the result in the manifest as `inputs.index_coverage`, see
+[[0014-standardize-manifest-shape]] amendment of 2026-10-26). The gate
+is on by default; opting out is recorded in the manifest.
+
+Open: whether to rebuild Phase 0 against a complete index (backlog
+Z32). The gate prevents a repeat; it does not fill the June gap.
+
 ## Consequences
 
 **Positive:**
