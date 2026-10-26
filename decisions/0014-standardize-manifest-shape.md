@@ -340,24 +340,24 @@ conditions what the build consumed. The first is `index_coverage`:
 }
 ```
 
-- `enabled` — bool. When `false` the object carries only `reason`
+- `enabled`: bool. When `false` the object carries only `reason`
   (`"opted out in config"`); the opt-out is recorded, never silent.
-- `passed` — bool. Always `true` in a written manifest: the gate is
+- `passed`: bool. Always `true` in a written manifest: the gate is
   strict, so a failed build writes nothing.
-- `as_of` — date of the build index snapshot. Batches the IRS
+- `as_of`: date of the build index snapshot. Batches the IRS
   published after it are reported with status `after_snapshot`, not
   failed, so the field is also the vintage's IRS cutoff.
-- `max_missing_share`, `min_batch_filings` — the thresholds in force.
-- `irs_index_files[]` — provenance of each IRS index file read:
+- `max_missing_share`, `min_batch_filings`: the thresholds in force.
+- `irs_index_files[]`: provenance of each IRS index file read:
   `url`, `retrieved_at_utc`, `bytes`, `sha256`, `rows`.
-- `batches[]` — one row per IRS batch in scope: `xml_batch_id`,
+- `batches[]`: one row per IRS batch in scope: `xml_batch_id`,
   `published` (from the batch ZIP's `Last-Modified` header; `null`
   when the server gave none), `n_irs`, `n_ambiguous` (short-year
   returns at the scope boundary, excluded from the denominator),
   `n_in_index`, `missing_share`, `status` (`ok`, `missing`, `small`,
   `after_snapshot`, `no_batch_id`, with ` (date_unknown)` appended
   when no publication date was available).
-- `failed[]` — batch ids under the threshold; empty in a written
+- `failed[]`: batch ids under the threshold; empty in a written
   manifest.
 
 **Scope note.** The e-file producer's `inputs` is an object keyed by

@@ -8,6 +8,7 @@ them.
 | File | What | Update cadence |
 |---|---|---|
 | `charter.md` | The governance charter | Amended by PR, typically after a committee meeting; version bumps in the header |
+| `agendas/YYYY-MM.md` | Meeting agendas | Circulated ahead of each meeting; superseded by the minutes |
 | `minutes/YYYY-MM-DD.md` | Meeting minutes | One file per meeting (monthly) |
 | `release-notes/*.md` | Plain-language release notes per data build | One per release (§6 flow); the ONLY place release notes are authored — the website changelog page is generated from these |
 | `decisions-pending.md` | Deferred committee decisions | Groomed each meeting |
