@@ -60,6 +60,20 @@ s3:
   #     one row per table-year: year, table, rows per form type, rows_tot.
   #     This is what the NCCS catalog pages read.
   #   RELEASE-NOTES-EFILE{PF}_V{major}_{minor}.md   (v3_1 only so far)
+  #   IRS-BATCH-COVERAGE.CSV   (written by NCCS, not the producer; agreed
+  #     with the producer by email 2026-10-27)
+  #     One row per IRS monthly batch per run of the NCCS coverage check
+  #     (nccs-data-efile, run_irs_batch_coverage(publish = TRUE)): how
+  #     many filings the IRS lists for the batch, how many are in the
+  #     release, and where the XML came from (GivingTuesday or the NCCS
+  #     patch store). Columns checked_on (run date) and build_date (the
+  #     release's header file date) carry the dates; the name is stable
+  #     per release so packages can build the path from the release alone.
+  #     Each run APPENDS its rows; the rows with the latest checked_on are
+  #     the current state, the rest are the history of the release,
+  #     including small in-place additions the producer makes without a
+  #     version bump. First file not yet written (waiting on the
+  #     producer's reply to the final name).
   # Source XML for filings the GivingTuesday index skipped (producer defect
   # EF2-18): xml2/v2_3_patch/{ObjectId}_public.xml with
   # xml2/v2_3_patch/PATCH-INDEX-v2_3-2026-10-07.csv (184,165 filings).
