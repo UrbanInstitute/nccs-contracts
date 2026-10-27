@@ -72,8 +72,8 @@ s3:
   #     Each run APPENDS its rows; the rows with the latest checked_on are
   #     the current state, the rest are the history of the release,
   #     including small in-place additions the producer makes without a
-  #     version bump. First file not yet written (waiting on the
-  #     producer's reply to the final name).
+  #     version bump. First files written 2026-10-27 for efile_v3_1 and
+  #     efilepf_v3_1 (producer agreed by email the same day).
   # Source XML for filings the GivingTuesday index skipped (producer defect
   # EF2-18): xml2/v2_3_patch/{ObjectId}_public.xml with
   # xml2/v2_3_patch/PATCH-INDEX-v2_3-2026-10-07.csv (184,165 filings).
