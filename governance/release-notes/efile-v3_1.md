@@ -74,6 +74,12 @@ today. Analyses built on v2_2 should be checked against this list.
 ## Part 2. What differs between the retained v2_2 and v3_1
 
 **Coverage.**
+- Complete through IRS batch 2026_TEOS_XML_08A (published by the IRS
+  2026-09-16), checked 2026-10-27 against the IRS index: 343,886 Form
+  990 and 990-EZ filings listed by the IRS in batches 01A to 08A, 4
+  missing (the ef2 #31 filings); 79,686 Form 990-PF filings, none
+  missing. Batch 09A (2026-10-21) postdates the build. Source:
+  `public/{release}/IRS-BATCH-COVERAGE.CSV` beside each release.
 - 184,165 filings that the GivingTuesday index never listed were
   fetched from the IRS and added (EF2-18). TY2024 header rows go
   from 456,170 in the retained v2_2 file to 568,736 in v3_1: Form 990

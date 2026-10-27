@@ -37,6 +37,14 @@ Deferred by the committee (2026-08-12), queued for future meetings:
    other review items (log in the review record), then bring to the
    committee.
 
+8. **"Complete through IRS batch NNN" line in every e-file release
+   note** (added 2026-10-27). Source: the monthly coverage check NCCS
+   now publishes beside each release
+   (`public/{release}/IRS-BATCH-COVERAGE.CSV`). First run: both v3_1
+   releases complete through 2026_TEOS_XML_08A. Note for the
+   committee: `governance/notes/2026-10-27-irs-batch-coverage.md`.
+   Changes practice under charter §6, not the charter.
+
 ## Recorded for the September 2026 meeting (no decision needed)
 
 Registry additions made 2026-09-16 under "register, don't ask"
