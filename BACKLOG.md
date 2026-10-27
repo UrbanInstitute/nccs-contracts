@@ -167,6 +167,7 @@ only through Jesse's direct-IRS patch store; 05A was split between the two sourc
 | U4 | Jesse reply on the cutoff line and 09A | *waiting* | Email sent 2026-10-24 (item 7). Jesse replied 2026-10-26 (three emails, in `nccs-inbox/threads/2026-10-jesse-planning-update/`); combined reply with flags-log items 2, 3, 6, 8 sent 2026-10-26. Waiting on his answer, then the planning discussion with Laura. |
 | U5 | Single-filing fetch between builds | `nccs-data-requests` | `fetch-irs-xml-from-zip.py` (HTTP range read of one file from an IRS zip, no 200 MB download) lives in the Tepper request folder; exception path only, every use pinned. Promote to `nccsdata` or `request_read.R` on second use (ADR 0024 rule). |
 | U6 | Commit the Tepper request folder | `nccs-data-requests` | Untracked as of 2026-10-24; CSVs and `_private.md` stay out by gitignore. |
+| U7 | Pin every R CMD check workflow to `ubuntu-24.04` | `nccs-data-efile` (drift-check.yml), `sector-in-brief-data`, `nccsdata` (matrix) | Found 2026-10-27 on nccs-data-efile #19: `ubuntu-latest` now resolves to Ubuntu 26.04, which the public R package mirror has no prebuilt binaries for, so every dependency compiles from source (duckdb took an hour, then failed to install). Main only passes because its compiled packages are cached. nccs-data-efile `check.yml` pinned on #19; do the rest before any of them adds a compiled dependency. |
 
 ## efile_v3_1 review follow-ups (2026-10-23)
 
