@@ -1,0 +1,13 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "NCCS data system: contracts and architecture decisions"
+type: software
+authors:
+  - family-names: Poongundranar
+    given-names: Thiyaghessan
+    affiliation: "National Center for Charitable Statistics, Urban Institute"
+  - name: "Urban Institute"
+repository-code: "https://github.com/UrbanInstitute/nccs-contracts"
+url: "https://nccs.urban.org"
+abstract: "The contract and decision record for the National Center for Charitable Statistics (NCCS) data system: the published S3 surfaces each pipeline produces and consumes, and the architecture decision records that govern them."
+date-released: "2026-10-29"
