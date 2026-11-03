@@ -3,7 +3,7 @@
 - **Status:** Proposed (2026-11-03). For the data governance committee to accept, amend or reject. Nothing in `nccs-data-core` changes until this is accepted.
 - **Date:** 2026-11-03
 - **Deciders:** sole maintainer, with Jesse Lecy; to be confirmed by the governance committee
-- **Related:** [[0015-core-contract-surface-restructure]], [[0027-core-990-parquet-promotion]], [[0046-nodc-soi-harmonization-interoperability]], [[0048-nteev2-specialty-code-x00-rule]] (why rules need executable checks), governance charter (tax period is an essential field), contracts `core-990`, `core-legacy`, `core-panel`
+- **Related:** [[0015-core-contract-surface-restructure]], [[0027-core-990-parquet-promotion]], [[0046-external-soi-harmonization-concordance]], [[0048-nteev2-specialty-code-x00-rule]] (why rules need executable checks), governance charter (tax period is an essential field), contracts `core-990`, `core-legacy`, `core-panel`
 
 ## Context
 
