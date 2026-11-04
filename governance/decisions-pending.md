@@ -45,6 +45,27 @@ Deferred by the committee (2026-08-12), queued for future meetings:
    committee: `governance/notes/2026-10-27-irs-batch-coverage.md`.
    Changes practice under charter §6, not the charter.
 
+9. **CORE tax_year definition** (added 2026-11-03, decision record
+   0053). CORE's `tax_year` is the period-end year; the IRS and the
+   e-file series use the period-start year, so two in five rows differ
+   by one year between series. Proposed: switch to the start year over
+   two releases, keep the end month, flag inferred and short-period
+   rows. Raised by JL by email 2026-10-30.
+
+10. **How cross-series rules are enforced** (added 2026-11-03, decision
+   record 0054). JL proposes a shared R package every pipeline imports;
+   proposed instead: a written rule plus a test fixture per rule in
+   `conventions/`, each producer tests its own code against it, a shared
+   package may exist as one implementation. Settles the mechanism behind
+   0048.
+
+11. **Provenance and dictionary inside data files** (added 2026-11-03,
+   decision record 0055; this is the design due-out for item 3). JL
+   proposes his `csvschema` package, which adds two columns to every
+   CSV. Proposed instead: provenance stays in the manifest, no columns
+   added to data, a Frictionless sidecar for the dictionary considered
+   after the parquet transition.
+
 ## Recorded for the September 2026 meeting (no decision needed)
 
 Registry additions made 2026-09-16 under "register, don't ask"
