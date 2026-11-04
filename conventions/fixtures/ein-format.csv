@@ -1,0 +1,11 @@
+case,input,expected_valid,expected_ein,expected_ein_prefixed,expected_ein2,expected_padded9,note
+canonical_dashed,04-2104327,TRUE,04-2104327,ein-04-2104327,EIN-04-2104327,042104327,Already canonical
+ein2_uppercase_prefix,EIN-04-2104327,TRUE,04-2104327,ein-04-2104327,EIN-04-2104327,042104327,Legacy and NODC key
+ein_prefixed_lowercase,ein-36-3686904,TRUE,36-3686904,ein-36-3686904,EIN-36-3686904,363686904,Coercion-safe key
+padded_nine,382787387,TRUE,38-2787387,ein-38-2787387,EIN-38-2787387,382787387,Raw legacy and e-file form
+bare_integer_leading_zero_lost,42104327,TRUE,04-2104327,ein-04-2104327,EIN-04-2104327,042104327,Eight digits after a lost leading zero; must left-pad
+bare_integer_single_digit,4,TRUE,00-0000004,ein-00-0000004,EIN-00-0000004,000000004,Master BMF ein_raw case; left-pad to nine
+too_many_digits,1234567890,FALSE,,,,,Ten digits; do not truncate
+all_zeros,000000000,FALSE,,,,,Not a real EIN
+empty,,FALSE,,,,,Missing
+letters_only,ABC,FALSE,,,,,No digits at all

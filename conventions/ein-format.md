@@ -148,6 +148,10 @@ Round-trip assertions:
   declared NA behavior *(lenient)* — pick one and test it. *(Consumer resolved lenient:
   un-normalizable → `NA` + warning.)*
 
+**Fixture file (ADR 0054):** the same vectors plus the reject cases are in
+`conventions/fixtures/ein-format.csv`, the shared test every implementation
+runs against.
+
 **Now mechanically enforced.** These vectors are encoded as executable tests in
 `nccsdata/tests/testthat/test-nccs_ein_bridge.R` — all four contract rows plus round-trip,
 leading-zero, bare-integer, and reject cases; suite green as of PR #22. That test file is

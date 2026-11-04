@@ -1,0 +1,14 @@
+case,tax_period,period_begin,bmf_accounting_month,expected_valid,expected_tax_year,expected_tax_year_end,expected_tax_year_inferred,expected_accounting_period_mismatch,note
+december_full_year,202312,,12,TRUE,2023,2023,TRUE,FALSE,Calendar year filer; both definitions agree
+june_full_year,202306,,06,TRUE,2022,2023,TRUE,FALSE,July 2022 to June 2023; the common non-December case
+january_full_year,202301,,01,TRUE,2022,2023,TRUE,FALSE,February 2022 to January 2023; eleven months fall in the start year
+november_full_year,202311,,11,TRUE,2022,2023,TRUE,FALSE,December 2022 to November 2023; eleven months fall in the end year
+june_with_start_date,202306,2022-07-01,06,TRUE,2022,2023,FALSE,FALSE,Start date known (e-file); not inferred
+short_period_known_start,202306,2023-01-01,06,TRUE,2023,2023,FALSE,FALSE,January to June 2023 with the start date known; the start year is 2023
+short_period_unknown_start,202306,,12,TRUE,2022,2023,TRUE,TRUE,Same return without a start date; rule 2 gives 2022 and the BMF month differs; this is the known-wrong case the flags exist for
+bmf_month_missing,202306,,,TRUE,2022,2023,TRUE,,No BMF row for the EIN; mismatch is NA not FALSE
+bmf_month_matches_december,202312,,12,TRUE,2023,2023,TRUE,FALSE,Match is not proof of a full year; still inferred
+invalid_month_13,202313,,12,FALSE,,,,,Month out of range; all year columns NA; row kept
+invalid_four_character,9412,,12,FALSE,,,,,Legacy two-digit year not converted before this rule; invalid here
+invalid_empty,,,12,FALSE,,,,,Missing period; all year columns NA; row kept
+invalid_not_digits,2023-6,,06,FALSE,,,,,Wrong shape; invalid
