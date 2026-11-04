@@ -59,15 +59,17 @@ a code change.
      `tax_period` by the twelve-month rule above. A column
      `tax_year_inferred` is TRUE on every row where the start year was
      inferred rather than read from the return (all SOI-derived rows
-     today), and `short_period_flag` is TRUE where the BMF accounting
-     period month for that EIN does not match the `tax_period` month,
-     which is the signal we have for a change of accounting period.
+     today). An end month alone cannot tell a full-year return from a
+     short period, so the flag claims inference, not a short period.
+     Where the BMF accounting period month for that EIN differs from the
+     `tax_period` month, `accounting_period_mismatch` is TRUE as an
+     advisory signal of a possible change of period; it is not proof.
    - Where a reported starting year exists (e-file rows in the merged
      panel), it is used and `tax_year_inferred` is FALSE.
 
 3. **Staged change, not a rewrite.**
    - Stage 1, next CORE release: add `tax_year_end`, `tax_year_inferred`
-     and `short_period_flag`. `tax_year` keeps its current meaning in
+     and `accounting_period_mismatch`. `tax_year` keeps its current meaning in
      this release. The dictionary and the release note say so.
    - Stage 2, the following release: `tax_year` switches to the starting
      year and rows move to the matching year directories. The legacy
@@ -105,11 +107,24 @@ a code change.
 - The inferred flag is honest about what we know. Short periods remain
   imperfect until a source with the start date (e-file) covers the row.
 
+## Evidence on what `tax_period` holds
+
+The SOI extract field `tax_pd` is documented only as "Tax Period: Form
+990 Header" and does not say start or end. It is the end. The BMF
+documents its TAX_PERIOD field as the period ending, and the two agree
+for the same return. Example: Centerstone of Tennessee, period July 2022
+to June 2023, carries 202306 (from the 2026-10-30 email exchange). What
+can be inferred from an end month: the start year for a twelve-month
+period. What cannot: whether the period was twelve months.
+
 ## Open questions for the committee
 
 - Should the panel tier (`core-panel`) flip in the same release as
   `core-990`, or one release later?
 - Is `tax_year_end` the right name, or `period_end_year`?
-- Does the legacy series (1989 to 2011, built from `STYEAR`) already hold
-  the starting year? Jesse's notes suggest it does. If so, Stage 2 also
-  removes a seam between legacy and modern CORE.
+- Does the legacy series (1989 to 2011) hold the starting year, the end
+  year, or both? Jesse recalls STYEAR and partial-return flags appearing
+  in some years and not others (2026-11-03), so nothing can be pinned on
+  memory. Task: profile every legacy year for the presence and population
+  of STYEAR, ENDYEAR, TAXPER and any partial-return indicator, and put
+  the table here before the historical treatment is settled.
