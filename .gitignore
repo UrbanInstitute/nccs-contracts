@@ -60,3 +60,5 @@ drafts/
 book/_book/
 book/.quarto/
 .quarto/
+.metrics/
+__pycache__/

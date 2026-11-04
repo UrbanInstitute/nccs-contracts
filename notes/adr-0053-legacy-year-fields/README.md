@@ -7,13 +7,15 @@ whether the start year they carry adds anything to the period end.
 **How.** Every file at `s3://nccsdata/legacy/core/CORE-{1989..2011}-*.csv`
 (68 files, three scopes, 11,347,844 rows) was read in full with DuckDB on
 a temporary EC2 instance (`profile_legacy_year_fields.py`, then
-`followup_file_year_and_1999.py`). Nothing was sampled. The instance was
+`followup_file_year_and_1999.py`, shared helpers in `legacy_core.py`; they
+are Python because DuckDB installs in seconds on a throwaway box). Nothing
+was sampled. The instance was
 terminated afterwards. There is no 1993 private-foundation file on S3.
 
 **Tables.** `legacy-year-fields-2026-11-04.csv` (one row per file:
 population and agreement counts), `legacy-file-year-alignment-2026-11-04.csv`
 (which year each file's rows belong to), and
-`core-1999-charities-pz-taxper-vs-styear.txt` (the 1999 anomaly).
+`core-1999-charities-pz-taxper-vs-styear-2026-11-04.csv` (the 1999 anomaly).
 
 ## Findings
 
