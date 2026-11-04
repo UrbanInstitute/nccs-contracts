@@ -121,9 +121,13 @@ period. What cannot: whether the period was twelve months.
 - Should the panel tier (`core-panel`) flip in the same release as
   `core-990`, or one release later?
 - Is `tax_year_end` the right name, or `period_end_year`?
-- Does the legacy series (1989 to 2011) hold the starting year, the end
-  year, or both? Jesse recalls STYEAR and partial-return flags appearing
-  in some years and not others (2026-11-03), so nothing can be pinned on
-  memory. Task: profile every legacy year for the presence and population
-  of STYEAR, ENDYEAR, TAXPER and any partial-return indicator, and put
-  the table here before the historical treatment is settled.
+- ~~Does the legacy series (1989 to 2011) hold the starting year, the end
+  year, or both?~~ **Answered 2026-11-04** by a full pass over all 68
+  legacy files (`notes/adr-0053-legacy-year-fields/`): STYEAR, FISYR and
+  TAXPER are fully populated in every year; STYEAR is exactly the
+  inference rule applied to TAXPER, so it is not a reported start date;
+  no short-period flag exists; the files are processing batches mixing
+  tax years. The legacy tier therefore takes the same rule as the modern
+  tier with `tax_year_inferred = TRUE`. One defect found on the way: the
+  1999 charities PZ file has a broken TAXPER and is currently published
+  under the wrong year (backlog U13), to be corrected before Stage 2.
