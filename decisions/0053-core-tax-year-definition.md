@@ -15,8 +15,7 @@ The IRS defines the tax year by the year the period begins. The Form 990
 instructions assign the 2023 form to periods beginning in 2023, and the
 e-file header carries that starting year. Our own e-file extraction
 (`nccs-data-efile`) takes `tax_year` from that header, so the same return
-is `tax_year` 2022 there. Jesse Lecy's harmonized SOI panel also uses the
-starting year.
+is `tax_year` 2022 there.
 
 For returns with December year ends the two definitions agree. For every
 other year end they differ by one year. In CORE's 2023 file that is
