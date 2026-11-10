@@ -149,7 +149,7 @@ correction:
   not_replaced:
     - "base CSVs CORE-{year}-{CLASS}-HRMN.csv (clean; left as they are)"
     - "501c3-pf (private foundations): decided separately if the full check finds damage"
-  deprecation_window: waived for the overwrite under ADR 0033 (correctness defect; originals kept aside)
+  deprecation_window: no 90-day notice before the overwrite, because the files are defective (ADR 0033 exception); originals copied aside first
 
 retention:
   retained: true
