@@ -39,6 +39,15 @@ s3:
   # are narrower than the modern pipeline's. Verify exact tax-year
   # × form coverage during S3 spot-check.
 
+# ADR 0057 (Proposed 2026-11-09; NOT yet republished): one row per return.
+row_grain:
+  one_row_is: one return (ein + tax_period), once per year file
+  unique_key: [ein, tax_period]   # rows with no tax_period excepted
+  rule: when a return sits in more than one yearly NCCS file, the copy from the newest file is kept
+  where_enforced: nccs-data-core R/transforms/repeated_returns.R, in the legacy harmonize step
+  added_column: source_file_year   # year of the NCCS file the row came from
+  before_the_fix: "2005: 490,488 rows, 97,593 repeating ein + tax_period (charities part 60,293, of which 43,729 identical in every value)"
+
 cadence:
   type: on-change
   notes: >
