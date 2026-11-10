@@ -52,6 +52,12 @@ s3:
   #   core_{tax_year}_{form}_dictionary.csv  — column metadata
   #   core_{tax_year}_{form}_quality.html    — validation report
 
+# ADR 0057 (Proposed 2026-11-09): the pre-2012 input is being corrected
+# (one row per return, newest NCCS file wins). Row counts here are unchanged;
+# values can change where repeated copies disagreed. Before the republish the
+# current files are copied to processed_merged/core/_superseded-2026-11/
+# (own manifest, retained indefinitely); the release note reports per-year
+# value-change counts.
 cadence:
   type: on-change
   notes: >

@@ -28,8 +28,12 @@ Measured on 2005 (2026-11-09):
   and 33,507 in the 2006 NCCS file.
 
 The merged panel (`processed_merged/core/`) already keeps one row per
-(EIN, period end) on each side before merging, so it is not affected.
-The pre-2012 tier itself is, and `sector-in-brief-data` reads it.
+(EIN, period end) on each side before merging, so its row counts are
+not affected. Its values can be: today it keeps the first copy it
+meets, while this decision keeps the newest NCCS file's copy, and
+repeated copies do not always agree (16,564 of the repeated 2005 charity
+rows differ somewhere). The pre-2012 tier itself has the repeats, and
+`sector-in-brief-data` reads it.
 
 ## Decision
 
@@ -46,8 +50,22 @@ The pre-2012 tier itself is, and `sector-in-brief-data` reads it.
 4. **The rule lives in one place:** `R/transforms/repeated_returns.R`
    in `nccs-data-core`, applied once in the legacy harmonize step, with
    a unit test. Consumers do not deduplicate.
-5. **Republish.** The pre-2012 years are rebuilt and republished at the
+5. **Keep what is there before replacing it.** Before any upload, the
+   current published files of every affected year in
+   `processed_legacy/core/` and `processed_merged/core/` are copied to
+   `processed_legacy/core/_superseded-2026-11/` and
+   `processed_merged/core/_superseded-2026-11/`, same relative paths,
+   each with a manifest (ADR 0014) recording sha256 per file. The copies
+   are written once, verified, never rewritten, and retained
+   indefinitely under the same rule as ADR 0056 Decision 2. The upload
+   runs only after the copy's manifest verifies, and a retry reuses the
+   copy rather than remaking it (ADR 0056 Decision 13). The release note
+   links to the copies.
+6. **Republish.** The pre-2012 years are rebuilt and republished at the
    same paths. The merged panel is rebuilt after, since it reads them.
+   The merged rebuild's acceptance evidence includes, per year, the
+   count of rows whose values changed and which columns changed most,
+   taken from the before copy; the release note reports them.
 
 ## Consequences
 
@@ -56,6 +74,8 @@ The pre-2012 tier itself is, and `sector-in-brief-data` reads it.
 - `sector-in-brief-data` and any other reader of the tier see fewer
   rows and one new column. Aggregates that summed over the repeats were
   too high and will change.
+- Readers of the merged panel see the same row counts but, where
+  repeated copies disagreed, different values for some rows.
 - The ADR 0056 rewrite of the harmonized files inherits clean rows with
   no logic of its own.
 
@@ -63,13 +83,17 @@ The pre-2012 tier itself is, and `sector-in-brief-data` reads it.
 
 Waived under ADR 0033: the repeats are a correctness defect (double
 counting), the fix removes rows rather than changing their meaning, and
-the one added column is additive. Readers are told in the release note.
+the one added column is additive. The waiver covers timing only; the
+before copies in Decision 5 are what keeps the earlier published inputs
+reachable. Readers are told in the release note.
 
 ## Follow-up
 
-1. Rerun the legacy pipeline on EC2 and republish `processed_legacy/core/`
-   (ADR 0056 Follow-up 3 shares the box).
-2. Rebuild and republish the merged panel.
+1. Rerun the legacy pipeline on EC2 (ADR 0056 Follow-up 3 shares the
+   box); copy the current published years aside per Decision 5; then
+   republish `processed_legacy/core/`.
+2. Rebuild the merged panel, measure the value changes against the
+   before copy, then republish.
 3. Record the per-year dropped counts in the contract's notes and in the
    release note; tell the `sector-in-brief-data` maintainer.
 4. Update the `core-legacy` contract (row grain, new column).

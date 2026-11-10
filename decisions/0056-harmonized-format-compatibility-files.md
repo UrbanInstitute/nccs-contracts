@@ -75,7 +75,9 @@ Kim.
 
 1. **The damaged files are replaced once, in place, at the same paths.**
    The replacement is the current CORE's values, renamed to the old
-   column names. Nobody has to change a link or a path. This uses the
+   column names, written to exactly the keys being replaced: same
+   folder, same file name, same `V1` token (a parquet copy is added
+   beside each CSV). Nobody has to change a link or a path. This uses the
    ADR 0033 override for a correctness defect, with no waiting period:
    every day the damaged files stay at those paths, someone can download
    wrong numbers.
@@ -238,10 +240,20 @@ Kim.
     - Any reader can tell the state from `README.txt` and from the
       folder manifest: a file whose sha256 matches the new manifest is
       new; one that matches the copy-aside manifest is old.
-    - If the upload is interrupted, it is simply rerun. Uploads are
-      idempotent by sha256 (ADR 0014), so finished files are skipped
-      and the rest continue. The originals are safe in the copy-aside
-      from the first step, so no state of interruption loses data.
+    - **The copy-aside is written once and never rewritten.** Before
+      the first upload, the copy-aside manifest records the sha256 of
+      every original. On a retry after an interruption, the copy step
+      is not rerun: the copy-aside is verified against its own manifest
+      and reused. A retry never copies a live key into the copy-aside,
+      because some live keys already hold replacement bytes. The
+      replacement manifest (built before the first upload, with the
+      sha256 of every replacement file) is the only list the retry
+      works from: a live key whose sha256 matches the replacement is
+      skipped, one that matches the original is uploaded, and one that
+      matches neither stops the run for a person to look at. Delete
+      protection on the folder does not prevent overwrites, so this rule
+      is the only thing that keeps the originals intact; it is enforced
+      in the upload script, not by bucket permissions.
     - The website note and the notices to outside contacts go out after
       `README.txt` says complete.
 
