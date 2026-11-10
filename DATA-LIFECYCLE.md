@@ -41,7 +41,7 @@ Each repository's README explains how to run it.
 |---|---|
 | [`nccs-data-bmf`](https://github.com/UrbanInstitute/nccs-data-bmf) | The monthly BMF, cleaned and standardized. The Unified BMF, which combines the available historical files into one row per organization with summary information about its history. The geocoded version with latitude and longitude. Geography crosswalks (tables linking organizations to counties and metro areas) and lookup tables for the codes. |
 | [`nccs-data-core`](https://github.com/UrbanInstitute/nccs-data-core) | CORE: the yearly Form 990 figures, with the 2012-on IRS extracts and the 1989 to 2011 NCCS files combined into one series with the same column names throughout. |
-| [`nccs-data-efile`](https://github.com/UrbanInstitute/nccs-data-efile) | Our own extraction from the e-filed returns. Today it covers two measures (government grants and program-related investments) used by the dashboard. The full e-file 990 tables on the website are built by Jesse Lecy's [`ef2`](https://github.com/Nonprofit-Open-Data-Collective/ef2) package from the Nonprofit Open Data Collective, which starts from GivingTuesday's copy of the IRS files. NCCS hosts those tables. |
+| [`ef2`](https://github.com/Nonprofit-Open-Data-Collective/ef2) (Jesse Lecy, Nonprofit Open Data Collective) | The e-file 990 tables: every e-filed Form 990, 990-EZ and 990-PF turned into tables, one per part of the form. It starts from GivingTuesday's copy of the IRS files. NCCS hosts the results. |
 
 The main processed datasets include a build record showing the code
 version, the input files and the row counts. Older and externally
@@ -54,7 +54,7 @@ is called a bucket). Anyone can download from them without an account.
 
 | Bucket | What is in it |
 |---|---|
-| `nccsdata` | The main one. IRS files as received, the cleaned BMF and CORE datasets, the Unified and geocoded BMF, crosswalks, lookup tables, the dashboard's data, and our own e-file extracts. |
+| `nccsdata` | The main one. IRS files as received, the cleaned BMF and CORE datasets, the Unified and geocoded BMF, crosswalks, lookup tables, and the dashboard's data. |
 | `nccs-efile` | The e-file 990 tables built with the `ef2` package (current release `efile_v3_1`, tax years 2009 to 2025), including the files behind the website's e-file pages. |
 | `nccs-data-archive` | Retired copies of old files, kept so nothing is lost. Do not use for new work. |
 
@@ -68,6 +68,7 @@ and `latest/` inside a folder points to the current version.
 |---|---|
 | [`nccsdata`](https://github.com/UrbanInstitute/nccsdata) (R package) | Lets researchers load the BMF and CORE straight from storage in R. |
 | [`sector-in-brief-data`](https://github.com/UrbanInstitute/sector-in-brief-data) and [`sector-in-brief`](https://github.com/UrbanInstitute/sector-in-brief) | The first builds the numbers behind the Sector In Brief dashboard; the second shows them. The dashboard is pinned to one dated version of the data. |
+| [`sector-in-brief-api`](https://github.com/UrbanInstitute/sector-in-brief-api) (download service) | Lets a user or a program ask for a custom slice of the BMF or CORE data and get back a download link, without downloading whole files. |
 | [`nccs`](https://github.com/UrbanInstitute/nccs) (the website) | nccs.urban.org. Each dataset has a page describing it, and the catalog pages list every downloadable file. |
 
 ## Step 6: how changes are agreed
