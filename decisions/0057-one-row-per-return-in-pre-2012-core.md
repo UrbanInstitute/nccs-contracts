@@ -1,6 +1,6 @@
 # 0057: One row per return in the pre-2012 CORE
 
-- **Status:** Proposed (2026-11-09)
+- **Status:** Accepted 2026-11-10, now Executing (decided by the maintainer on merge of PR #126)
 - **Date:** 2026-11-09
 - **Deciders:** Thiyaghessan Poongundranar (tpoongundranar@urban.org); decided 2026-11-09 to fix at the source rather than in a consumer
 - **Related:** [[0056-harmonized-format-compatibility-files]] (where the repeats were found), [[0053-core-tax-year-definition]] (rows are assigned to years by period end), [[0033-deprecation-window-policy-and-critical-bug-override]], contract `core-legacy`, contract `core-panel`
