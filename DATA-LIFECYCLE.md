@@ -1,56 +1,51 @@
 # How NCCS data moves: from the IRS to nccs.urban.org
 
-Written for someone new to NCCS. It explains where our data comes from,
-what we do to it, where it is kept, and where it ends up. Read this
-before `ARCHITECTURE.md`, which goes into more detail.
+NCCS takes the free files the IRS publishes about tax-exempt
+organizations, cleans them, combines them with earlier years, and
+publishes the result as data files anyone can download. Our R package,
+the Sector In Brief dashboard and the nccs.urban.org website all read
+from those published files.
 
-Last checked 9 November 2026.
-
-## The short version
-
-The IRS publishes several free files about tax-exempt organizations.
-NCCS copies each file into its own storage, cleans and combines it with
-earlier years, and publishes the result as data files anyone can
-download. Our R package, the Sector In Brief dashboard, and the
-nccs.urban.org website all read from those published files. Nothing
-reads from the IRS directly except the first copying step.
+This is a short overview for someone joining the team. `ARCHITECTURE.md`
+has the detail. Last checked 9 November 2026.
 
 ## Step 1: what the IRS publishes
 
 | IRS file | What it is | How often | What NCCS makes from it |
 |---|---|---|---|
 | Business Master File (BMF) | The IRS list of every registered tax-exempt organization: name, address, type, size class | Monthly | The BMF datasets |
-| SOI extracts | Yearly spreadsheets of the main Form 990, 990-EZ and 990-PF figures, from 2012 on | Yearly | The CORE datasets |
-| E-filed returns | The full text of every electronically filed Form 990, as XML files | Several releases a year | The e-file 990 tables |
+| Statistics of Income (SOI) extracts | Yearly spreadsheets of the main Form 990, 990-EZ and 990-PF figures, from 2012 on | Yearly | The CORE datasets |
+| E-filed returns | The full content of every electronically filed Form 990, as XML files (a plain-text format that computers read, not people) | Several releases a year | The e-file 990 tables |
 | Smaller lists | Organizations that lost exemption, Pub 78 (eligible for tax-deductible gifts), 990-N postcard filers, and similar | Monthly | Published as lists, mostly as received |
 
 Two things come from elsewhere: geography (Census boundaries, used to
 place each organization in a county and metro area) and older NCCS
 files from before 2012, which we keep to extend the record back to 1989.
 
-## Step 2: copying the IRS files
+## Step 2: getting the IRS files
 
-Small automated programs (called collectors) check the IRS website each
-month and copy any new file into NCCS storage, unchanged. Their code is
-in the `nccs-lambda` repository. If a monthly update is missing, this is
-the first place to look.
+Each pipeline retrieves the source files it needs.
+[`nccs-lambda`](https://github.com/UI-Research/nccs-lambda) collects the
+monthly BMF and several smaller IRS lists with small automated programs
+that run each month. CORE and e-file data have separate download steps
+inside their own repositories. If a monthly BMF update is missing,
+`nccs-lambda` is the first place to look.
 
 ## Step 3: cleaning and combining
 
-Each dataset has its own code repository that turns the raw IRS files
-into something usable. A repository is a folder of code with its own
-history and its own `README.md` and `CLAUDE.md` that explain how to run
-it.
+Each dataset has its own code repository that turns the IRS files into
+something usable. A repository is a folder of code with its own history.
+Each repository's README explains how to run it.
 
 | Repository | What it produces |
 |---|---|
-| `nccs-data-bmf` | The monthly BMF, cleaned and standardized. The Unified BMF: one row per organization covering every month since 1989. The geocoded version with latitude and longitude. Geography crosswalks (tables linking organizations to counties and metro areas) and lookup tables for the codes. |
-| `nccs-data-core` | CORE: the yearly Form 990 figures, with the 2012-on IRS extracts and the 1989 to 2011 NCCS files combined into one series with the same column names throughout. |
-| `nccs-data-efile` | Our own extraction from the e-filed returns. Today it covers two measures (government grants and program-related investments) used by the dashboard. The full e-file 990 tables on the website are built by Jesse Lecy's `ef2` package from the Nonprofit Open Data Collective, which starts from GivingTuesday's copy of the IRS files. |
+| [`nccs-data-bmf`](https://github.com/UrbanInstitute/nccs-data-bmf) | The monthly BMF, cleaned and standardized. The Unified BMF, which combines the available historical files into one row per organization with summary information about its history. The geocoded version with latitude and longitude. Geography crosswalks (tables linking organizations to counties and metro areas) and lookup tables for the codes. |
+| [`nccs-data-core`](https://github.com/UrbanInstitute/nccs-data-core) | CORE: the yearly Form 990 figures, with the 2012-on IRS extracts and the 1989 to 2011 NCCS files combined into one series with the same column names throughout. |
+| [`nccs-data-efile`](https://github.com/UrbanInstitute/nccs-data-efile) | Our own extraction from the e-filed returns. Today it covers two measures (government grants and program-related investments) used by the dashboard. The full e-file 990 tables on the website are built by Jesse Lecy's [`ef2`](https://github.com/Nonprofit-Open-Data-Collective/ef2) package from the Nonprofit Open Data Collective, which starts from GivingTuesday's copy of the IRS files. NCCS hosts those tables. |
 
-Each published file comes with a small record of what it was built from
-(the code version, the input files, the row count). This is how we check
-that a file is what we think it is.
+The main processed datasets include a build record showing the code
+version, the input files and the row counts. Older and externally
+produced files do not all have one.
 
 ## Step 4: where the data is kept
 
@@ -59,40 +54,41 @@ is called a bucket). Anyone can download from them without an account.
 
 | Bucket | What is in it |
 |---|---|
-| `nccsdata` | The main one. Raw IRS copies, the cleaned BMF and CORE datasets, the Unified and geocoded BMF, crosswalks, lookup tables, the dashboard's data, and our own e-file extracts. |
+| `nccsdata` | The main one. IRS files as received, the cleaned BMF and CORE datasets, the Unified and geocoded BMF, crosswalks, lookup tables, the dashboard's data, and our own e-file extracts. |
 | `nccs-efile` | The e-file 990 tables built with the `ef2` package (current release `efile_v3_1`, tax years 2009 to 2025), including the files behind the website's e-file pages. |
 | `nccs-data-archive` | Retired copies of old files, kept so nothing is lost. Do not use for new work. |
 
-Within `nccsdata`, the rule is simple: `raw/` holds IRS files as
-received, `processed/` holds cleaned data, `unified/` and `geocoding/`
-hold the combined BMF, and `latest/` inside a folder always points to
-the current version.
+Within `nccsdata`: `raw/` holds IRS files as received, `processed/`
+holds cleaned data, `unified/` and `geocoding/` hold the combined BMF,
+and `latest/` inside a folder points to the current version.
 
 ## Step 5: who reads the published data
 
 | Reader | What it does |
 |---|---|
-| `nccsdata` (R package) | Lets researchers load the BMF and CORE straight from storage in R. |
-| `sector-in-brief-data` and `sector-in-brief` | Build the numbers behind the Sector In Brief dashboard, then show them. The dashboard is pinned to one dated version of the data. |
-| `nccs` (the website) | nccs.urban.org. Each dataset has a page describing it, and the catalog pages list every downloadable file. |
+| [`nccsdata`](https://github.com/UrbanInstitute/nccsdata) (R package) | Lets researchers load the BMF and CORE straight from storage in R. |
+| [`sector-in-brief-data`](https://github.com/UrbanInstitute/sector-in-brief-data) and [`sector-in-brief`](https://github.com/UrbanInstitute/sector-in-brief) | The first builds the numbers behind the Sector In Brief dashboard; the second shows them. The dashboard is pinned to one dated version of the data. |
+| [`nccs`](https://github.com/UrbanInstitute/nccs) (the website) | nccs.urban.org. Each dataset has a page describing it, and the catalog pages list every downloadable file. |
 
 ## Step 6: how changes are agreed
 
-The `nccs-contracts` repository (this one) holds one short file per
-published dataset saying where it lives, what columns it has, and who
-reads it. A change to any of those is agreed here first, and the reason
-is written down in `decisions/`. A monthly data governance committee
-reviews these changes. The process document on Box, "NCCS process,
-reviewers and roles", says who reviews what.
+This repository, `nccs-contracts`, holds one short file per published
+dataset saying where it lives, what columns it has, and who reads it. A
+change to any of those is agreed here first, and the reason is written
+down in `decisions/`. A monthly data governance committee reviews these
+changes. The process document on Box, "NCCS process, reviewers and
+roles" (in Data Engineering / Data Engineering Processes), says who
+reviews what.
 
 ## Where to look when something is wrong
 
-- A monthly BMF file did not arrive: the collectors (`nccs-lambda`).
+- A monthly BMF file did not arrive: `nccs-lambda`.
 - A BMF number looks wrong: `nccs-data-bmf`, starting with its quality
   reports in `docs/quality-reports/`.
 - A CORE figure looks wrong: `nccs-data-core`.
-- The dashboard shows old data: `sector-in-brief-data`, which decides
-  the version the dashboard reads.
+- The dashboard shows old data: check whether `sector-in-brief-data` has
+  published an update, and whether `sector-in-brief` is using that
+  version.
 - A website page is out of date: `nccs`, where catalog pages are rebuilt
   by hand and can lag behind storage.
 
