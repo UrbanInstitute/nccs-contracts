@@ -1,6 +1,6 @@
 # 0058: Add the organization role column to the Unified BMF
 
-- **Status:** Proposed 2026-11-10 (becomes Accepted when the maintainer merges this PR)
+- **Status:** Accepted 2026-11-10, now Executing (decided by the maintainer on merge of PR #129)
 - **Date:** 2026-11-10
 - **Deciders:** Thiyaghessan Poongundranar (tpoongundranar@urban.org); decided 2026-11-10 to add the column in the November 2026 build
 - **Related:** [[0036-ein-coercion-safety-additive-columns]] (the earlier case of adding columns without changing existing ones), [[0048-nteev2-specialty-code-x00-rule]] (how the NTEE columns are built), [[0016-no-canonical-cross-dataset-merge]] (consumers join by EIN themselves)
@@ -78,11 +78,16 @@ one-off file made with it was sent to the colleague (see
    names `nccs_org_class` and `nccs_org_field` are placeholders, because
    either may turn out to repeat a column the BMF already has.
 
-7. **No notice period.** The two columns are added at the end of the
-   column list. No existing column is renamed, removed or changed in
-   meaning, and the Unified BMF contract already says new columns may be
-   added at any time. The release note for the November build announces
-   them.
+7. **No notice period.** No existing column is renamed, removed or
+   changed in meaning, and the Unified BMF contract already says new
+   columns may be added at any time. The release note for the November
+   build announces the two columns and where they sit.
+
+8. **Where the columns sit.** In the Unified BMF they are the last two
+   columns. The geocoded Unified BMF and the per-state files add their
+   geocode columns after all the Unified BMF columns, so there the two
+   role columns come after the other BMF columns and before the geocode
+   columns.
 
 ## Consequences
 
@@ -93,8 +98,10 @@ one-off file made with it was sent to the colleague (see
 - A T code that never appeared in the older files follows the general
   pattern in line 4. That is an extension of what was observed, not
   something observed.
-- Anyone who reads the CSV by column position sees two extra columns at
-  the end and nothing moved.
+- Anyone who reads the Unified BMF CSV by column position sees two extra
+  columns at the end and nothing moved. Anyone who reads the geocoded CSV
+  or a per-state CSV by column position sees the geocode columns move two
+  places to the right. Reading by column name is not affected.
 - The monthly BMF files (`processed/bmf/`) do not get the columns. If a
   consumer needs the role per monthly file, that is a new decision.
 
