@@ -40,8 +40,8 @@ s3:
   # × form coverage during S3 spot-check.
 
 # ADR 0057 (Proposed 2026-11-09; NOT yet republished): one row per return.
-row_grain:
-  one_row_is: one return (ein + tax_period), once per year file
+one_row_is:
+  description: one return (ein + tax_period), once per year file
   unique_key: [ein, tax_period]   # rows with no tax_period excepted
   rule: when a return sits in more than one yearly NCCS file, the copy from the newest file is kept
   where_enforced: nccs-data-core R/transforms/repeated_returns.R, in the legacy harmonize step

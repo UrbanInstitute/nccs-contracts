@@ -95,8 +95,17 @@ reachable. Readers are told in the release note.
 2. Rebuild the merged panel, measure the value changes against the
    before copy, then republish.
 3. Record the per-year dropped counts in the contract's notes and in the
-   release note; tell the `sector-in-brief-data` maintainer.
-4. Update the `core-legacy` contract (row grain, new column).
+   release note.
+4. Sector in Brief does not update on its own. After the republish:
+   rerun `sector-in-brief-data` to produce a new dated version of its
+   tables (pre-2012 counts will fall), check the new numbers, then
+   repoint the dashboard to that version. Tell its maintainer first.
+5. Review the CORE processing code (`nccs-data-core`) for brittleness:
+   the maintainer reads it by hand with the `ub-mode` skill applied
+   (tests first, one decision in one place, root causes). The two
+   defects found this month, the carried-forward repeats and the 2025
+   damage, both came from stacking steps that no test covered.
+6. Update the `core-legacy` contract (what one row is, new column).
 
 ## Outcome
 
