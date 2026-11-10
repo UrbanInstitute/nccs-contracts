@@ -2,7 +2,7 @@
 
 - **Status:** Proposed (2026-11-09)
 - **Date:** 2026-11-09
-- **Deciders:** sole maintainer (decided 2026-11-09 to fix at the source rather than in a consumer)
+- **Deciders:** Thiyaghessan Poongundranar (tpoongundranar@urban.org); decided 2026-11-09 to fix at the source rather than in a consumer
 - **Related:** [[0056-harmonized-format-compatibility-files]] (where the repeats were found), [[0053-core-tax-year-definition]] (rows are assigned to years by period end), [[0033-deprecation-window-policy-and-critical-bug-override]], contract `core-legacy`, contract `core-panel`
 
 ## Context
@@ -32,8 +32,8 @@ The merged panel (`processed_merged/core/`) already keeps one row per
 not affected. Its values can be: today it keeps the first copy it
 meets, while this decision keeps the newest NCCS file's copy, and
 repeated copies do not always agree (16,564 of the repeated 2005 charity
-rows differ somewhere). The pre-2012 tier itself has the repeats, and
-`sector-in-brief-data` reads it.
+rows differ somewhere). The pre-2012 CORE files themselves have the
+repeats, and `sector-in-brief-data` reads them.
 
 ## Decision
 
@@ -71,7 +71,7 @@ rows differ somewhere). The pre-2012 tier itself has the repeats, and
 
 - Row counts in every pre-2012 year file fall. For 2005 the charities
   file goes from 324,768 rows to about 264,000.
-- `sector-in-brief-data` and any other reader of the tier see fewer
+- `sector-in-brief-data` and any other reader of the pre-2012 CORE files see fewer
   rows and one new column. Aggregates that summed over the repeats were
   too high and will change.
 - Readers of the merged panel see the same row counts but, where
@@ -81,32 +81,41 @@ rows differ somewhere). The pre-2012 tier itself has the repeats, and
 
 ## Deprecation window
 
-Waived under ADR 0033: the repeats are a correctness defect (double
-counting), the fix removes rows rather than changing their meaning, and
-the one added column is additive. The waiver covers timing only; the
-before copies in Decision 5 are what keeps the earlier published inputs
-reachable. Readers are told in the release note.
+We will not be providing 90-day notice since this is a defective file
+which falls under the rule's exception (ADR 0033): the repeats are a
+correctness defect (double counting), the fix removes rows rather than
+changing their meaning, and the one added column is additive. Skipping
+the notice does not mean skipping the copy: the old files are copied
+aside first (Decision 5), so anyone who used them can still get them.
+Readers are told in the release note.
 
 ## Follow-up
 
-1. Rerun the legacy pipeline on EC2 (ADR 0056 Follow-up 3 shares the
-   box); copy the current published years aside per Decision 5; then
+1. Rerun the legacy pipeline on EC2 (ADR 0056 Follow-up item 3 uses the
+   same EC2 instance); copy the current published years aside per Decision 5; then
    republish `processed_legacy/core/`.
 2. Rebuild the merged panel, measure the value changes against the
-   before copy, then republish.
+   before copy for correctness, then republish.
 3. Record the per-year dropped counts in the contract's notes and in the
    release note.
 4. Sector in Brief does not update on its own. After the republish:
    rerun `sector-in-brief-data` to produce a new dated version of its
    tables (pre-2012 counts will fall), check the new numbers, then
-   repoint the dashboard to that version. Tell its maintainer first.
+   repoint the dashboard to that version.
 5. Review the CORE processing code (`nccs-data-core`) for brittleness:
    the maintainer reads it by hand with the `ub-mode` skill applied
    (tests first, one decision in one place, root causes). The two
    defects found this month, the carried-forward repeats and the 2025
    damage, both came from stacking steps that no test covered.
-6. Update the `core-legacy` contract (what one row is, new column).
+6. Update [`contracts/core-legacy.yml`](../contracts/core-legacy.yml)
+   (the `one_row_is` block and the new column) and
+   [`contracts/core-panel.yml`](../contracts/core-panel.yml).
 
 ## Outcome
 
-_To be filled at reconcile._
+Written when the work is done. It will state: the date the pre-2012
+files and the merged panel were republished, the per-year rows dropped,
+the per-year value changes in the merged panel, where the before copies
+are, the link to the release note, and the dates the Sector in Brief
+tables were rerun and the dashboard repointed. Until then this decision
+stays Proposed or Executing.

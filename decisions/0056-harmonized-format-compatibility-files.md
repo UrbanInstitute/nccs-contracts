@@ -2,7 +2,7 @@
 
 - **Status:** Proposed (2026-11-09)
 - **Date:** 2026-11-09
-- **Deciders:** sole maintainer; raised by an outside user's report through the website contact form (2026-11-09)
+- **Deciders:** Thiyaghessan Poongundranar (tpoongundranar@urban.org); raised by an outside user's report through the website contact form (2026-11-09)
 - **Related:** [[0035-retain-harmonized-core-frozen-surface]] (amends: a frozen file can hold a defect), [[0033-deprecation-window-policy-and-critical-bug-override]] (the correctness-defect override used here), [[0043-legacy-format-compatibility-views]] (same renaming pattern, different old format), [[0014-standardize-manifest-shape]], [[0053-core-tax-year-definition]]
 
 ## Context
@@ -347,11 +347,12 @@ reviewed picks for the 17 columns applied.
 
 ## Deprecation window
 
-Waived for the overwrite of the damaged yearly files, under ADR 0033's
-correctness-defect override: the harm is that readers download
-meaningless numbers from the published address, and the originals are
-kept aside, so nothing is lost. `_superseded-2025-04/` is never
-removed; see Decision 2.
+We will not be providing 90-day notice before overwriting the damaged
+yearly files, since they are defective and fall under the rule's
+exception (ADR 0033): every day they stay, readers download meaningless
+numbers from the published address. The originals are copied aside
+first and `_superseded-2025-04/` is never removed (Decision 2), so
+nothing is lost.
 
 ## Follow-up
 
@@ -373,4 +374,8 @@ removed; see Decision 2.
 
 ## Outcome
 
-_To be filled at reconcile._
+Written when the work is done. It will state: the date of the rewrite,
+the list of files replaced with their new sizes and hashes, where the
+copy-aside is, the results of every check in Decision 10 per year, the
+38 returns explained, and the dates of the notices. Until then this
+decision stays Proposed or Executing.
