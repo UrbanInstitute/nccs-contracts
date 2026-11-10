@@ -86,6 +86,9 @@ manifest:
 
 schema:
   source: geocoding/unified-bmf/latest/bmf_unified_geocoded_data_dictionary.csv  # the data dictionary is a CSV saved in the same folder as the data file; the pipeline rewrites it on every run (master_geocoding.R)
+  # ADR 0058 (from the November 2026 build on): the two organization role
+  # columns of the Unified BMF, nccs_org_role and nccs_org_role_definition,
+  # are carried through unchanged. See contracts/unified-bmf.yml.
 
 consumers:
   - repo: UrbanInstitute/nccsdata

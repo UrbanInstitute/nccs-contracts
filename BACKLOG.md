@@ -171,7 +171,7 @@ go.
 | # | Task | Where | Notes |
 |---|------|-------|-------|
 | M1 | Build the November 2026 monthly BMF (`processed/bmf/2026_11/`) from `raw/bmf/2026-11-BMF.csv` | `nccs-data-bmf` | Newest monthly build on S3 is 2026_07. Check the build summary counts before publishing. |
-| M2 | Rebuild the Unified BMF (one row per EIN) with the November file added | `nccs-data-bmf` | Contract `unified-bmf.yml`: rebuilt when a new monthly file arrives. |
+| M2 | Rebuild the Unified BMF (one row per EIN) with the November file added. This build also adds the two organization role columns, `nccs_org_role` and `nccs_org_role_definition` (ADR 0058) | `nccs-data-bmf` | Contract `unified-bmf.yml`: rebuilt when a new monthly file arrives. Check the counts by role against the figures in ADR 0058 before publishing. |
 | M3 | Geocode the addresses that are new since the last build, then publish the geocoded Unified BMF (dated copy plus `latest/`) and the per-state files | `nccs-data-bmf` | Send only the new addresses (the "delta" mode). The geocoder is automatic: drop the files in its input folder and wait for the output. The R package and the download API read `latest/`, so they pick this up with no change. |
 | M4 | Rebuild the EIN index (the small files behind the website's lookup by EIN) | `nccs-data-bmf` | Contract `bmf-ein-index.yml`: rebuilt at the end of every Unified BMF build. |
 | M5 | Rebuild the two crosswalks that follow the monthly BMF: NTEE-resolved and address-resolved | `nccs-data-bmf` | Both contracts say monthly, after each new BMF. |
