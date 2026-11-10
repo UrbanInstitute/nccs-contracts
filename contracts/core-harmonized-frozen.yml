@@ -98,6 +98,59 @@ inventory:
       full  : { count:   1, version: V1 }
 
 # Retention guarantee (ADR 0035). The reason this contract exists.
+# ---- ADR 0056: known defects in the frozen objects (found 2026-11-09) ----
+# Corrected once in place under ADR 0056; see correction: below.
+known_defects:
+  - id: damaged-dollar-values-2025-04
+    found: "2026-11-09"
+    reported_by: outside user, via the website contact form
+    what: >
+      Many dollar amounts in the yearly marts files were replaced by a
+      meaningless tiny number (about 1.11e-308). The original values
+      cannot be reliably recovered from the damaged ones.
+    affected:
+      confirmed_by_full_scan:
+        - "501c3-pz/marts/CORE-2022-501C3-CHARITIES-PZ-HRMN-V1.csv  (47 of 298 columns; total assets damaged in 439,859 of 443,601 rows)"
+      confirmed_by_3mb_sample:
+        - "501c3-pz/marts/ V1 files for 2012, 2015, 2018, 2019, 2020, 2021"
+        - "501c3-pc/marts/CORE-2022-501C3-CHARITIES-PC-HRMN-V1.csv"
+        - "501ce-pz/marts/CORE-2022-501CE-NONPROFIT-PZ-HRMN-V1.csv"
+        - "501ce-pc/marts/CORE-2022-501CE-NONPROFIT-PC-HRMN-V1.csv"
+      clean_in_sample:
+        - "501c3-pf/marts/CORE-2022-501C3-PRIVFOUND-PF-HRMN-V0.csv"
+        - "501c3-pz/CORE-2022-501C3-CHARITIES-PZ-HRMN.csv  (base file, read in full)"
+      not_yet_checked:
+        - "all five full/ parquet files"
+        - "every marts file in full (EC2 job, ADR 0056 Follow-up 1)"
+    likely_cause: >
+      The 2024 pipeline (R/core_update.R, commit f4cb15a) stacked columns
+      stored as 64-bit whole numbers on top of columns stored as decimals.
+      Not proven by a re-run.
+  - id: doubled-returns-2025-04
+    found: "2026-11-09"
+    what: >
+      The 2022 charities PZ marts file has 443,601 rows but 392,795
+      distinct returns (EIN plus period end). 50,806 returns appear twice:
+      the base-file rows stacked on the same returns from the newer IRS
+      extract. Other years not yet counted.
+
+# ---- ADR 0056: one-time correction in place (decided; NOT YET DONE) ----
+# The damaged yearly files, the full/ parquet files and the dd/ dictionaries
+# will be replaced ONCE at their current paths with the current CORE's values
+# renamed to the old column names (same headers, five carried columns added
+# at the end). Before the overwrite every replaced object is copied to the
+# path below. After the rewrite the folder is frozen again and not updated.
+# When done: update inventory:, manifest:, and set correction.status: done.
+correction:
+  status: planned
+  adr: "0056"
+  originals_copied_to: harmonized/core/_superseded-2025-04/   # same relative paths; own manifest; same delete protection; RETAINED INDEFINITELY (moves with the folder if it is ever archived)
+  notice_file: harmonized/core/README.txt
+  not_replaced:
+    - "base CSVs CORE-{year}-{CLASS}-HRMN.csv (clean; left as they are)"
+    - "501c3-pf (private foundations): decided separately if the full check finds damage"
+  deprecation_window: no 90-day notice before the overwrite, because the files are defective (ADR 0033 exception); originals copied aside first
+
 retention:
   retained: true
   frozen_since: "2025-04-21"        # last object LastModified; nothing written after
@@ -193,6 +246,9 @@ drift_detection:
   # Integrity check against the manifest is etag+size, not per-file sha256
   # (deferred — see manifest.integrity_basis + deviations[]): a changed ETag or
   # byte-size, or a missing/added path vs the 232 manifest entries, is the signal.
+  # ADR 0056: until correction.status is done, the 232 entries stand. After the
+  # rewrite the manifest is regenerated and _superseded-2025-04/ and README.txt
+  # are part of the inventory.
 
 deprecation_window_days: 90
 

@@ -1,6 +1,6 @@
 # 0035 — Retain the Harmonized CORE Surface as a Frozen, Protected Artifact
 
-- **Status:** Accepted
+- **Status:** Accepted; amended by [[0056-harmonized-format-compatibility-files]] (2026-11-09): the claim that a frozen artifact cannot hold a correctness defect was wrong, the yearly files were damaged when frozen, and they are corrected once in place under ADR 0056 with the originals kept aside.
 - **Date:** 2026-06-26
 - **Deciders:** sole maintainer
 - **Related:** [[0015-core-contract-surface-restructure]] (corrects), [[0005-bmf-unified-superseded-by-master]], [[0033-deprecation-window-policy-and-critical-bug-override]], [[0013-versioned-producer-outputs]], [[0014-standardize-manifest-shape]], [[0001-s3-as-contract-surface]]
