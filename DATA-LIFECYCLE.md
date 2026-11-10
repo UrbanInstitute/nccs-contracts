@@ -13,10 +13,10 @@ has the detail. Last checked 9 November 2026.
 
 | IRS file | What it is | How often | What NCCS makes from it |
 |---|---|---|---|
-| Business Master File (BMF) | The IRS list of every registered tax-exempt organization: name, address, type, size class | Monthly | The BMF datasets |
-| Statistics of Income (SOI) extracts | Yearly spreadsheets of the main Form 990, 990-EZ and 990-PF figures, from 2012 on | Yearly | The CORE datasets |
-| E-filed returns | The full content of every electronically filed Form 990, as XML files (a plain-text format that computers read, not people) | Several releases a year | The e-file 990 tables |
-| Smaller lists | Organizations that lost exemption, Pub 78 (eligible for tax-deductible gifts), 990-N postcard filers, and similar | Monthly | Published as lists, mostly as received |
+| Business Master File (BMF) | The IRS list of every registered tax-exempt organization: name, address, type, size class | Monthly | [The BMF datasets](https://nccs.urban.org/nccs/datasets/bmf/) |
+| Statistics of Income (SOI) extracts | Yearly spreadsheets of the main Form 990, 990-EZ and 990-PF figures, from 2012 on | Yearly | [The CORE datasets](https://nccs.urban.org/nccs/datasets/core/) |
+| E-filed returns | The full content of every electronically filed Form 990, as XML files (a plain-text format that computers read, not people) | Several releases a year | [The e-file 990 tables](https://nccs.urban.org/nccs/datasets/efile/) |
+| Smaller lists | Organizations that lost exemption, Pub 78 (eligible for tax-deductible gifts), 990-N postcard filers, and similar | Monthly | Published as lists, mostly as received (see the [dataset catalog](https://nccs.urban.org/nccs/datasets/)) |
 
 Two things come from elsewhere: geography (Census boundaries, used to
 place each organization in a county and metro area) and older NCCS
@@ -66,10 +66,10 @@ and `latest/` inside a folder points to the current version.
 
 | Reader | What it does |
 |---|---|
-| [`nccsdata`](https://github.com/UrbanInstitute/nccsdata) (R package) | Lets researchers load the BMF and CORE straight from storage in R. |
-| [`sector-in-brief-data`](https://github.com/UrbanInstitute/sector-in-brief-data) and [`sector-in-brief`](https://github.com/UrbanInstitute/sector-in-brief) | The first builds the numbers behind the Sector In Brief dashboard; the second shows them. The dashboard is pinned to one dated version of the data. |
+| [`nccsdata`](https://github.com/UrbanInstitute/nccsdata) (R package) | Lets researchers load the BMF and CORE straight from storage in R. [Package guide](https://urbaninstitute.github.io/nccsdata/). |
+| [`sector-in-brief-data`](https://github.com/UrbanInstitute/sector-in-brief-data) and [`sector-in-brief`](https://github.com/UrbanInstitute/sector-in-brief) | The first builds the numbers behind the [Sector In Brief dashboard](https://urban-main.shinyapps.io/sector-in-brief/); the second shows them. The dashboard is pinned to one dated version of the data. [About the dashboard](https://nccs.urban.org/nccs/resources/sector-in-brief-dashboard/). |
 | [`sector-in-brief-api`](https://github.com/UrbanInstitute/sector-in-brief-api) (download service) | Lets a user or a program ask for a custom slice of the BMF or CORE data and get back a download link, without downloading whole files. |
-| [`nccs`](https://github.com/UrbanInstitute/nccs) (the website) | nccs.urban.org. Each dataset has a page describing it, and the catalog pages list every downloadable file. |
+| [`nccs`](https://github.com/UrbanInstitute/nccs) (the website) | [nccs.urban.org](https://nccs.urban.org/). Each dataset has a [page describing it](https://nccs.urban.org/nccs/datasets/), the [catalog pages](https://nccs.urban.org/nccs/catalogs/) list every downloadable file, and the [changelog](https://nccs.urban.org/nccs/changelog/) records data changes. The [terms page](https://nccs.urban.org/nccs/terms/) says how the data may be used. |
 
 ## Step 6: how changes are agreed
 
