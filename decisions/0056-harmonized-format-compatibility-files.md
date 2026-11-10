@@ -1,6 +1,6 @@
 # 0056: Correct the frozen "harmonized" CORE files once, in place, from the current CORE, and keep the damaged originals aside
 
-- **Status:** Proposed (2026-11-09)
+- **Status:** Accepted 2026-11-10, now Executing (decided by the maintainer on merge of PR #126)
 - **Date:** 2026-11-09
 - **Deciders:** Thiyaghessan Poongundranar (tpoongundranar@urban.org); raised by an outside user's report through the website contact form (2026-11-09)
 - **Related:** [[0035-retain-harmonized-core-frozen-surface]] (amends: a frozen file can hold a defect), [[0033-deprecation-window-policy-and-critical-bug-override]] (the correctness-defect override used here), [[0043-legacy-format-compatibility-views]] (same renaming pattern, different old format), [[0014-standardize-manifest-shape]], [[0053-core-tax-year-definition]]
