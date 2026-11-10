@@ -109,6 +109,13 @@ schema:
   # UNCHANGED. ADR 0036 F1a was resolved by relabel (the dictionary now describes
   # ein_raw's lossy reality), not retype — so the contracted shape of ein_raw
   # holds. See conventions/ein-format.md.
+  # ADR 0058 additive columns (from the November 2026 build on), appended at
+  # the end of the column list and derived from this file's own
+  # ntee_code_raw, subsection_code and foundation_code by
+  # R/nccs_org_role.R::derive_nccs_org_role():
+  #   nccs_org_role             string  O (operating), S (supporting), M (mutual benefit); missing when unknown
+  #   nccs_org_role_definition  string  the same value in words
+  # Formerly NCCS_LEVEL_2 (CORE) and LEVEL2 (BMF) in the older NCCS files.
 
 # COLUMN STABILITY (recorded 2026-09-16, backlog Z17). Outside consumers
 # write our column names into their code. Known cases: NODC's npmatch
