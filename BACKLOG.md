@@ -13,7 +13,7 @@ open-loop ADR (`Accepted`/`Executing`) should map to a row here. Run
 `/reconcile-status` at boot to cross-check the board against downstream PRs and
 catch reconcile lag.
 
-_Last updated: 2026-11-04._
+_Last updated: 2026-11-09._
 
 ---
 
@@ -146,9 +146,45 @@ retaining the Unified BMF name"; ADR 0022 consumer-notification obligation satis
 | 6 | Publish/formalize the NTEE-EIN crosswalk on the website | `nccs` | **✅ DONE** — published on the BMF catalog (nccs PR #88, live on Pages); consumer back-reconciled into the contract + ADR 0034 (nccs-contracts PR #45). |
 | 7 | Build the modular `_nccs` metadata datasets (separate, contracted, joinable on `ein`) | `nccs-data-bmf` / `nccs-data-core` + contracts | **ADR-NEEDED (§4.2).** ⚠️ overlaps #12 (Jesse ratifies). See sequencing note below. |
 | 8 | Expose the optional metadata merge in nccsdata (off by default) | `nccsdata` | **ADR-NEEDED (§4.3).** Same Jesse-gating as #7. Design sketch in the fact-finding §4.3. |
-| 9 | Update harmonized datasets from the new CORE (convert columns via crosswalk) so the parallel surface keeps functioning | `nccs-data-core` + contracts | ⚠️ **This is a NEW ongoing "compatibility shim" surface, distinct from the FROZEN run-1 files (ADR 0035).** Needs its own ADR (new producer pattern) + interacts with #15. Decide *whether* to build before building. |
+| 9 | ~~Update harmonized datasets from the new CORE so the parallel surface keeps functioning~~ | `nccs-data-core` + contracts | **Superseded 2026-11-09 by 9b / ADR 0056.** Decided: no ongoing parallel surface. The frozen harmonized files are corrected ONCE in place from the current CORE and then frozen for good; the current CORE is the only maintained CORE. #15's caution (no permanent invisible obligation) is met by that choice. |
+| 9b | Damaged dollar values in the frozen harmonized CORE yearly files (`harmonized/core/*/marts/*-HRMN-V1.csv`) | `nccs-data-core` + contracts | **New 2026-11-09** (outside user's report via the website contact form). Many dollar amounts were replaced by a meaningless tiny number (about 1.11e-308). Confirmed by full scan of `501c3-pz` 2022: 47 of 298 columns, e.g. total assets in 439,859 of 443,601 rows; the same file also doubles 50,806 returns. Same damage in 3 MB samples of 2012-2021 and of the 2022 `501c3-pc`, `501ce-pz`, `501ce-pc` files; private foundation (V0) sample clean. **Decided (ADR 0056, Proposed, contracts PR #126):** correct the files ONCE in place from the current CORE at the same keys (old headers kept whole, five carried columns added), after copying the originals to `_superseded-2025-04/` (written once, kept for good); then freeze again. **Done locally (core PR #15):** name table with reviewed picks, generator, build-and-check runner, tests (309 pass). Trial summaries withdrawn pending a rerun with the corrected checks. **Outstanding:** 9c first (ADR 0057); full-data build and checks on EC2 (box `i-01ae18eba7de2dcbd` up 2026-11-09); full scan of every frozen file incl. PF and the 38 returns only in the old 2022 file; upload script with the write-once copy-aside and replacement manifest; notices (ADR 0035 contacts, website, governance note); reply to the reporter once fixed. Nothing published. |
+| 9c | Repeated returns in the current pre-2012 CORE (`processed_legacy/core/`) | `nccs-data-core` + contracts | **New 2026-11-09**, found while building the ADR 0056 rewrite. The 2005 `990combined` file repeats `ein` plus `tax_period` in 97,593 of 490,488 rows; 43,729 of the repeated charity rows are identical in every value. Other years not counted. **Decided 2026-11-09: fix at the source (ADR 0057, Proposed).** Cause found and fixed with a test in `nccs-data-core` (yearly NCCS files carried returns forward; one row per ein + tax_period is now kept, newest file wins; new column `source_file_year`). Needs: EC2 rerun of the legacy pipeline, republish `processed_legacy/` then the merged panel, tell sector-in-brief-data. The ADR 0056 rewrite waits for it. |
+| 9d | Sector in Brief after ADR 0057: rerun `sector-in-brief-data` (new dated version, pre-2012 counts fall), check, repoint the dashboard | `sector-in-brief-data` + `sector-in-brief` | **New 2026-11-10.** Not automatic; waits on the 9c republish. Tell the maintainer first. |
+| 9e | Brittleness review of the CORE processing code | `nccs-data-core` | **New 2026-11-10.** Maintainer hand review with the `ub-mode` skill (tests first, one decision in one place, root causes). Prompted by two defects from untested stacking steps (9b, 9c). After 9c. |
 | 10 | ~~Branch protection on all core repos~~ **DONE 2026-08-11** | core repos | **ADR 0047 ratified + applied** (contracts #76): `branch-protection-baseline` ruleset ACTIVE on all 7 maintainer-admin repos — PRs required for every role (admin bypass = pull_request mode: self-merge yes, direct push no), 1 review for non-admins, contracts-guard required where the caller exists (6/7), force-push/deletion blocked. Approver policy decided: 'self' (revisit on second committer). Absorbs ADR 0022 step-4. Follow-up: `nccs` repo excluded (maintainer lacks admin; external collaborator holds it) — org-owner ask or admin-applied. |
 | 11 | New ADR correcting ADR 0015's "retired/never-written" description + record the retained-frozen decision + contract | nccs-contracts | **✅ DONE via ADR 0035** (PR #41) — corrects 0015's "phantom/never-written" claim + records retained-frozen + the contract YAML. Note: ADR 0035 *corrects* (not supersedes) 0015 — 0015's retirement of the *intermediate* tier stands. **→ close this item.** |
+
+## Monthly IRS collectors and the November 2026 BMF cycle (opened 2026-11-09)
+
+Origin: the seven monthly IRS collectors (the Lambda functions in `UI-Research/nccs-lambda`
+that copy IRS files into `s3://nccsdata/raw/`) did not run from August to October 2026.
+Fixed 2026-11-06 to 2026-11-09 (nccs-lambda #7 to #12): all seven have their November
+files on S3, a hand run can now do all seven in one go, and a collector that cannot start
+now sends a failure email. August, September and October cannot be recovered, because the
+IRS replaces its files each month. The BMF series therefore goes from July 2026 straight
+to November 2026.
+
+The monthly cycle below covers the November BMF **and everything downstream of it**, in
+run order. M1 to M5 run on EC2, not a laptop. Every publish to S3 needs the maintainer's
+go.
+
+| # | Task | Where | Notes |
+|---|------|-------|-------|
+| M1 | Build the November 2026 monthly BMF (`processed/bmf/2026_11/`) from `raw/bmf/2026-11-BMF.csv` | `nccs-data-bmf` | Newest monthly build on S3 is 2026_07. Check the build summary counts before publishing. |
+| M2 | Rebuild the Unified BMF (one row per EIN) with the November file added | `nccs-data-bmf` | Contract `unified-bmf.yml`: rebuilt when a new monthly file arrives. |
+| M3 | Geocode the addresses that are new since the last build, then publish the geocoded Unified BMF (dated copy plus `latest/`) and the per-state files | `nccs-data-bmf` | Send only the new addresses (the "delta" mode). The geocoder is automatic: drop the files in its input folder and wait for the output. The R package and the download API read `latest/`, so they pick this up with no change. |
+| M4 | Rebuild the EIN index (the small files behind the website's lookup by EIN) | `nccs-data-bmf` | Contract `bmf-ein-index.yml`: rebuilt at the end of every Unified BMF build. |
+| M5 | Rebuild the two crosswalks that follow the monthly BMF: NTEE-resolved and address-resolved | `nccs-data-bmf` | Both contracts say monthly, after each new BMF. |
+| M6 | Decide and, if needed, rebuild the crosswalks that follow the geocoded build: census geography (after each geocoded publish), address history with geography (about once a quarter), county FIPS / CBSA / Connecticut planning regions (only when new county labels appear) | `nccs-data-bmf` | Check each contract's rebuild rule against what M3 changed before running anything. |
+| M7 | Website: refresh the BMF catalog page, and write the release note | `nccs` + `governance/` | Release notes are written only in `governance/`; the website changelog is generated from them. |
+| M8 | **Decision:** rebuild the Sector in Brief data with the new BMF, or leave the dashboard on its current build | `sector-in-brief-data` then `sector-in-brief` | The dashboard is pinned to one build on purpose. A new build changes published numbers, so this is a separate go, not part of the monthly run. |
+| M9 | Add a failure alarm to the collectors, so a failed monthly run is seen the same day | `nccs-lambda` | The failure email now covers most cases; an alarm covers a function that dies before it can send one. |
+| M10 | Register the seven collectors and their `raw/` folders in the contracts | `nccs-contracts` | They publish to `s3://nccsdata/raw/` with no contract file today. |
+| M11 | On 1 December 2026, check the scheduled run: seven emails, seven sets of files, and the first real "new cases" files for 1023-EZ and split-interest trusts | `nccs-lambda` | The comparison against last month's file was fixed in #10 but has only run with stand-ins; December is the first month with a previous file to compare. Every earlier "NEW-CASES" file on S3 holds only its own file name. |
+| M12 | Re-render the other catalog pages that read the bucket file listing (CORE, legacy, SOI microdata, 990 metadata) | `nccs` | The listing was rebuilt 2026-11-09 (nccs #114) but only the revocations page was re-rendered. |
+| M13 | Tidy-up in the collectors: keep the list of collectors in one place (it is in both the stack template and the hand-run step), and share the comparison code that is repeated in two scripts | `nccs-lambda` | Low priority. |
+| M14 | Later: publish a parquet copy of the revocations file, with a contract entry | `nccs-contracts` then `nccs-data-bmf` | Not started. |
+| M15 | Note for users: the IRS has published no working 1023-EZ approvals file after 2023 (the 2024 link on its page returns "not found") | `nccs` | The collector can only copy the 2022 and 2023 files until the IRS fixes this. |
 
 ## E-file upstream currency: GivingTuesday lag and IRS batch coverage (found 2026-10-24)
 
