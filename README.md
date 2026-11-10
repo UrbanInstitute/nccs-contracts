@@ -13,6 +13,8 @@ decisions behind that shape.
 
 ## What's in here
 
+- `DATA-LIFECYCLE.md` — plain-language walk from the IRS files to the
+  website. Start here if you are new to NCCS.
 - `ARCHITECTURE.md` — system overview: producers, consumers, S3 spine,
   agentic operations. Read this first.
 - `contracts/` — one YAML file per published artifact (BMF master,
