@@ -70,6 +70,24 @@ Every producer publishes the same shape:
 A producer that doesn't follow this shape isn't a producer — it's an
 ad-hoc data drop, and consumers should not depend on it.
 
+### Temporary one-off files (`adhoc-datasets/`)
+
+`s3://nccsdata/adhoc-datasets/` is the one place for a one-off file that
+has to be handed to someone by link, for example the answer to a
+colleague's question. It is not a dataset and nothing should be built on
+it. Three rules keep it that way:
+
+- **One dated folder per file set**, named `YYYY-MM-DD-short-name/`.
+- **A `README.txt` in every folder** saying what the files are, who asked,
+  which code and source file made them, and the date they will be removed.
+- **Removed after 90 days.** Removal is done by hand for now; the date in
+  the README is the commitment.
+
+These folders have no contract YAML, no `_manifest.json` and no `latest`
+copy, on purpose. If the same file is asked for twice, that is the signal
+to publish it properly as a column or dataset with a contract. First use:
+`adhoc-datasets/2026-11-10-nccs-org-role/` (2026-11-10).
+
 ## 4. Consumer Pattern
 
 Consumers read canonical artifacts from S3 (directly, or via the API
