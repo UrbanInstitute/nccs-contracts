@@ -1,8 +1,12 @@
 # Full scan of the frozen harmonized CORE files (2026-11-11)
 
-Evidence for ADR 0056 Follow-up 1 and 1a: which files under
-`s3://nccsdata/harmonized/core/` are damaged, and where the 38 returns
-found only in the old 2022 charities file went.
+This note is reference: it records what the scan found, for anyone who
+needs to look up a file or a count. The reasons for the scan and the
+decision it supports are in ADR 0056 (Follow-up 1 and 1a).
+
+It answers two questions: which files under
+`s3://nccsdata/harmonized/core/` hold damaged values, and where the 38
+returns found only in the old 2022 charities file went.
 
 ## Result
 
@@ -26,10 +30,9 @@ rows. A file has between 16 and 73 damaged columns.
 ## What counts as a damaged cell
 
 A number that is not zero and is smaller than 1e-300 in size. The files
-show these as values such as 1.11e-308. They appear when a whole number
-stored in 64 bits is read back as a decimal number. In a CSV file the
-scan looks for text of that form; in a parquet file it tests the decimal
-columns.
+show these as values such as 1.11e-308. In a CSV file the scan looks for
+text of that form. In a parquet file it tests the decimal columns. ADR
+0056 explains the likely cause.
 
 ## The 38 returns
 
@@ -40,8 +43,8 @@ place them in the 2022 nonprofit file. No return is lost.
 
 ## Files
 
-- `scan_frozen.R`: the scan. It was run once, for this evidence, and is
-  written for speed and not to the repo's R style.
+- `scan_frozen.R`: the scan script. We ran it once, for this evidence.
+  It favors speed and does not follow the repo's R style.
 - `frozen_scan_by_file.csv`: one row per file, with rows, columns,
   damaged columns and damaged cells.
 - `frozen_scan_by_column.csv`: one row per damaged column of each file.
