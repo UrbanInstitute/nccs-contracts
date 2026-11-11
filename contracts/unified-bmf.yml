@@ -116,9 +116,11 @@ schema:
   #   nccs_org_role             string  O (operating), S (supporting), M (mutual benefit); missing when unknown
   #   nccs_org_role_definition  string  the same value in words
   # Formerly NCCS_LEVEL_2 (CORE) and LEVEL2 (BMF) in the older NCCS files.
-  # ADR 0059 (PROPOSED 2026-11-11, not yet in any build): four more additive
-  # columns after the two above, derived from subsection_code,
-  # foundation_code and ntee_code_raw:
+  # ADR 0059 additive columns (from the November 2026 build on), after the
+  # two above and derived from this file's own subsection_code,
+  # foundation_code and ntee_code_raw by
+  # R/nccs_org_legal_type.R::derive_nccs_org_legal_type() and
+  # R/nccs_org_field.R::derive_nccs_org_field():
   #   nccs_org_legal_type             string  PC (public charity), PF (private foundation), O (other tax-exempt organization); missing when unknown
   #   nccs_org_legal_type_definition  string  the same value in words
   #   nccs_org_field                  string  one of 17 two-letter values (AR, ED, EN, HE, HS, IN, PB, RE, UN, MO, MR, ZA to ZF); missing when unknown
