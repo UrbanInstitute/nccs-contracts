@@ -96,19 +96,23 @@ Kim.
 
 3. **After the rewrite the folder is frozen again, and not updated.**
    No ongoing generation, no yearly review, no new surface. The rebuilt
-   files stop at the newest tax year the current CORE has at rewrite
-   time. Anyone who wants newer years, or corrections after this one,
-   uses the current CORE. The website says so beside the links.
+   files stop at 2023, the last year the folder already holds. No 2024
+   files are added (decided by the maintainer on 2026-11-11). The
+   current CORE has only part of 2024 so far. A partial year in a folder that is never updated would
+   stay partial for good, and a reader could take it for a full year.
+   The four all-years parquet files stop at 2023 for the same reason.
+   Anyone who wants newer years, or corrections after this one, uses
+   the current CORE. The website says so beside the links.
 
 4. **What is rewritten, from which source.** "PC" means full Form 990
    filers only. "PZ" means Form 990 and Form 990-EZ filers together.
 
    | Family | Years | Source | Which rows | Stage |
    |---|---|---|---|---|
-   | 501C3-CHARITIES-PC | 2012 to newest | `processed/core/{year}/990` | `is_501c3` is TRUE | 1 |
-   | 501CE-NONPROFIT-PC | 2012 to newest | `processed/core/{year}/990` | `is_501c3` is FALSE | 1 |
-   | 501C3-CHARITIES-PZ | 2012 to newest | `processed/core/{year}/990` and `/990ez`, stacked | `is_501c3` is TRUE | 1 |
-   | 501CE-NONPROFIT-PZ | 2012 to newest | same | `is_501c3` is FALSE | 1 |
+   | 501C3-CHARITIES-PC | 2012 to 2023 | `processed/core/{year}/990` | `is_501c3` is TRUE | 1 |
+   | 501CE-NONPROFIT-PC | 2012 to 2023 | `processed/core/{year}/990` | `is_501c3` is FALSE | 1 |
+   | 501C3-CHARITIES-PZ | 2012 to 2023 | `processed/core/{year}/990` and `/990ez`, stacked | `is_501c3` is TRUE | 1 |
+   | 501CE-NONPROFIT-PZ | 2012 to 2023 | same | `is_501c3` is FALSE | 1 |
    | 501C3-CHARITIES-PZ | 1989 to 2011 | `processed_legacy/core/{year}/990combined` | `source_subsection_class` is 501C3-CHARITIES | 2 |
    | 501CE-NONPROFIT-PZ | 1989 to 2011 | same | `source_subsection_class` is 501CE-NONPROFIT | 2 |
    | the `full/` parquet file and `dd/` dictionary of each of the four families above | all | the rewritten yearly files | all | with their family |
@@ -333,7 +337,7 @@ reviewed picks for the 17 columns applied.
 ## Consequences
 
 - Users of the older format get working files at the paths they already
-  use, for 1989 to the newest year, with the same headers.
+  use, for 1989 to 2023, with the same headers.
 - The format then stays frozen for good. No new years will be added to
   it. The current CORE is the only maintained CORE.
 - Rows and some values differ from earlier downloads. Anyone who built
