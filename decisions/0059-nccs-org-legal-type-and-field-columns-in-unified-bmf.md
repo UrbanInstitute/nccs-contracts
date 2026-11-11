@@ -1,8 +1,8 @@
 # 0059: Add the organization legal type and field columns to the Unified BMF
 
-- **Status:** Proposed 2026-11-11
+- **Status:** Accepted 2026-11-11, now Executing (decided by the maintainer on merge of PR #132)
 - **Date:** 2026-11-11
-- **Deciders:** Thiyaghessan Poongundranar (tpoongundranar@urban.org)
+- **Deciders:** Thiyaghessan Poongundranar (tpoongundranar@urban.org); decided 2026-11-11 to add the columns in the November 2026 build
 - **Related:** [[0058-nccs-org-role-column-in-unified-bmf]] (the role column, formerly level 2; this record follows its pattern), [[0016-no-canonical-cross-dataset-merge]] (consumers join by EIN themselves), [[0048-nteev2-specialty-code-x00-rule]] (how the NTEE columns are built)
 
 ## Context
@@ -224,9 +224,11 @@ has no groups for supporting organizations.
 ## Follow-up
 
 1. Maintainer decides: accept the names, and say whether the columns go
-   into the November 2026 build or the one after.
+   into the November 2026 build or the one after. **Done 2026-11-11.**
+   The maintainer accepted the names and chose the November 2026 build.
 2. Write the two functions, their tests and the check script in
-   `nccs-data-bmf`.
+   `nccs-data-bmf`. **Written 2026-11-11** (nccs-data-bmf PR #69, open
+   for review).
 3. Add the columns to the Unified BMF contract and the data dictionary.
 4. Add the derived-column section to the build's validation report.
 

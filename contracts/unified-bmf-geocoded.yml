@@ -91,6 +91,11 @@ schema:
   # are carried through unchanged. See contracts/unified-bmf.yml. In this
   # file and the per-state files they sit after the other BMF columns and
   # before the geocode columns.
+  # ADR 0059 (from the November 2026 build on): the four legal type and
+  # field columns, nccs_org_legal_type, nccs_org_legal_type_definition,
+  # nccs_org_field and nccs_org_field_definition, are carried through
+  # unchanged in the same way, after the two role columns and before the
+  # geocode columns.
 
 consumers:
   - repo: UrbanInstitute/nccsdata
