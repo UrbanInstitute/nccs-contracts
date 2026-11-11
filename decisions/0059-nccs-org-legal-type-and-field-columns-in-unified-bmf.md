@@ -8,16 +8,16 @@
 ## Context
 
 Older NCCS files sorted every organization with four columns, called
-levels 1 to 4. ADR 0058 brought back level 2 as `nccs_org_role`. The
-maintainer asked on 2026-11-11 for levels 1 and 3 as well, under
-descriptive names, and asked where they should live: in the Unified BMF,
-in CORE too, or in the table of NTEE codes. The aim is the fewest places
-to maintain.
+levels 1 to 4. ADR 0058 brought back level 2 as `nccs_org_role`. On
+2026-11-11 the maintainer asked for levels 1 and 3 as well, under
+descriptive names. The maintainer also asked where they should live: in
+the Unified BMF, in CORE too, or in the table of NTEE codes. The aim is the fewest
+places to maintain.
 
-The rules behind levels 1 and 3 were never written down. They were
-worked out on 2026-11-11 by comparing the old columns with the other
-columns in two older BMF files, read in full: July 2013 (1,427,584 rows)
-and December 2017 (1,544,575 rows).
+Nobody wrote down the rules behind levels 1 and 3. On 2026-11-11 we
+worked them out by comparing the old columns with the other columns in
+two older BMF files, read in full. The files are July 2013 (1,427,584
+rows) and December 2017 (1,544,575 rows).
 
 **Level 1** says what kind of tax-exempt organization this is. It comes
 from two IRS codes, the subsection code and the foundation code:
@@ -80,12 +80,13 @@ has no groups for supporting organizations.
    CORE and not added to the NTEE code tables.
    - CORE users get them by joining the Unified BMF on `ein`
      (ADR 0016). Adding them to CORE would put a second copy in 36 years
-     of files, to be kept the same as the first.
+     of files, which the CORE pipeline would have to keep the same as
+     the first.
    - The legal type cannot live in a table of NTEE codes, because it
      does not come from the NTEE code. The role (ADR 0058) cannot
      either, because since 2017 it also uses the foundation code.
    - The field does come from the NTEE code alone, so it could live in
-     a table of NTEE codes. It is kept with the other two so that a user
+     a table of NTEE codes. We keep it with the other two so that a user
      finds all three in one file and reads them the same way.
 
 3. **The rules** are the two tables in the Context section. The inputs
@@ -102,12 +103,12 @@ has no groups for supporting organizations.
      organizations.
    - Field is missing when the organization has no usable NTEE code.
    - The old value "U" for legal type and the old value "UN" for field
-     are different things. "UN" is kept: it means the IRS assigned an
+     are different things. We keep "UN": it means the IRS assigned an
      NTEE code starting with Z, which is itself "unclassified".
 
-5. **Punctuation after an NTEE code is ignored** when deriving the
-   field, as ADR 0058 Decision 4 does for the role. The same cleaning
-   function is used.
+5. **The field rule ignores punctuation after an NTEE code**, as ADR
+   0058 Decision 4 does for the role. Both use the same cleaning
+   function.
 
 6. **One place computes each column.** Two tested R functions in
    `nccs-data-bmf`, next to `derive_nccs_org_role()`, called once on the
