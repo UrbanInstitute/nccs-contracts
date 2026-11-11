@@ -79,7 +79,12 @@ has no groups for supporting organizations.
 2. **The Unified BMF is the only home.** The columns are not added to
    CORE and not added to the NTEE code tables.
    - CORE users get them by joining the Unified BMF on `ein`
-     (ADR 0016). Adding them to CORE would put a second copy in 36 years
+     (ADR 0016). `ein` is the standard column, written XX-XXXXXXX, and
+     it is the one EIN column that every current CORE file and the
+     Unified BMF both carry today (checked against the live files on
+     2026-11-11). The frozen harmonized CORE files have no `ein`
+     column; there the join is on `EIN2`, which the Unified BMF also
+     carries. Adding them to CORE would put a second copy in 36 years
      of files, which the CORE pipeline would have to keep the same as
      the first.
    - The legal type cannot live in a table of NTEE codes, because it
@@ -100,7 +105,16 @@ has no groups for supporting organizations.
      or a private foundation. The older files marked such organizations
      as public charities (1,691 rows in December 2017). We do not,
      because that is a guess. In the current Unified BMF this is 76,600
-     organizations.
+     organizations. All but 3 of them come from the older BMF files.
+     None has a usable private foundation filing code:
+     `pf_filing_requirement_code` is empty for 76,597 and says "no
+     990-PF return" for 3. The older files did carry that code, as the
+     last digit of a three-character filing code. In December 2017 that
+     digit said "990-PF required" for 195 of the 1,691 such
+     organizations, so the old label of public charity was wrong for
+     some of them. The Unified BMF does not keep that digit in a usable
+     form for rows from the older files (backlog M2c). If M2c recovers
+     it, a later decision can use it to fill some of these in.
    - Field is missing when the organization has no usable NTEE code.
    - The old value "U" for legal type and the old value "UN" for field
      are different things. We keep "UN": it means the IRS assigned an
