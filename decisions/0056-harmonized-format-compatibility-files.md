@@ -359,8 +359,22 @@ nothing is lost.
 1. Check all five `full/` parquet files and every yearly file in full
    (EC2 job), private foundations included, and record the exact list of
    damaged files in the contract.
+   **Done 2026-11-11.** All 231 frozen files were read in full. 98 are
+   damaged: every yearly `marts/` file of the four charity and nonprofit
+   groups (94 files, 1989 to 2023 for the two PZ groups and 2012 to 2023
+   for the two PC groups) and their four `full/` parquet files. The
+   damage reaches back to 1989; the earlier samples covered 2012 on
+   only. All 38 private foundation files, all 90 base files and the
+   dictionaries are clean. The list is in
+   `contracts/core-harmonized-frozen.yml`; the counts per file and per
+   column are in `notes/adr-0056-frozen-scan-2026-11-11/`.
 1a. Explain the 38 returns that are in the damaged 2022 charities PZ
    file and not in the current CORE.
+   **Done 2026-11-11.** All 38 are in the current CORE for 2022, with
+   the same EIN and period end, under subsection codes 4, 5, 6 or 7. The
+   old file had placed them among 501(c)(3) charities. In the rebuilt
+   files they are in the 2022 nonprofit PZ file. No return is lost. List:
+   `notes/adr-0056-frozen-scan-2026-11-11/returns_only_in_old_2022_charities_pz.csv`.
 2. Review the 17 pre-2012 multi-source columns and write the overrides
    file (stage 2).
 3. Build the write step, the dictionary step and the `full/` parquet

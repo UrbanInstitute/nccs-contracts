@@ -109,19 +109,19 @@ known_defects:
       meaningless tiny number (about 1.11e-308). The original values
       cannot be reliably recovered from the damaged ones.
     affected:
-      confirmed_by_full_scan:
-        - "501c3-pz/marts/CORE-2022-501C3-CHARITIES-PZ-HRMN-V1.csv  (47 of 298 columns; total assets damaged in 439,859 of 443,601 rows)"
-      confirmed_by_3mb_sample:
-        - "501c3-pz/marts/ V1 files for 2012, 2015, 2018, 2019, 2020, 2021"
-        - "501c3-pc/marts/CORE-2022-501C3-CHARITIES-PC-HRMN-V1.csv"
-        - "501ce-pz/marts/CORE-2022-501CE-NONPROFIT-PZ-HRMN-V1.csv"
-        - "501ce-pc/marts/CORE-2022-501CE-NONPROFIT-PC-HRMN-V1.csv"
-      clean_in_sample:
-        - "501c3-pf/marts/CORE-2022-501C3-PRIVFOUND-PF-HRMN-V0.csv"
-        - "501c3-pz/CORE-2022-501C3-CHARITIES-PZ-HRMN.csv  (base file, read in full)"
-      not_yet_checked:
-        - "all five full/ parquet files"
-        - "every marts file in full (EC2 job, ADR 0056 Follow-up 1)"
+      # Full scan of all 231 frozen files on 2026-11-11 (ADR 0056 Follow-up 1).
+      # Per-file and per-column counts: notes/adr-0056-frozen-scan-2026-11-11/
+      scanned: "2026-11-11, every file read in full, none failed to read"
+      damaged:   # 98 files
+        - "501c3-pz/marts/ V1 yearly files, 1989 to 2023 (35 files; 16 to 63 damaged columns each)"
+        - "501ce-pz/marts/ V1 yearly files, 1989 to 2023 (35 files; 17 to 48 damaged columns each)"
+        - "501c3-pc/marts/ V1 yearly files, 2012 to 2023 (12 files; 65 to 73 damaged columns each)"
+        - "501ce-pc/marts/ V1 yearly files, 2012 to 2023 (12 files; 35 to 40 damaged columns each)"
+        - "501c3-pz/full/, 501ce-pz/full/, 501c3-pc/full/, 501ce-pc/full/ (the 4 all-years parquet files)"
+      clean:     # 133 files
+        - "501c3-pf (private foundations): all 37 yearly V0 files, the full/ parquet file and the dictionary"
+        - "all 90 base files CORE-{year}-{CLASS}-HRMN.csv"
+        - "the 4 dd/ dictionaries of the damaged groups"
     likely_cause: >
       The 2024 pipeline (R/core_update.R, commit f4cb15a) stacked columns
       stored as 64-bit whole numbers on top of columns stored as decimals.
@@ -148,7 +148,7 @@ correction:
   notice_file: harmonized/core/README.txt
   not_replaced:
     - "base CSVs CORE-{year}-{CLASS}-HRMN.csv (clean; left as they are)"
-    - "501c3-pf (private foundations): decided separately if the full check finds damage"
+    - "501c3-pf (private foundations): the full scan of 2026-11-11 found no damage; left as they are"
   deprecation_window: no 90-day notice before the overwrite, because the files are defective (ADR 0033 exception); originals copied aside first
 
 retention:
