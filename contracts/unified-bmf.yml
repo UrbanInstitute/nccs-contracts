@@ -116,6 +116,14 @@ schema:
   #   nccs_org_role             string  O (operating), S (supporting), M (mutual benefit); missing when unknown
   #   nccs_org_role_definition  string  the same value in words
   # Formerly NCCS_LEVEL_2 (CORE) and LEVEL2 (BMF) in the older NCCS files.
+  # ADR 0059 (PROPOSED 2026-11-11, not yet in any build): four more additive
+  # columns after the two above, derived from subsection_code,
+  # foundation_code and ntee_code_raw:
+  #   nccs_org_legal_type             string  PC (public charity), PF (private foundation), O (other tax-exempt organization); missing when unknown
+  #   nccs_org_legal_type_definition  string  the same value in words
+  #   nccs_org_field                  string  one of 17 two-letter values (AR, ED, EN, HE, HS, IN, PB, RE, UN, MO, MR, ZA to ZF); missing when unknown
+  #   nccs_org_field_definition       string  the same value in words
+  # Formerly NCCS_LEVEL_1 / LEVEL1 and NCCS_LEVEL_3 / LEVEL3 in the older NCCS files.
 
 # COLUMN STABILITY (recorded 2026-09-16, backlog Z17). Outside consumers
 # write our column names into their code. Known cases: NODC's npmatch
