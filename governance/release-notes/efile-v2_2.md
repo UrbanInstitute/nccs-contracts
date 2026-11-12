@@ -25,3 +25,9 @@ NULL expenses (dedup on OBJECTID before joins).
 
 **Verification:** NCCS crosscheck 2026-08-11 (OBJECTID-level join of
 shared filings, grants field). Method available on request.
+
+## Attribution (added 2026-11-11)
+
+Released by: Nonprofit Open Data Collective (the producer), 2026-08-11, as stated at the top of this note.  
+Pipeline author: Nonprofit Open Data Collective (`ef2`).  
+Other credit: the data is produced by the Nonprofit Open Data Collective. NCCS documented and checked the release. Thiyaghessan Poongundranar wrote this release note (nccs-contracts commit `511a978`).
