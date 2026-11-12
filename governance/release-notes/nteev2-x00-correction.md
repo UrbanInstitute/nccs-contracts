@@ -42,3 +42,9 @@ the first time, so on those files `ntee_code_clean`,
 columns also change, and `nteev2_subsector_definition` is added. The Unified
 BMF already carried those corrections for active EINs. Files for 2024-09 and
 2024-10 are published for the first time.
+
+## Attribution (added 2026-11-11)
+
+Released by: NCCS. The person who ran the build and the upload is not recorded; the build record files (`_manifest.json`) name code version `dbf33ae` of nccs-data-bmf.  
+Pipeline author: Thiyaghessan Poongundranar.  
+Other credit: the double-encoding defect was identified by Jesse Lecy / Nonprofit Open Data Collective (`Nonprofit-Open-Data-Collective/matchdb`, commit `faa4fe8`), as stated in the Credit paragraph above. Thiyaghessan Poongundranar wrote this release note (nccs-contracts commits `8b34ddd`, `b72b0e5`).

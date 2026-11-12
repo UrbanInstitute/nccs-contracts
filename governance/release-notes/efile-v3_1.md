@@ -146,3 +146,9 @@ parquet footer; header key uniqueness across 7,542,621 records;
 patch index reconciliation; S3 object-version history; xpath-level
 concordance diff; same-filing value comparison for every renamed
 column). Evidence in `nccs-workspace/reviews/2026-10-21-efile-audit/`.
+
+## Attribution (added 2026-11-11)
+
+Released by: Nonprofit Open Data Collective (the producer), 2026-10-09, as stated at the top of this note.  
+Pipeline author: Nonprofit Open Data Collective (`ef2` 2.0.0, `concordance990` 2.0.1).  
+Other credit: the data is produced by the Nonprofit Open Data Collective. NCCS documented and checked the release. Thiyaghessan Poongundranar wrote this release note (nccs-contracts commits `42196e4`, `f74c8d3`, `14c63d1`).
