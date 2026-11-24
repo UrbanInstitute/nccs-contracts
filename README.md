@@ -1,5 +1,7 @@
 # nccs-contracts
 
+Maintained by Thiyaghessan Poongundranar, National Center for Charitable Statistics, Urban Institute, since May 2026.
+
 The contract surface for the NCCS data system. This repo describes
 every artifact published to S3 by the NCCS data pipelines, the
 conventions producers and consumers agree on, and the architectural

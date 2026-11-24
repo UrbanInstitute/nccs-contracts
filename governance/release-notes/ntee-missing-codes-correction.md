@@ -59,3 +59,9 @@ corrected in place, same row counts, same precedent as the ADR 0032 and ADR
 `s3://nccsdata/crosswalks/ntee-resolved/`, and every monthly and legacy file
 under `processed/bmf/` and `processed/bmf-legacy/`. Manifests carry git_sha
 `1b1f8a9`.
+
+## Attribution (added 2026-11-11)
+
+Released by: NCCS. The person who ran the build and the upload is not recorded; the build record files (`_manifest.json`) name code version `1b1f8a9` of nccs-data-bmf.  
+Pipeline author: Thiyaghessan Poongundranar.  
+Other credit: none stated in this note. Thiyaghessan Poongundranar wrote this release note (nccs-contracts commits `c8799ef`, `6203628`).

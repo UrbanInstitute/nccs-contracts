@@ -35,3 +35,9 @@ values corrected).
 
 **Details:** nccs-data-bmf PR #60; BACKLOG Z28; found while closing Z18
 (whose first row-count estimate was inflated by the same double count).
+
+## Attribution (added 2026-11-11)
+
+Released by: NCCS. The person who ran the build and the upload is not recorded; the build record file (`_manifest.json`) names code version `9d10275` of nccs-data-bmf.  
+Pipeline author: Thiyaghessan Poongundranar.  
+Other credit: none stated in this note. Thiyaghessan Poongundranar wrote this release note (nccs-contracts commits `e216429`, `39e1052`).
