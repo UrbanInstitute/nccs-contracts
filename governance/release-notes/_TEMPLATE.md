@@ -14,7 +14,7 @@ Copy this file to `governance/release-notes/<short-name>.md` and fill in every f
 
 **For users:** <what a user must do: download again, filter differently, or nothing>.
 
-**Verification:** <the checks that were run and where their results are kept>.
+**Verification:** <the checks you ran and where you keep their results>.
 
 **Details:** <pull requests, decision records (ADR numbers), backlog items>.
 

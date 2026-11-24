@@ -47,4 +47,4 @@ BMF already carried those corrections for active EINs. Files for 2024-09 and
 
 Released by: NCCS. The person who ran the build and the upload is not recorded; the build record files (`_manifest.json`) name code version `dbf33ae` of nccs-data-bmf.  
 Pipeline author: Thiyaghessan Poongundranar.  
-Other credit: the double-encoding defect was identified by Jesse Lecy / Nonprofit Open Data Collective (`Nonprofit-Open-Data-Collective/matchdb`, commit `faa4fe8`), as stated in the Credit paragraph above. Thiyaghessan Poongundranar wrote this release note (nccs-contracts commits `8b34ddd`, `b72b0e5`).
+Other credit: Jesse Lecy / Nonprofit Open Data Collective identified the double-encoding defect (`Nonprofit-Open-Data-Collective/matchdb`, commit `faa4fe8`), as stated in the Credit paragraph above. Thiyaghessan Poongundranar wrote this release note (nccs-contracts commits `8b34ddd`, `b72b0e5`).

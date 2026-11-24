@@ -151,4 +151,4 @@ column). Evidence in `nccs-workspace/reviews/2026-10-21-efile-audit/`.
 
 Released by: Nonprofit Open Data Collective (the producer), 2026-10-09, as stated at the top of this note.  
 Pipeline author: Nonprofit Open Data Collective (`ef2` 2.0.0, `concordance990` 2.0.1).  
-Other credit: the data is produced by the Nonprofit Open Data Collective. NCCS documented and checked the release. Thiyaghessan Poongundranar wrote this release note (nccs-contracts commits `42196e4`, `f74c8d3`, `14c63d1`).
+Other credit: the Nonprofit Open Data Collective produces the data. NCCS documented and checked the release. Thiyaghessan Poongundranar wrote this release note (nccs-contracts commits `42196e4`, `f74c8d3`, `14c63d1`).
